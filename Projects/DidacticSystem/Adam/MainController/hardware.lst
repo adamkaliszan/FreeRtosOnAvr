@@ -1,0 +1,1371 @@
+   1               		.file	"hardware.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  10               		.text
+  11               	.Ltext0:
+ 273               	.global	hardwareInit
+ 275               	hardwareInit:
+ 276               		.stabd	46,0,0
+   1:hardware.c    **** #include "hardware.h"
+   2:hardware.c    **** 
+   3:hardware.c    **** #if LANG_EN
+   4:hardware.c    **** #include "hardware_en.h"
+   5:hardware.c    **** #endif
+   6:hardware.c    **** 
+   7:hardware.c    **** #if LANG_PL
+   8:hardware.c    **** #include "hardware_pl.h"
+   9:hardware.c    **** #endif
+  10:hardware.c    **** 
+  11:hardware.c    **** xQueueHandle      xSpiRx;             /// Kolejka z odebranymi bajtami z SPI. Blokuje transmisję d
+  12:hardware.c    **** 
+  13:hardware.c    **** void hardwareInit(void)
+  14:hardware.c    **** {
+ 278               	.LM0:
+ 279               	.LFBB1:
+ 280               	/* prologue: function */
+ 281               	/* frame size = 0 */
+ 282               	/* stack size = 0 */
+ 283               	.L__stack_usage = 0
+  15:hardware.c    ****   //DDRA = 0x00;  //External Memory
+  16:hardware.c    ****   portENTER_CRITICAL();
+ 285               	.LM1:
+ 286               	/* #APP */
+ 287               	 ;  16 "hardware.c" 1
+ 288 0000 0FB6      		in		__tmp_reg__, __SREG__
+ 289               	 ;  0 "" 2
+ 290               	 ;  16 "hardware.c" 1
+ 291 0002 F894      		cli
+ 292               	 ;  0 "" 2
+ 293               	 ;  16 "hardware.c" 1
+ 294 0004 0F92      		push	__tmp_reg__
+ 295               	 ;  0 "" 2
+  17:hardware.c    ****   xSpiRx          = xQueueCreate(1, 1);
+ 297               	.LM2:
+ 298               	/* #NOAPP */
+ 299 0006 61E0      		ldi r22,lo8(1)
+ 300 0008 81E0      		ldi r24,lo8(1)
+ 301 000a 0E94 0000 		call xQueueCreate
+ 302 000e 9093 0000 		sts xSpiRx+1,r25
+ 303 0012 8093 0000 		sts xSpiRx,r24
+  18:hardware.c    ****   portEXIT_CRITICAL();
+ 305               	.LM3:
+ 306               	/* #APP */
+ 307               	 ;  18 "hardware.c" 1
+ 308 0016 0F90      		pop		__tmp_reg__
+ 309               	 ;  0 "" 2
+ 310               	 ;  18 "hardware.c" 1
+ 311 0018 0FBE      		out		__SREG__, __tmp_reg__
+ 312               	 ;  0 "" 2
+  19:hardware.c    **** 
+  20:hardware.c    ****   DDRB = 0xF7;
+ 314               	.LM4:
+ 315               	/* #NOAPP */
+ 316 001a 87EF      		ldi r24,lo8(-9)
+ 317 001c 87BB      		out 0x17,r24
+  21:hardware.c    ****   PORTB = 0xD1;
+ 319               	.LM5:
+ 320 001e 81ED      		ldi r24,lo8(-47)
+ 321 0020 88BB      		out 0x18,r24
+  22:hardware.c    ****   /*
+  23:hardware.c    ****    0 - Sl_RST
+  24:hardware.c    ****    1 - SCK
+  25:hardware.c    ****    2 - MOSI
+  26:hardware.c    ****    3 - MISO
+  27:hardware.c    ****    4 - External SPI ASR 4
+  28:hardware.c    ****    5 - External SPI ASR 5 (DS1305)     0 - off; 1 - on
+  29:hardware.c    ****    6 - External SPI ASR 6 (MCP3008)    0 - on;  1 - off
+  30:hardware.c    ****    7 - External SPI ASR 7 (MPC23S17)   0 - on;  1 - off
+  31:hardware.c    ****   */
+  32:hardware.c    **** 
+  33:hardware.c    ****   //DDRC = 0x00;  //External Memory
+  34:hardware.c    **** 
+  35:hardware.c    ****   DDRD = 0x00;
+ 323               	.LM6:
+ 324 0022 11BA      		out 0x11,__zero_reg__
+  36:hardware.c    ****   /*
+  37:hardware.c    ****    0 - SCL
+  38:hardware.c    ****    1 - SDA
+  39:hardware.c    ****    2 - RxD USB
+  40:hardware.c    ****    3 - TxD USB
+  41:hardware.c    ****    4 - External SPI ASR 0
+  42:hardware.c    ****    5 - External SPI ASR 1
+  43:hardware.c    ****    6 - External SPI ASR 2
+  44:hardware.c    ****    7 - External SPI ASR 3
+  45:hardware.c    ****    */
+  46:hardware.c    **** 
+  47:hardware.c    ****   DDRE  = 0x0E;
+ 326               	.LM7:
+ 327 0024 8EE0      		ldi r24,lo8(14)
+ 328 0026 82B9      		out 0x2,r24
+  48:hardware.c    ****   PORTE = 0x0C;
+ 330               	.LM8:
+ 331 0028 8CE0      		ldi r24,lo8(12)
+ 332 002a 83B9      		out 0x3,r24
+  49:hardware.c    ****   /*
+  50:hardware.c    ****    0 - RxD Rs485
+  51:hardware.c    ****    1 - TxD Rs485
+  52:hardware.c    ****    2 - ENC RST
+  53:hardware.c    ****    3 - ENC CS
+  54:hardware.c    ****    4 - INT 4
+  55:hardware.c    ****    5 - INT 5
+  56:hardware.c    ****    6 - INT 6
+  57:hardware.c    ****    7 - INT Enc28j60
+  58:hardware.c    ****   */
+  59:hardware.c    ****   DDRF = 0x00;    //JTAG and A/C
+ 334               	.LM9:
+ 335 002c 1092 6100 		sts 97,__zero_reg__
+  60:hardware.c    ****   DDRG = 0x1F;
+ 337               	.LM10:
+ 338 0030 8FE1      		ldi r24,lo8(31)
+ 339 0032 8093 6400 		sts 100,r24
+ 340 0036 0895      		ret
+ 342               	.Lscope1:
+ 344               		.stabd	78,0,0
+ 346               	.global	LockersMemInit
+ 348               	LockersMemInit:
+ 349               		.stabd	46,0,0
+  61:hardware.c    ****   /*
+  62:hardware.c    ****    0 - WR
+  63:hardware.c    ****    1 - RD
+  64:hardware.c    ****    2 - ALE
+  65:hardware.c    ****    3 - SD CS
+  66:hardware.c    ****    4 - RS485 TxEn
+  67:hardware.c    ****    5 -
+  68:hardware.c    ****    6 -
+  69:hardware.c    ****    7 -
+  70:hardware.c    ****    */
+  71:hardware.c    **** }
+  72:hardware.c    **** 
+  73:hardware.c    **** void LockersMemInit(void)
+  74:hardware.c    **** {
+ 351               	.LM11:
+ 352               	.LFBB2:
+ 353               	/* prologue: function */
+ 354               	/* frame size = 0 */
+ 355               	/* stack size = 0 */
+ 356               	.L__stack_usage = 0
+  75:hardware.c    ****   lockSensors = xmalloc(4 * sizeof(struct lockerSensor));
+ 358               	.LM12:
+ 359 0038 88E1      		ldi r24,lo8(24)
+ 360 003a 90E0      		ldi r25,0
+ 361 003c 0E94 0000 		call xmalloc
+ 362 0040 9093 0000 		sts lockSensors+1,r25
+ 363 0044 8093 0000 		sts lockSensors,r24
+ 364 0048 0895      		ret
+ 366               	.Lscope2:
+ 368               		.stabd	78,0,0
+ 370               	.global	printLockers
+ 372               	printLockers:
+ 373               		.stabd	46,0,0
+  76:hardware.c    **** }
+  77:hardware.c    **** 
+  78:hardware.c    **** uint8_t printLockers(FILE *stream)
+  79:hardware.c    **** {
+ 375               	.LM13:
+ 376               	.LFBB3:
+ 377 004a 5F92      		push r5
+ 378 004c 6F92      		push r6
+ 379 004e 7F92      		push r7
+ 380 0050 8F92      		push r8
+ 381 0052 9F92      		push r9
+ 382 0054 AF92      		push r10
+ 383 0056 BF92      		push r11
+ 384 0058 CF92      		push r12
+ 385 005a DF92      		push r13
+ 386 005c EF92      		push r14
+ 387 005e FF92      		push r15
+ 388 0060 0F93      		push r16
+ 389 0062 1F93      		push r17
+ 390 0064 CF93      		push r28
+ 391 0066 DF93      		push r29
+ 392               	/* prologue: function */
+ 393               	/* frame size = 0 */
+ 394               	/* stack size = 15 */
+ 395               	.L__stack_usage = 15
+ 396 0068 782E      		mov r7,r24
+ 397 006a 692E      		mov r6,r25
+  80:hardware.c    ****   uint8_t i;
+  81:hardware.c    ****   uint8_t result = 0;
+  82:hardware.c    ****   struct lockerSensor *tmpLock = lockSensors;
+ 399               	.LM14:
+ 400 006c C091 0000 		lds r28,lockSensors
+ 401 0070 D091 0000 		lds r29,lockSensors+1
+ 402 0074 01E0      		ldi r16,lo8(1)
+ 403 0076 10E0      		ldi r17,0
+  81:hardware.c    ****   struct lockerSensor *tmpLock = lockSensors;
+ 405               	.LM15:
+ 406 0078 512C      		mov r5,__zero_reg__
+  83:hardware.c    ****   for (i=1; i<=4; i++)
+  84:hardware.c    ****   {
+  85:hardware.c    ****     if (tmpLock->enabled)
+  86:hardware.c    ****     {
+  87:hardware.c    ****       fprintf_P(stream, statusLockerSensDescStr, i);
+ 408               	.LM16:
+ 409 007a 80E0      		ldi r24,lo8(statusLockerSensDescStr)
+ 410 007c E82E      		mov r14,r24
+ 411 007e 80E0      		ldi r24,hi8(statusLockerSensDescStr)
+ 412 0080 F82E      		mov r15,r24
+  88:hardware.c    ****       if (tmpLock->threshold > tmpLock->acVal)
+  89:hardware.c    ****         fprintf_P(stream, statusLockerOpenStr);
+  90:hardware.c    ****       else
+  91:hardware.c    ****         fprintf_P(stream, statusLockerCloseStr);
+  92:hardware.c    ****       fprintf_P(stream, statusLockerSensAdditionalDescStr, tmpLock->threshold, tmpLock->acVal);
+ 414               	.LM17:
+ 415 0082 90E0      		ldi r25,lo8(statusLockerSensAdditionalDescStr)
+ 416 0084 C92E      		mov r12,r25
+ 417 0086 90E0      		ldi r25,hi8(statusLockerSensAdditionalDescStr)
+ 418 0088 D92E      		mov r13,r25
+  91:hardware.c    ****       fprintf_P(stream, statusLockerSensAdditionalDescStr, tmpLock->threshold, tmpLock->acVal);
+ 420               	.LM18:
+ 421 008a 20E0      		ldi r18,lo8(statusLockerCloseStr)
+ 422 008c A22E      		mov r10,r18
+ 423 008e 20E0      		ldi r18,hi8(statusLockerCloseStr)
+ 424 0090 B22E      		mov r11,r18
+  89:hardware.c    ****       else
+ 426               	.LM19:
+ 427 0092 30E0      		ldi r19,lo8(statusLockerOpenStr)
+ 428 0094 832E      		mov r8,r19
+ 429 0096 30E0      		ldi r19,hi8(statusLockerOpenStr)
+ 430 0098 932E      		mov r9,r19
+ 431               	.L7:
+  85:hardware.c    ****     {
+ 433               	.LM20:
+ 434 009a 8881      		ld r24,Y
+ 435 009c 8823      		tst r24
+ 436 009e 01F0      		breq .L4
+  87:hardware.c    ****       if (tmpLock->threshold > tmpLock->acVal)
+ 438               	.LM21:
+ 439 00a0 1F93      		push r17
+ 440 00a2 0F93      		push r16
+ 441 00a4 FF92      		push r15
+ 442 00a6 EF92      		push r14
+ 443 00a8 6F92      		push r6
+ 444 00aa 7F92      		push r7
+ 445 00ac 0E94 0000 		call fprintf_P
+  88:hardware.c    ****         fprintf_P(stream, statusLockerOpenStr);
+ 447               	.LM22:
+ 448 00b0 0F90      		pop __tmp_reg__
+ 449 00b2 0F90      		pop __tmp_reg__
+ 450 00b4 0F90      		pop __tmp_reg__
+ 451 00b6 0F90      		pop __tmp_reg__
+ 452 00b8 0F90      		pop __tmp_reg__
+ 453 00ba 0F90      		pop __tmp_reg__
+ 454 00bc 2981      		ldd r18,Y+1
+ 455 00be 3A81      		ldd r19,Y+2
+ 456 00c0 8B81      		ldd r24,Y+3
+ 457 00c2 9C81      		ldd r25,Y+4
+ 458 00c4 8217      		cp r24,r18
+ 459 00c6 9307      		cpc r25,r19
+ 460 00c8 00F4      		brsh .L5
+  89:hardware.c    ****       else
+ 462               	.LM23:
+ 463 00ca 9F92      		push r9
+ 464 00cc 8F92      		push r8
+ 465 00ce 00C0      		rjmp .L12
+ 466               	.L5:
+  91:hardware.c    ****       fprintf_P(stream, statusLockerSensAdditionalDescStr, tmpLock->threshold, tmpLock->acVal);
+ 468               	.LM24:
+ 469 00d0 BF92      		push r11
+ 470 00d2 AF92      		push r10
+ 471               	.L12:
+ 472 00d4 6F92      		push r6
+ 473 00d6 7F92      		push r7
+ 474 00d8 0E94 0000 		call fprintf_P
+ 475 00dc 0F90      		pop __tmp_reg__
+ 476 00de 0F90      		pop __tmp_reg__
+ 477 00e0 0F90      		pop __tmp_reg__
+ 478 00e2 0F90      		pop __tmp_reg__
+ 480               	.LM25:
+ 481 00e4 8C81      		ldd r24,Y+4
+ 482 00e6 8F93      		push r24
+ 483 00e8 8B81      		ldd r24,Y+3
+ 484 00ea 8F93      		push r24
+ 485 00ec 8A81      		ldd r24,Y+2
+ 486 00ee 8F93      		push r24
+ 487 00f0 8981      		ldd r24,Y+1
+ 488 00f2 8F93      		push r24
+ 489 00f4 DF92      		push r13
+ 490 00f6 CF92      		push r12
+ 491 00f8 6F92      		push r6
+ 492 00fa 7F92      		push r7
+ 493 00fc 0E94 0000 		call fprintf_P
+  93:hardware.c    ****       result++;
+ 495               	.LM26:
+ 496 0100 5394      		inc r5
+ 497 0102 8DB7      		in r24,__SP_L__
+ 498 0104 9EB7      		in r25,__SP_H__
+ 499 0106 0896      		adiw r24,8
+ 500 0108 0FB6      		in __tmp_reg__,__SREG__
+ 501 010a F894      		cli
+ 502 010c 9EBF      		out __SP_H__,r25
+ 503 010e 0FBE      		out __SREG__,__tmp_reg__
+ 504 0110 8DBF      		out __SP_L__,r24
+ 505               	.L4:
+  94:hardware.c    ****     }
+  95:hardware.c    ****     tmpLock++;
+ 507               	.LM27:
+ 508 0112 2696      		adiw r28,6
+ 509 0114 0F5F      		subi r16,-1
+ 510 0116 1F4F      		sbci r17,-1
+  83:hardware.c    ****   {
+ 512               	.LM28:
+ 513 0118 0530      		cpi r16,5
+ 514 011a 1105      		cpc r17,__zero_reg__
+ 515 011c 01F0      		breq .+2
+ 516 011e 00C0      		rjmp .L7
+  96:hardware.c    ****   }
+  97:hardware.c    ****   return result;
+  98:hardware.c    **** }
+ 518               	.LM29:
+ 519 0120 852D      		mov r24,r5
+ 520               	/* epilogue start */
+ 521 0122 DF91      		pop r29
+ 522 0124 CF91      		pop r28
+ 523 0126 1F91      		pop r17
+ 524 0128 0F91      		pop r16
+ 525 012a FF90      		pop r15
+ 526 012c EF90      		pop r14
+ 527 012e DF90      		pop r13
+ 528 0130 CF90      		pop r12
+ 529 0132 BF90      		pop r11
+ 530 0134 AF90      		pop r10
+ 531 0136 9F90      		pop r9
+ 532 0138 8F90      		pop r8
+ 533 013a 7F90      		pop r7
+ 534 013c 6F90      		pop r6
+ 535 013e 5F90      		pop r5
+ 536 0140 0895      		ret
+ 542               	.Lscope3:
+ 544               		.stabd	78,0,0
+ 546               	.global	checkLockerSensors
+ 548               	checkLockerSensors:
+ 549               		.stabd	46,0,0
+  99:hardware.c    **** 
+ 100:hardware.c    **** void checkLockerSensors(void)
+ 101:hardware.c    **** {
+ 551               	.LM30:
+ 552               	.LFBB4:
+ 553 0142 CF93      		push r28
+ 554 0144 DF93      		push r29
+ 555               	/* prologue: function */
+ 556               	/* frame size = 0 */
+ 557               	/* stack size = 2 */
+ 558               	.L__stack_usage = 2
+ 102:hardware.c    ****   if (lockSensors[0].enabled)
+ 560               	.LM31:
+ 561 0146 E091 0000 		lds r30,lockSensors
+ 562 014a F091 0000 		lds r31,lockSensors+1
+ 563 014e 8081      		ld r24,Z
+ 564 0150 8823      		tst r24
+ 565 0152 01F0      		breq .L15
+ 103:hardware.c    ****   {
+ 104:hardware.c    ****     MPC23s17SetBitsOnPortA(LOCK_SENS_1_LIGHT, 0);
+ 567               	.LM32:
+ 568 0154 60E0      		ldi r22,0
+ 569 0156 80E4      		ldi r24,lo8(64)
+ 570 0158 0E94 0000 		call MPC23s17SetBitsOnPortA
+ 105:hardware.c    ****     vTaskDelay(30);
+ 572               	.LM33:
+ 573 015c 8EE1      		ldi r24,lo8(30)
+ 574 015e 90E0      		ldi r25,0
+ 575 0160 0E94 0000 		call vTaskDelay
+ 106:hardware.c    ****     lockSensors[0].acVal = MCP3008_getSampleSingle(LOCK_SENS_1_AC_IN);
+ 577               	.LM34:
+ 578 0164 C091 0000 		lds r28,lockSensors
+ 579 0168 D091 0000 		lds r29,lockSensors+1
+ 580 016c 84E0      		ldi r24,lo8(4)
+ 581 016e 0E94 0000 		call MCP3008_getSampleSingle
+ 582 0172 9C83      		std Y+4,r25
+ 583 0174 8B83      		std Y+3,r24
+ 107:hardware.c    ****     MPC23s17ClearBitsOnPortA(LOCK_SENS_1_LIGHT, 0);
+ 585               	.LM35:
+ 586 0176 60E0      		ldi r22,0
+ 587 0178 80E4      		ldi r24,lo8(64)
+ 588 017a 0E94 0000 		call MPC23s17ClearBitsOnPortA
+ 108:hardware.c    ****     lockSensors[0].locked = (lockSensors[0].acVal > lockSensors[0].threshold) ? 1 : 0;
+ 590               	.LM36:
+ 591 017e E091 0000 		lds r30,lockSensors
+ 592 0182 F091 0000 		lds r31,lockSensors+1
+ 593 0186 81E0      		ldi r24,lo8(1)
+ 594 0188 4381      		ldd r20,Z+3
+ 595 018a 5481      		ldd r21,Z+4
+ 596 018c 2181      		ldd r18,Z+1
+ 597 018e 3281      		ldd r19,Z+2
+ 598 0190 2417      		cp r18,r20
+ 599 0192 3507      		cpc r19,r21
+ 600 0194 00F0      		brlo .L16
+ 601 0196 80E0      		ldi r24,0
+ 602               	.L16:
+ 603 0198 8583      		std Z+5,r24
+ 109:hardware.c    ****     vTaskDelay(10);
+ 605               	.LM37:
+ 606 019a 8AE0      		ldi r24,lo8(10)
+ 607 019c 90E0      		ldi r25,0
+ 608 019e 0E94 0000 		call vTaskDelay
+ 609               	.L15:
+ 110:hardware.c    ****   }
+ 111:hardware.c    **** 
+ 112:hardware.c    ****   if (lockSensors[1].enabled)
+ 611               	.LM38:
+ 612 01a2 E091 0000 		lds r30,lockSensors
+ 613 01a6 F091 0000 		lds r31,lockSensors+1
+ 614 01aa 8681      		ldd r24,Z+6
+ 615 01ac 8823      		tst r24
+ 616 01ae 01F0      		breq .L17
+ 113:hardware.c    ****   {
+ 114:hardware.c    ****     MPC23s17SetBitsOnPortA(LOCK_SENS_2_LIGHT, 0);
+ 618               	.LM39:
+ 619 01b0 60E0      		ldi r22,0
+ 620 01b2 80E2      		ldi r24,lo8(32)
+ 621 01b4 0E94 0000 		call MPC23s17SetBitsOnPortA
+ 115:hardware.c    ****     vTaskDelay(30);
+ 623               	.LM40:
+ 624 01b8 8EE1      		ldi r24,lo8(30)
+ 625 01ba 90E0      		ldi r25,0
+ 626 01bc 0E94 0000 		call vTaskDelay
+ 116:hardware.c    ****     lockSensors[1].acVal = MCP3008_getSampleSingle(LOCK_SENS_2_AC_IN);
+ 628               	.LM41:
+ 629 01c0 C091 0000 		lds r28,lockSensors
+ 630 01c4 D091 0000 		lds r29,lockSensors+1
+ 631 01c8 85E0      		ldi r24,lo8(5)
+ 632 01ca 0E94 0000 		call MCP3008_getSampleSingle
+ 633 01ce 9A87      		std Y+10,r25
+ 634 01d0 8987      		std Y+9,r24
+ 117:hardware.c    ****     MPC23s17ClearBitsOnPortA(LOCK_SENS_2_LIGHT, 0);
+ 636               	.LM42:
+ 637 01d2 60E0      		ldi r22,0
+ 638 01d4 80E2      		ldi r24,lo8(32)
+ 639 01d6 0E94 0000 		call MPC23s17ClearBitsOnPortA
+ 118:hardware.c    ****     lockSensors[1].locked = (lockSensors[1].acVal > lockSensors[1].threshold) ? 1 : 0;
+ 641               	.LM43:
+ 642 01da E091 0000 		lds r30,lockSensors
+ 643 01de F091 0000 		lds r31,lockSensors+1
+ 644 01e2 81E0      		ldi r24,lo8(1)
+ 645 01e4 4185      		ldd r20,Z+9
+ 646 01e6 5285      		ldd r21,Z+10
+ 647 01e8 2781      		ldd r18,Z+7
+ 648 01ea 3085      		ldd r19,Z+8
+ 649 01ec 2417      		cp r18,r20
+ 650 01ee 3507      		cpc r19,r21
+ 651 01f0 00F0      		brlo .L18
+ 652 01f2 80E0      		ldi r24,0
+ 653               	.L18:
+ 654 01f4 8387      		std Z+11,r24
+ 119:hardware.c    ****     vTaskDelay(10);
+ 656               	.LM44:
+ 657 01f6 8AE0      		ldi r24,lo8(10)
+ 658 01f8 90E0      		ldi r25,0
+ 659 01fa 0E94 0000 		call vTaskDelay
+ 660               	.L17:
+ 120:hardware.c    ****   }
+ 121:hardware.c    **** 
+ 122:hardware.c    ****   if (lockSensors[2].enabled)
+ 662               	.LM45:
+ 663 01fe E091 0000 		lds r30,lockSensors
+ 664 0202 F091 0000 		lds r31,lockSensors+1
+ 665 0206 8485      		ldd r24,Z+12
+ 666 0208 8823      		tst r24
+ 667 020a 01F0      		breq .L19
+ 123:hardware.c    ****   {
+ 124:hardware.c    ****     MPC23s17SetBitsOnPortA(LOCK_SENS_3_LIGHT, 0);
+ 669               	.LM46:
+ 670 020c 60E0      		ldi r22,0
+ 671 020e 80E1      		ldi r24,lo8(16)
+ 672 0210 0E94 0000 		call MPC23s17SetBitsOnPortA
+ 125:hardware.c    ****     vTaskDelay(30);
+ 674               	.LM47:
+ 675 0214 8EE1      		ldi r24,lo8(30)
+ 676 0216 90E0      		ldi r25,0
+ 677 0218 0E94 0000 		call vTaskDelay
+ 126:hardware.c    ****     lockSensors[2].acVal = MCP3008_getSampleSingle(LOCK_SENS_3_AC_IN);
+ 679               	.LM48:
+ 680 021c C091 0000 		lds r28,lockSensors
+ 681 0220 D091 0000 		lds r29,lockSensors+1
+ 682 0224 86E0      		ldi r24,lo8(6)
+ 683 0226 0E94 0000 		call MCP3008_getSampleSingle
+ 684 022a 988B      		std Y+16,r25
+ 685 022c 8F87      		std Y+15,r24
+ 127:hardware.c    ****     MPC23s17ClearBitsOnPortA(LOCK_SENS_3_LIGHT, 0);
+ 687               	.LM49:
+ 688 022e 60E0      		ldi r22,0
+ 689 0230 80E1      		ldi r24,lo8(16)
+ 690 0232 0E94 0000 		call MPC23s17ClearBitsOnPortA
+ 128:hardware.c    ****     lockSensors[2].locked = (lockSensors[2].acVal > lockSensors[2].threshold) ? 1 : 0;
+ 692               	.LM50:
+ 693 0236 E091 0000 		lds r30,lockSensors
+ 694 023a F091 0000 		lds r31,lockSensors+1
+ 695 023e 81E0      		ldi r24,lo8(1)
+ 696 0240 4785      		ldd r20,Z+15
+ 697 0242 5089      		ldd r21,Z+16
+ 698 0244 2585      		ldd r18,Z+13
+ 699 0246 3685      		ldd r19,Z+14
+ 700 0248 2417      		cp r18,r20
+ 701 024a 3507      		cpc r19,r21
+ 702 024c 00F0      		brlo .L20
+ 703 024e 80E0      		ldi r24,0
+ 704               	.L20:
+ 705 0250 818B      		std Z+17,r24
+ 129:hardware.c    ****     vTaskDelay(10);
+ 707               	.LM51:
+ 708 0252 8AE0      		ldi r24,lo8(10)
+ 709 0254 90E0      		ldi r25,0
+ 710 0256 0E94 0000 		call vTaskDelay
+ 711               	.L19:
+ 130:hardware.c    ****   }
+ 131:hardware.c    **** 
+ 132:hardware.c    ****   if (lockSensors[3].enabled)
+ 713               	.LM52:
+ 714 025a E091 0000 		lds r30,lockSensors
+ 715 025e F091 0000 		lds r31,lockSensors+1
+ 716 0262 8289      		ldd r24,Z+18
+ 717 0264 8823      		tst r24
+ 718 0266 01F0      		breq .L14
+ 133:hardware.c    ****   {
+ 134:hardware.c    ****     MPC23s17SetBitsOnPortA(LOCK_SENS_4_LIGHT, 0);
+ 720               	.LM53:
+ 721 0268 60E0      		ldi r22,0
+ 722 026a 88E0      		ldi r24,lo8(8)
+ 723 026c 0E94 0000 		call MPC23s17SetBitsOnPortA
+ 135:hardware.c    ****     vTaskDelay(30);
+ 725               	.LM54:
+ 726 0270 8EE1      		ldi r24,lo8(30)
+ 727 0272 90E0      		ldi r25,0
+ 728 0274 0E94 0000 		call vTaskDelay
+ 136:hardware.c    ****     lockSensors[3].acVal = MCP3008_getSampleSingle(LOCK_SENS_4_AC_IN);
+ 730               	.LM55:
+ 731 0278 C091 0000 		lds r28,lockSensors
+ 732 027c D091 0000 		lds r29,lockSensors+1
+ 733 0280 87E0      		ldi r24,lo8(7)
+ 734 0282 0E94 0000 		call MCP3008_getSampleSingle
+ 735 0286 9E8B      		std Y+22,r25
+ 736 0288 8D8B      		std Y+21,r24
+ 137:hardware.c    ****     MPC23s17ClearBitsOnPortA(LOCK_SENS_4_LIGHT, 0);
+ 738               	.LM56:
+ 739 028a 60E0      		ldi r22,0
+ 740 028c 88E0      		ldi r24,lo8(8)
+ 741 028e 0E94 0000 		call MPC23s17ClearBitsOnPortA
+ 138:hardware.c    ****     lockSensors[3].locked = (lockSensors[3].acVal > lockSensors[3].threshold) ? 1 : 0;
+ 743               	.LM57:
+ 744 0292 E091 0000 		lds r30,lockSensors
+ 745 0296 F091 0000 		lds r31,lockSensors+1
+ 746 029a 81E0      		ldi r24,lo8(1)
+ 747 029c 4589      		ldd r20,Z+21
+ 748 029e 5689      		ldd r21,Z+22
+ 749 02a0 2389      		ldd r18,Z+19
+ 750 02a2 3489      		ldd r19,Z+20
+ 751 02a4 2417      		cp r18,r20
+ 752 02a6 3507      		cpc r19,r21
+ 753 02a8 00F0      		brlo .L22
+ 754 02aa 80E0      		ldi r24,0
+ 755               	.L22:
+ 756 02ac 878B      		std Z+23,r24
+ 139:hardware.c    ****     vTaskDelay(10);
+ 758               	.LM58:
+ 759 02ae 8AE0      		ldi r24,lo8(10)
+ 760 02b0 90E0      		ldi r25,0
+ 761               	/* epilogue start */
+ 140:hardware.c    ****   }
+ 141:hardware.c    **** }
+ 763               	.LM59:
+ 764 02b2 DF91      		pop r29
+ 765 02b4 CF91      		pop r28
+ 139:hardware.c    ****     vTaskDelay(10);
+ 767               	.LM60:
+ 768 02b6 0C94 0000 		jmp vTaskDelay
+ 769               	.L14:
+ 770               	/* epilogue start */
+ 772               	.LM61:
+ 773 02ba DF91      		pop r29
+ 774 02bc CF91      		pop r28
+ 775 02be 0895      		ret
+ 777               	.Lscope4:
+ 779               		.stabd	78,0,0
+ 782               		.weak	spiSend
+ 784               	spiSend:
+ 785               		.stabd	46,0,0
+ 142:hardware.c    **** 
+ 143:hardware.c    **** 
+ 144:hardware.c    **** uint8_t spiSend(uint8_t data)
+ 145:hardware.c    **** {
+ 787               	.LM62:
+ 788               	.LFBB5:
+ 789 02c0 CF93      		push r28
+ 790 02c2 DF93      		push r29
+ 791 02c4 1F92      		push __zero_reg__
+ 792 02c6 CDB7      		in r28,__SP_L__
+ 793 02c8 DEB7      		in r29,__SP_H__
+ 794               	/* prologue: function */
+ 795               	/* frame size = 1 */
+ 796               	/* stack size = 3 */
+ 797               	.L__stack_usage = 3
+ 146:hardware.c    ****   uint8_t result;
+ 147:hardware.c    ****   SPDR = data;
+ 799               	.LM63:
+ 800 02ca 8FB9      		out 0xf,r24
+ 148:hardware.c    ****   xQueueReceive(xSpiRx, &result, 10);
+ 802               	.LM64:
+ 803 02cc 20E0      		ldi r18,0
+ 804 02ce 4AE0      		ldi r20,lo8(10)
+ 805 02d0 50E0      		ldi r21,0
+ 806 02d2 BE01      		movw r22,r28
+ 807 02d4 6F5F      		subi r22,-1
+ 808 02d6 7F4F      		sbci r23,-1
+ 809 02d8 8091 0000 		lds r24,xSpiRx
+ 810 02dc 9091 0000 		lds r25,xSpiRx+1
+ 811 02e0 0E94 0000 		call xQueueGenericReceive
+ 149:hardware.c    ****   return result;
+ 150:hardware.c    **** }
+ 813               	.LM65:
+ 814 02e4 8981      		ldd r24,Y+1
+ 815               	/* epilogue start */
+ 816 02e6 0F90      		pop __tmp_reg__
+ 817 02e8 DF91      		pop r29
+ 818 02ea CF91      		pop r28
+ 819 02ec 0895      		ret
+ 824               	.Lscope5:
+ 826               		.stabd	78,0,0
+ 829               	.global	spiSendENC
+ 831               	spiSendENC:
+ 832               		.stabd	46,0,0
+ 151:hardware.c    **** 
+ 152:hardware.c    **** uint8_t spiSendENC(uint8_t data)
+ 153:hardware.c    **** {
+ 834               	.LM66:
+ 835               	.LFBB6:
+ 836 02ee CF93      		push r28
+ 837 02f0 DF93      		push r29
+ 838 02f2 1F92      		push __zero_reg__
+ 839 02f4 CDB7      		in r28,__SP_L__
+ 840 02f6 DEB7      		in r29,__SP_H__
+ 841               	/* prologue: function */
+ 842               	/* frame size = 1 */
+ 843               	/* stack size = 3 */
+ 844               	.L__stack_usage = 3
+ 154:hardware.c    ****   uint8_t result;
+ 155:hardware.c    ****   SPDR = data;
+ 846               	.LM67:
+ 847 02f8 8FB9      		out 0xf,r24
+ 156:hardware.c    ****   xQueueReceive(xSpiRx, &result, 10);
+ 849               	.LM68:
+ 850 02fa 20E0      		ldi r18,0
+ 851 02fc 4AE0      		ldi r20,lo8(10)
+ 852 02fe 50E0      		ldi r21,0
+ 853 0300 BE01      		movw r22,r28
+ 854 0302 6F5F      		subi r22,-1
+ 855 0304 7F4F      		sbci r23,-1
+ 856 0306 8091 0000 		lds r24,xSpiRx
+ 857 030a 9091 0000 		lds r25,xSpiRx+1
+ 858 030e 0E94 0000 		call xQueueGenericReceive
+ 157:hardware.c    ****   return result;
+ 158:hardware.c    **** }
+ 860               	.LM69:
+ 861 0312 8981      		ldd r24,Y+1
+ 862               	/* epilogue start */
+ 863 0314 0F90      		pop __tmp_reg__
+ 864 0316 DF91      		pop r29
+ 865 0318 CF91      		pop r28
+ 866 031a 0895      		ret
+ 871               	.Lscope6:
+ 873               		.stabd	78,0,0
+ 876               		.weak	spiSendSpinBlock
+ 878               	spiSendSpinBlock:
+ 879               		.stabd	46,0,0
+ 159:hardware.c    **** 
+ 160:hardware.c    **** uint8_t spiSendSpinBlock(uint8_t data)
+ 161:hardware.c    **** {
+ 881               	.LM70:
+ 882               	.LFBB7:
+ 883               	/* prologue: function */
+ 884               	/* frame size = 0 */
+ 885               	/* stack size = 0 */
+ 886               	.L__stack_usage = 0
+ 162:hardware.c    ****   SPDR = data;
+ 888               	.LM71:
+ 889 031c 8FB9      		out 0xf,r24
+ 163:hardware.c    ****   SPCR &= ~(1<<SPIE);                //Disable SPI interrupt
+ 891               	.LM72:
+ 892 031e 6F98      		cbi 0xd,7
+ 893               	.L35:
+ 164:hardware.c    ****   while(!(SPSR&(1<<SPIF)));
+ 895               	.LM73:
+ 896 0320 779B      		sbis 0xe,7
+ 897 0322 00C0      		rjmp .L35
+ 165:hardware.c    ****   data = SPSR;                       //Clearing interrupt flag
+ 899               	.LM74:
+ 900 0324 8EB1      		in r24,0xe
+ 166:hardware.c    ****   data = SPDR;                       //Resfing DPI buffer register
+ 902               	.LM75:
+ 903 0326 8FB1      		in r24,0xf
+ 167:hardware.c    ****   SPCR |= (1<<SPIE);                 //Enable SPI Interrupt
+ 905               	.LM76:
+ 906 0328 6F9A      		sbi 0xd,7
+ 168:hardware.c    ****   return data;
+ 169:hardware.c    **** }
+ 908               	.LM77:
+ 909 032a 0895      		ret
+ 911               	.Lscope7:
+ 913               		.stabd	78,0,0
+ 916               	.global	spiSendENCSpinBlock
+ 918               	spiSendENCSpinBlock:
+ 919               		.stabd	46,0,0
+ 170:hardware.c    **** 
+ 171:hardware.c    **** uint8_t spiSendENCSpinBlock(uint8_t data)
+ 172:hardware.c    **** {
+ 921               	.LM78:
+ 922               	.LFBB8:
+ 923               	/* prologue: function */
+ 924               	/* frame size = 0 */
+ 925               	/* stack size = 0 */
+ 926               	.L__stack_usage = 0
+ 173:hardware.c    ****   SPDR = data;
+ 928               	.LM79:
+ 929 032c 8FB9      		out 0xf,r24
+ 174:hardware.c    ****   SPCR &= ~(1<<SPIE);                //Disable SPI interrupt
+ 931               	.LM80:
+ 932 032e 6F98      		cbi 0xd,7
+ 933               	.L38:
+ 175:hardware.c    ****   while(!(SPSR&(1<<SPIF)));
+ 935               	.LM81:
+ 936 0330 779B      		sbis 0xe,7
+ 937 0332 00C0      		rjmp .L38
+ 176:hardware.c    ****   data = SPSR;                       //Clearing interrupt flag
+ 939               	.LM82:
+ 940 0334 8EB1      		in r24,0xe
+ 177:hardware.c    ****   data = SPDR;                       //Resfing DPI buffer register
+ 942               	.LM83:
+ 943 0336 8FB1      		in r24,0xf
+ 178:hardware.c    ****   SPCR |= (1<<SPIE);                 //Enable SPI Interrupt
+ 945               	.LM84:
+ 946 0338 6F9A      		sbi 0xd,7
+ 179:hardware.c    ****   return data;
+ 180:hardware.c    **** }
+ 948               	.LM85:
+ 949 033a 0895      		ret
+ 951               	.Lscope8:
+ 953               		.stabd	78,0,0
+ 955               	.global	disableAllSpiDevices
+ 957               	disableAllSpiDevices:
+ 958               		.stabd	46,0,0
+ 181:hardware.c    **** 
+ 182:hardware.c    **** void disableAllSpiDevices(void)
+ 183:hardware.c    **** {
+ 960               	.LM86:
+ 961               	.LFBB9:
+ 962               	/* prologue: function */
+ 963               	/* frame size = 0 */
+ 964               	/* stack size = 0 */
+ 965               	.L__stack_usage = 0
+ 184:hardware.c    **** #if disableSpiPORTA_OR != 0
+ 185:hardware.c    **** #error Port A is memory bus
+ 186:hardware.c    ****   PORTA |= disableSpiPORTA_OR;
+ 187:hardware.c    **** #endif
+ 188:hardware.c    **** #if disableSpiPORTA_AND != 0xFF
+ 189:hardware.c    **** #error Port A is memory bus
+ 190:hardware.c    ****   PORTA &= disableSpiPORTA_AND;
+ 191:hardware.c    **** #endif
+ 192:hardware.c    **** 
+ 193:hardware.c    **** #if disableSpiPORTB_OR != 0
+ 194:hardware.c    ****   PORTB |= disableSpiPORTB_OR;
+ 967               	.LM87:
+ 968 033c 88B3      		in r24,0x18
+ 969 033e 806C      		ori r24,lo8(-64)
+ 970 0340 88BB      		out 0x18,r24
+ 195:hardware.c    **** #endif
+ 196:hardware.c    **** #if disableSpiPORTB_AND != 0xFF
+ 197:hardware.c    ****   PORTB &= disableSpiPORTB_AND;
+ 972               	.LM88:
+ 973 0342 C598      		cbi 0x18,5
+ 198:hardware.c    **** #endif
+ 199:hardware.c    **** 
+ 200:hardware.c    **** #if disableSpiPORTC_OR != 0
+ 201:hardware.c    **** #error Port C is memory bus
+ 202:hardware.c    ****   PORTC |= disableSpiPORTC_OR;
+ 203:hardware.c    **** #endif
+ 204:hardware.c    **** #if disableSpiPORTC_AND != 0xFF
+ 205:hardware.c    **** #error Port C is memory bus
+ 206:hardware.c    ****   PORTC &= disableSpiPORTC_AND;
+ 207:hardware.c    **** #endif
+ 208:hardware.c    **** 
+ 209:hardware.c    **** #if disableSpiPORTD_OR != 0
+ 210:hardware.c    ****   PORTD |= disableSpiPORTD_OR;
+ 211:hardware.c    **** #endif
+ 212:hardware.c    **** #if disableSpiPORTD_AND != 0xFF
+ 213:hardware.c    ****   PORTD &= disableSpiPORTD_AND;
+ 214:hardware.c    **** #endif
+ 215:hardware.c    **** #if disableSpiPORTE_OR != 0
+ 216:hardware.c    ****   PORTE |= disableSpiPORTE_OR;
+ 975               	.LM89:
+ 976 0344 1B9A      		sbi 0x3,3
+ 217:hardware.c    **** #endif
+ 218:hardware.c    **** #if disableSpiPORTE_AND != 0xFF
+ 219:hardware.c    ****   PORTE &= disableSpiPORTE_AND;
+ 220:hardware.c    **** #endif
+ 221:hardware.c    **** 
+ 222:hardware.c    **** #if disableSpiPORTF_OR != 0
+ 223:hardware.c    ****   PORTF |= disableSpiPORTF_OR;
+ 224:hardware.c    **** #endif
+ 225:hardware.c    **** #if disableSpiPORTF_AND != 0xFF
+ 226:hardware.c    ****   PORTF &= disableSpiPORTF_AND;
+ 227:hardware.c    **** #endif
+ 228:hardware.c    **** 
+ 229:hardware.c    **** #if disableSpiPORTG_OR != 0
+ 230:hardware.c    ****   PORTG |= disableSpiPORTG_OR;
+ 978               	.LM90:
+ 979 0346 E5E6      		ldi r30,lo8(101)
+ 980 0348 F0E0      		ldi r31,0
+ 981 034a 8081      		ld r24,Z
+ 982 034c 8860      		ori r24,lo8(8)
+ 983 034e 8083      		st Z,r24
+ 984 0350 0895      		ret
+ 986               	.Lscope9:
+ 988               		.stabd	78,0,0
+ 990               		.weak	spiEnableEnc28j60
+ 992               	spiEnableEnc28j60:
+ 993               		.stabd	46,0,0
+ 231:hardware.c    **** #endif
+ 232:hardware.c    **** #if disableSpiPORTG_AND != 0xFF
+ 233:hardware.c    ****   PORTG &= disableSpiPORTG_AND;
+ 234:hardware.c    **** #endif
+ 235:hardware.c    **** }
+ 236:hardware.c    **** 
+ 237:hardware.c    **** void spiEnableEnc28j60(void)
+ 238:hardware.c    **** {
+ 995               	.LM91:
+ 996               	.LFBB10:
+ 997               	/* prologue: function */
+ 998               	/* frame size = 0 */
+ 999               	/* stack size = 0 */
+ 1000               	.L__stack_usage = 0
+ 239:hardware.c    **** #if ENC_SPI_CS_EN_MASK_OR != 0
+ 240:hardware.c    ****   ENC_SPI_CS_PORT |= ENC_SPI_CS_EN_MASK_OR;
+ 241:hardware.c    **** #endif
+ 242:hardware.c    **** #if ENC_SPI_CS_EN_MASK_AND != 0xFF
+ 243:hardware.c    ****   ENC_SPI_CS_PORT &= ENC_SPI_CS_EN_MASK_AND;
+ 1002               	.LM92:
+ 1003 0352 1B98      		cbi 0x3,3
+ 1004 0354 0895      		ret
+ 1006               	.Lscope10:
+ 1008               		.stabd	78,0,0
+ 1010               		.weak	spiDisableEnc28j60
+ 1012               	spiDisableEnc28j60:
+ 1013               		.stabd	46,0,0
+ 244:hardware.c    **** #endif
+ 245:hardware.c    **** }
+ 246:hardware.c    **** 
+ 247:hardware.c    **** void spiDisableEnc28j60(void)
+ 248:hardware.c    **** {
+ 1015               	.LM93:
+ 1016               	.LFBB11:
+ 1017               	/* prologue: function */
+ 1018               	/* frame size = 0 */
+ 1019               	/* stack size = 0 */
+ 1020               	.L__stack_usage = 0
+ 249:hardware.c    **** #if ENC_SPI_CS_EN_MASK_OR != 0
+ 250:hardware.c    ****   ENC_SPI_CS_PORT &= (~ENC_SPI_CS_EN_MASK_OR);
+ 251:hardware.c    **** #endif
+ 252:hardware.c    **** #if ENC_SPI_CS_EN_MASK_AND != 0xFF
+ 253:hardware.c    ****   ENC_SPI_CS_PORT |= (~ENC_SPI_CS_EN_MASK_AND);
+ 1022               	.LM94:
+ 1023 0356 1B9A      		sbi 0x3,3
+ 1024 0358 0895      		ret
+ 1026               	.Lscope11:
+ 1028               		.stabd	78,0,0
+ 1030               	.global	enableSpiSd
+ 1032               	enableSpiSd:
+ 1033               		.stabd	46,0,0
+ 254:hardware.c    **** #endif
+ 255:hardware.c    **** }
+ 256:hardware.c    **** 
+ 257:hardware.c    **** void enableSpiSd(void)
+ 258:hardware.c    **** {
+ 1035               	.LM95:
+ 1036               	.LFBB12:
+ 1037               	/* prologue: function */
+ 1038               	/* frame size = 0 */
+ 1039               	/* stack size = 0 */
+ 1040               	.L__stack_usage = 0
+ 259:hardware.c    **** #if SD_SPI_CS_EN_MASK_OR != 0
+ 260:hardware.c    ****   SD_SPI_CS_PORT |= SD_SPI_CS_EN_MASK_OR;
+ 261:hardware.c    **** #endif
+ 262:hardware.c    **** #if SD_SPI_CS_EN_MASK_AND != 0xFF
+ 263:hardware.c    ****   SD_SPI_CS_PORT &= SD_SPI_CS_EN_MASK_AND;
+ 1042               	.LM96:
+ 1043 035a E5E6      		ldi r30,lo8(101)
+ 1044 035c F0E0      		ldi r31,0
+ 1045 035e 8081      		ld r24,Z
+ 1046 0360 877F      		andi r24,lo8(-9)
+ 1047 0362 8083      		st Z,r24
+ 1048 0364 0895      		ret
+ 1050               	.Lscope12:
+ 1052               		.stabd	78,0,0
+ 1054               	.global	disableSpiSd
+ 1056               	disableSpiSd:
+ 1057               		.stabd	46,0,0
+ 264:hardware.c    **** #endif
+ 265:hardware.c    **** }
+ 266:hardware.c    **** 
+ 267:hardware.c    **** void disableSpiSd(void)
+ 268:hardware.c    **** {
+ 1059               	.LM97:
+ 1060               	.LFBB13:
+ 1061               	/* prologue: function */
+ 1062               	/* frame size = 0 */
+ 1063               	/* stack size = 0 */
+ 1064               	.L__stack_usage = 0
+ 269:hardware.c    **** #if SD_SPI_CS_EN_MASK_OR != 0
+ 270:hardware.c    ****   SD_SPI_CS_PORT &= (~SD_SPI_CS_EN_MASK_OR);
+ 271:hardware.c    **** #endif
+ 272:hardware.c    **** #if SD_SPI_CS_EN_MASK_AND != 0xFF
+ 273:hardware.c    ****   SD_SPI_CS_PORT |= (~SD_SPI_CS_EN_MASK_AND);
+ 1066               	.LM98:
+ 1067 0366 E5E6      		ldi r30,lo8(101)
+ 1068 0368 F0E0      		ldi r31,0
+ 1069 036a 8081      		ld r24,Z
+ 1070 036c 8860      		ori r24,lo8(8)
+ 1071 036e 8083      		st Z,r24
+ 1072 0370 0895      		ret
+ 1074               	.Lscope13:
+ 1076               		.stabd	78,0,0
+ 1078               		.weak	enableSpiMPC23S17
+ 1080               	enableSpiMPC23S17:
+ 1081               		.stabd	46,0,0
+ 274:hardware.c    **** #endif
+ 275:hardware.c    **** }
+ 276:hardware.c    **** 
+ 277:hardware.c    **** void enableSpiMPC23S17(void)
+ 278:hardware.c    **** {
+ 1083               	.LM99:
+ 1084               	.LFBB14:
+ 1085               	/* prologue: function */
+ 1086               	/* frame size = 0 */
+ 1087               	/* stack size = 0 */
+ 1088               	.L__stack_usage = 0
+ 279:hardware.c    **** #if MCP23S17_SPI_CS_EN_MASK_OR != 0
+ 280:hardware.c    ****   MCP23S17_SPI_CS_PORT |= MCP23S17_SPI_CS_EN_MASK_OR;
+ 281:hardware.c    **** #endif
+ 282:hardware.c    **** #if MCP23S17_SPI_CS_EN_MASK_AND != 0xFF
+ 283:hardware.c    ****   MPC23S17_SPI_CS_PORT &= MPC23S17_SPI_CS_EN_MASK_AND;
+ 1090               	.LM100:
+ 1091 0372 C798      		cbi 0x18,7
+ 1092 0374 0895      		ret
+ 1094               	.Lscope14:
+ 1096               		.stabd	78,0,0
+ 1098               		.weak	disableSpiMPC23S17
+ 1100               	disableSpiMPC23S17:
+ 1101               		.stabd	46,0,0
+ 284:hardware.c    **** #endif
+ 285:hardware.c    **** }
+ 286:hardware.c    **** 
+ 287:hardware.c    **** void disableSpiMPC23S17(void)
+ 288:hardware.c    **** {
+ 1103               	.LM101:
+ 1104               	.LFBB15:
+ 1105               	/* prologue: function */
+ 1106               	/* frame size = 0 */
+ 1107               	/* stack size = 0 */
+ 1108               	.L__stack_usage = 0
+ 289:hardware.c    **** #if MCP23S17_SPI_CS_EN_MASK_OR != 0
+ 290:hardware.c    ****   MCP23S17_SPI_CS_PORT &= (~MCP23S17_SPI_CS_EN_MASK_OR);
+ 291:hardware.c    **** #endif
+ 292:hardware.c    **** #if MCP23S17_SPI_CS_EN_MASK_AND != 0xFF
+ 293:hardware.c    ****   MPC23S17_SPI_CS_PORT |= (~MPC23S17_SPI_CS_EN_MASK_AND);
+ 1110               	.LM102:
+ 1111 0376 C79A      		sbi 0x18,7
+ 1112 0378 0895      		ret
+ 1114               	.Lscope15:
+ 1116               		.stabd	78,0,0
+ 1118               		.weak	enableSpiMCP3008
+ 1120               	enableSpiMCP3008:
+ 1121               		.stabd	46,0,0
+ 294:hardware.c    **** #endif
+ 295:hardware.c    **** }
+ 296:hardware.c    **** 
+ 297:hardware.c    **** #define MCP3008_SPCR_OR_MASK ((1<<SPR1)|(1<<SPR0))
+ 298:hardware.c    **** void enableSpiMCP3008(void)
+ 299:hardware.c    **** {
+ 1123               	.LM103:
+ 1124               	.LFBB16:
+ 1125               	/* prologue: function */
+ 1126               	/* frame size = 0 */
+ 1127               	/* stack size = 0 */
+ 1128               	.L__stack_usage = 0
+ 300:hardware.c    ****   SPCR |= MCP3008_SPCR_OR_MASK;
+ 1130               	.LM104:
+ 1131 037a 8DB1      		in r24,0xd
+ 1132 037c 8360      		ori r24,lo8(3)
+ 1133 037e 8DB9      		out 0xd,r24
+ 301:hardware.c    **** #if MCP3008_SPI_CS_EN_MASK_OR != 0
+ 302:hardware.c    ****   MCP3008_SPI_CS_PORT |= MCP3008_SPI_CS_EN_MASK_OR;
+ 303:hardware.c    **** #endif
+ 304:hardware.c    **** #if MCP3008_SPI_CS_EN_MASK_AND != 0xFF
+ 305:hardware.c    ****   MCP3008_SPI_CS_PORT &= MCP3008_SPI_CS_EN_MASK_AND;
+ 1135               	.LM105:
+ 1136 0380 C698      		cbi 0x18,6
+ 1137 0382 0895      		ret
+ 1139               	.Lscope16:
+ 1141               		.stabd	78,0,0
+ 1143               		.weak	disableSpiMCP3008
+ 1145               	disableSpiMCP3008:
+ 1146               		.stabd	46,0,0
+ 306:hardware.c    **** #endif
+ 307:hardware.c    **** 
+ 308:hardware.c    **** }
+ 309:hardware.c    **** 
+ 310:hardware.c    **** void disableSpiMCP3008(void)
+ 311:hardware.c    **** {
+ 1148               	.LM106:
+ 1149               	.LFBB17:
+ 1150               	/* prologue: function */
+ 1151               	/* frame size = 0 */
+ 1152               	/* stack size = 0 */
+ 1153               	.L__stack_usage = 0
+ 312:hardware.c    ****   SPCR &= ~MCP3008_SPCR_OR_MASK;
+ 1155               	.LM107:
+ 1156 0384 8DB1      		in r24,0xd
+ 1157 0386 8C7F      		andi r24,lo8(-4)
+ 1158 0388 8DB9      		out 0xd,r24
+ 313:hardware.c    ****   #if MCP3008_SPI_CS_EN_MASK_OR != 0
+ 314:hardware.c    ****   MCP3008_SPI_CS_PORT &= (~MCP3008_SPI_CS_EN_MASK_OR);
+ 315:hardware.c    **** #endif
+ 316:hardware.c    **** #if MCP3008_SPI_CS_EN_MASK_AND != 0xFF
+ 317:hardware.c    ****   MCP3008_SPI_CS_PORT |= (~MCP3008_SPI_CS_EN_MASK_AND);
+ 1160               	.LM108:
+ 1161 038a C69A      		sbi 0x18,6
+ 1162 038c 0895      		ret
+ 1164               	.Lscope17:
+ 1166               		.stabd	78,0,0
+ 1168               	.global	enableSpiMCP4150
+ 1170               	enableSpiMCP4150:
+ 1171               		.stabd	46,0,0
+ 318:hardware.c    **** #endif
+ 319:hardware.c    **** }
+ 320:hardware.c    **** 
+ 321:hardware.c    **** 
+ 322:hardware.c    **** #define MCP4150_SPCR_OR_MASK ((1<<SPR1)|(1<<SPR0))
+ 323:hardware.c    **** void enableSpiMCP4150(void)
+ 324:hardware.c    **** {
+ 1173               	.LM109:
+ 1174               	.LFBB18:
+ 1175               	/* prologue: function */
+ 1176               	/* frame size = 0 */
+ 1177               	/* stack size = 0 */
+ 1178               	.L__stack_usage = 0
+ 325:hardware.c    ****   SPCR |= MCP4150_SPCR_OR_MASK;
+ 1180               	.LM110:
+ 1181 038e 8DB1      		in r24,0xd
+ 1182 0390 8360      		ori r24,lo8(3)
+ 1183 0392 8DB9      		out 0xd,r24
+ 326:hardware.c    **** #if MCP4150_SPI_CS_EN_MASK_OR != 0
+ 327:hardware.c    ****   MCP4150_SPI_CS_PORT |= MCP4150_SPI_CS_EN_MASK_OR;
+ 328:hardware.c    **** #endif
+ 329:hardware.c    **** #if MCP4150_SPI_CS_EN_MASK_AND != 0xFF
+ 330:hardware.c    ****   MCP4150_SPI_CS_PORT &= MCP4150_SPI_CS_EN_MASK_AND;
+ 1185               	.LM111:
+ 1186 0394 C698      		cbi 0x18,6
+ 1187 0396 0895      		ret
+ 1189               	.Lscope18:
+ 1191               		.stabd	78,0,0
+ 1193               	.global	disableSpiMCP4150
+ 1195               	disableSpiMCP4150:
+ 1196               		.stabd	46,0,0
+ 331:hardware.c    **** #endif
+ 332:hardware.c    **** }
+ 333:hardware.c    **** void disableSpiMCP4150(void)
+ 334:hardware.c    **** {
+ 1198               	.LM112:
+ 1199               	.LFBB19:
+ 1200               	/* prologue: function */
+ 1201               	/* frame size = 0 */
+ 1202               	/* stack size = 0 */
+ 1203               	.L__stack_usage = 0
+ 335:hardware.c    ****   SPCR &= ~MCP4150_SPCR_OR_MASK;
+ 1205               	.LM113:
+ 1206 0398 8DB1      		in r24,0xd
+ 1207 039a 8C7F      		andi r24,lo8(-4)
+ 1208 039c 8DB9      		out 0xd,r24
+ 336:hardware.c    ****   #if MCP4150_SPI_CS_EN_MASK_OR != 0
+ 337:hardware.c    ****   MCP4150_SPI_CS_PORT &= (~MCP4150_SPI_CS_EN_MASK_OR);
+ 338:hardware.c    **** #endif
+ 339:hardware.c    **** #if MCP4150_SPI_CS_EN_MASK_AND != 0xFF
+ 340:hardware.c    ****   MCP4150_SPI_CS_PORT |= (~MCP4150_SPI_CS_EN_MASK_AND);
+ 1210               	.LM114:
+ 1211 039e C69A      		sbi 0x18,6
+ 1212 03a0 0895      		ret
+ 1214               	.Lscope19:
+ 1216               		.stabd	78,0,0
+ 1218               		.weak	spiEnableDS1305
+ 1220               	spiEnableDS1305:
+ 1221               		.stabd	46,0,0
+ 341:hardware.c    **** #endif
+ 342:hardware.c    **** }
+ 343:hardware.c    **** 
+ 344:hardware.c    **** #define DS_SPCR_OR_MASK ((1<<CPHA)|(1<<SPR0))
+ 345:hardware.c    **** 
+ 346:hardware.c    **** void spiEnableDS1305(void)
+ 347:hardware.c    **** {
+ 1223               	.LM115:
+ 1224               	.LFBB20:
+ 1225               	/* prologue: function */
+ 1226               	/* frame size = 0 */
+ 1227               	/* stack size = 0 */
+ 1228               	.L__stack_usage = 0
+ 348:hardware.c    ****   SPCR |= DS_SPCR_OR_MASK;
+ 1230               	.LM116:
+ 1231 03a2 8DB1      		in r24,0xd
+ 1232 03a4 8560      		ori r24,lo8(5)
+ 1233 03a6 8DB9      		out 0xd,r24
+ 349:hardware.c    **** #if DS1305_SPI_CS_EN_MASK_OR != 0
+ 350:hardware.c    ****   DS1305_SPI_CS_PORT |= DS1305_SPI_CS_EN_MASK_OR;
+ 1235               	.LM117:
+ 1236 03a8 C59A      		sbi 0x18,5
+ 1237 03aa 0895      		ret
+ 1239               	.Lscope20:
+ 1241               		.stabd	78,0,0
+ 1243               		.weak	spiDisableDS1305
+ 1245               	spiDisableDS1305:
+ 1246               		.stabd	46,0,0
+ 351:hardware.c    **** #endif
+ 352:hardware.c    **** #if DS1305_SPI_CS_EN_MASK_AND != 0xFF
+ 353:hardware.c    ****   DS1305_SPI_CS_PORT &= DS1305_SPI_CS_EN_MASK_AND;
+ 354:hardware.c    **** #endif
+ 355:hardware.c    **** }
+ 356:hardware.c    **** 
+ 357:hardware.c    **** void spiDisableDS1305(void)
+ 358:hardware.c    **** {
+ 1248               	.LM118:
+ 1249               	.LFBB21:
+ 1250               	/* prologue: function */
+ 1251               	/* frame size = 0 */
+ 1252               	/* stack size = 0 */
+ 1253               	.L__stack_usage = 0
+ 359:hardware.c    ****   SPCR &= (~(DS_SPCR_OR_MASK));
+ 1255               	.LM119:
+ 1256 03ac 8DB1      		in r24,0xd
+ 1257 03ae 8A7F      		andi r24,lo8(-6)
+ 1258 03b0 8DB9      		out 0xd,r24
+ 360:hardware.c    **** #if DS1305_SPI_CS_EN_MASK_OR != 0
+ 361:hardware.c    ****   DS1305_SPI_CS_PORT &= (~(DS1305_SPI_CS_EN_MASK_OR));
+ 1260               	.LM120:
+ 1261 03b2 C598      		cbi 0x18,5
+ 1262 03b4 0895      		ret
+ 1264               	.Lscope21:
+ 1266               		.stabd	78,0,0
+ 1268               	.global	__vector_17
+ 1270               	__vector_17:
+ 1271               		.stabd	46,0,0
+ 362:hardware.c    **** #endif
+ 363:hardware.c    **** #if DS1305_SPI_CS_EN_MASK_AND != 0xFF
+ 364:hardware.c    ****   DS1305_SPI_CS_PORT |= (~(DS1305_SPI_CS_EN_MASK_AND));
+ 365:hardware.c    **** #endif
+ 366:hardware.c    **** }
+ 367:hardware.c    **** 
+ 368:hardware.c    **** ISR(SPI_STC_vect)
+ 369:hardware.c    **** {
+ 1273               	.LM121:
+ 1274               	.LFBB22:
+ 1275 03b6 1F92      		push r1
+ 1276 03b8 0F92      		push r0
+ 1277 03ba 0FB6      		in r0,__SREG__
+ 1278 03bc 0F92      		push r0
+ 1279 03be 1124      		clr __zero_reg__
+ 1280 03c0 0BB6      		in r0,__RAMPZ__
+ 1281 03c2 0F92      		push r0
+ 1282 03c4 2F93      		push r18
+ 1283 03c6 3F93      		push r19
+ 1284 03c8 4F93      		push r20
+ 1285 03ca 5F93      		push r21
+ 1286 03cc 6F93      		push r22
+ 1287 03ce 7F93      		push r23
+ 1288 03d0 8F93      		push r24
+ 1289 03d2 9F93      		push r25
+ 1290 03d4 AF93      		push r26
+ 1291 03d6 BF93      		push r27
+ 1292 03d8 EF93      		push r30
+ 1293 03da FF93      		push r31
+ 1294               	/* prologue: Signal */
+ 1295               	/* frame size = 0 */
+ 1296               	/* stack size = 16 */
+ 1297               	.L__stack_usage = 16
+ 370:hardware.c    ****   static signed portBASE_TYPE xHigherPriorityTaskWoken;
+ 371:hardware.c    **** 
+ 372:hardware.c    ****   static uint8_t data;
+ 373:hardware.c    ****   data = SPDR;
+ 1299               	.LM122:
+ 1300 03dc 8FB1      		in r24,0xf
+ 1301 03de 8093 0000 		sts data.3498,r24
+ 374:hardware.c    **** 
+ 375:hardware.c    ****   xQueueSendFromISR(xSpiRx, &data, &xHigherPriorityTaskWoken);
+ 1303               	.LM123:
+ 1304 03e2 20E0      		ldi r18,0
+ 1305 03e4 40E0      		ldi r20,lo8(xHigherPriorityTaskWoken.3497)
+ 1306 03e6 50E0      		ldi r21,hi8(xHigherPriorityTaskWoken.3497)
+ 1307 03e8 60E0      		ldi r22,lo8(data.3498)
+ 1308 03ea 70E0      		ldi r23,hi8(data.3498)
+ 1309 03ec 8091 0000 		lds r24,xSpiRx
+ 1310 03f0 9091 0000 		lds r25,xSpiRx+1
+ 1311 03f4 0E94 0000 		call xQueueGenericSendFromISR
+ 376:hardware.c    **** 
+ 377:hardware.c    ****   if( xHigherPriorityTaskWoken )
+ 1313               	.LM124:
+ 1314 03f8 8091 0000 		lds r24,xHigherPriorityTaskWoken.3497
+ 1315 03fc 8111      		cpse r24,__zero_reg__
+ 378:hardware.c    ****   {
+ 379:hardware.c    ****     taskYIELD();
+ 1317               	.LM125:
+ 1318 03fe 0E94 0000 		call vPortYield
+ 1319               	.L53:
+ 1320               	/* epilogue start */
+ 380:hardware.c    ****   }
+ 381:hardware.c    **** 
+ 382:hardware.c    ****   //clear SPI interrupt SPI |= 1;
+ 383:hardware.c    **** }
+ 1322               	.LM126:
+ 1323 0402 FF91      		pop r31
+ 1324 0404 EF91      		pop r30
+ 1325 0406 BF91      		pop r27
+ 1326 0408 AF91      		pop r26
+ 1327 040a 9F91      		pop r25
+ 1328 040c 8F91      		pop r24
+ 1329 040e 7F91      		pop r23
+ 1330 0410 6F91      		pop r22
+ 1331 0412 5F91      		pop r21
+ 1332 0414 4F91      		pop r20
+ 1333 0416 3F91      		pop r19
+ 1334 0418 2F91      		pop r18
+ 1335 041a 0F90      		pop r0
+ 1336 041c 0BBE      		out __RAMPZ__,r0
+ 1337 041e 0F90      		pop r0
+ 1338 0420 0FBE      		out __SREG__,r0
+ 1339 0422 0F90      		pop r0
+ 1340 0424 1F90      		pop r1
+ 1341 0426 1895      		reti
+ 1347               	.Lscope22:
+ 1349               		.stabd	78,0,0
+ 1350               		.local	xHigherPriorityTaskWoken.3497
+ 1351               		.comm	xHigherPriorityTaskWoken.3497,1,1
+ 1352               		.local	data.3498
+ 1353               		.comm	data.3498,1,1
+ 1354               		.comm	xSpiRx,2,1
+ 1355               	.global	statusLockerSensAdditionalDescStr
+ 1356               		.section	.progmem.data,"a",@progbits
+ 1359               	statusLockerSensAdditionalDescStr:
+ 1360 0000 2028 7468 		.string	" (threshold %d, AC value %d)\r\n"
+ 1360      7265 7368 
+ 1360      6F6C 6420 
+ 1360      2564 2C20 
+ 1360      4143 2076 
+ 1361               	.global	statusLockerCloseStr
+ 1364               	statusLockerCloseStr:
+ 1365 001f 206C 6F63 		.string	" locked "
+ 1365      6B65 6420 
+ 1365      00
+ 1366               	.global	statusLockerOpenStr
+ 1369               	statusLockerOpenStr:
+ 1370 0028 206F 7065 		.string	" open   "
+ 1370      6E20 2020 
+ 1370      00
+ 1371               	.global	statusLockerSensDescStr
+ 1374               	statusLockerSensDescStr:
+ 1375 0031 206C 6F63 		.string	" locker %d"
+ 1375      6B65 7220 
+ 1375      2564 00
+ 1376               		.comm	lockSensors,2,1
+ 1377               		.comm	portB,1,1
+ 1378               		.comm	portA,1,1
+ 1379               		.comm	czasRtc,7,1
+ 1380               		.comm	sockets,2,1
+ 1381               		.comm	tcpDebugLevel,1,1
+ 1382               		.comm	tcpDebugStream,2,1
+ 1383               		.comm	IpMyConfig,15,1
+ 1384               		.comm	udpDbgLevel,1,1
+ 1385               		.comm	udpDbgStream,2,1
+ 1386               		.comm	udpSocket,2,1
+ 1387               		.comm	icmpDebugLevel,1,1
+ 1388               		.comm	icmpDebug,2,1
+ 1389               		.comm	arpDebugLevel,1,1
+ 1390               		.comm	arpDebug,2,1
+ 1391               		.comm	nicState,14,1
+ 1392               		.comm	xSemaphoreSpiSS,2,1
+ 1393               		.comm	xSemaphoreRs485,2,1
+ 1394               		.comm	rollers,2,1
+ 1395               		.comm	klastry,128,1
+ 1396               		.comm	wwwport,1,1
+ 1423               		.text
+ 1425               	.Letext0:
+ 1426               		.ident	"GCC: (GNU) 4.9.2"
+ 1427               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 hardware.c
+     /tmp/ccMBbMyn.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccMBbMyn.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccMBbMyn.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccMBbMyn.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccMBbMyn.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccMBbMyn.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccMBbMyn.s:275    .text:0000000000000000 hardwareInit
+                            *COM*:0000000000000002 xSpiRx
+     /tmp/ccMBbMyn.s:348    .text:0000000000000038 LockersMemInit
+                            *COM*:0000000000000002 lockSensors
+     /tmp/ccMBbMyn.s:372    .text:000000000000004a printLockers
+     /tmp/ccMBbMyn.s:1374   .progmem.data:0000000000000031 statusLockerSensDescStr
+     /tmp/ccMBbMyn.s:1359   .progmem.data:0000000000000000 statusLockerSensAdditionalDescStr
+     /tmp/ccMBbMyn.s:1364   .progmem.data:000000000000001f statusLockerCloseStr
+     /tmp/ccMBbMyn.s:1369   .progmem.data:0000000000000028 statusLockerOpenStr
+     /tmp/ccMBbMyn.s:548    .text:0000000000000142 checkLockerSensors
+     /tmp/ccMBbMyn.s:784    .text:00000000000002c0 spiSend
+     /tmp/ccMBbMyn.s:831    .text:00000000000002ee spiSendENC
+     /tmp/ccMBbMyn.s:878    .text:000000000000031c spiSendSpinBlock
+     /tmp/ccMBbMyn.s:918    .text:000000000000032c spiSendENCSpinBlock
+     /tmp/ccMBbMyn.s:957    .text:000000000000033c disableAllSpiDevices
+     /tmp/ccMBbMyn.s:992    .text:0000000000000352 spiEnableEnc28j60
+     /tmp/ccMBbMyn.s:1012   .text:0000000000000356 spiDisableEnc28j60
+     /tmp/ccMBbMyn.s:1032   .text:000000000000035a enableSpiSd
+     /tmp/ccMBbMyn.s:1056   .text:0000000000000366 disableSpiSd
+     /tmp/ccMBbMyn.s:1080   .text:0000000000000372 enableSpiMPC23S17
+     /tmp/ccMBbMyn.s:1100   .text:0000000000000376 disableSpiMPC23S17
+     /tmp/ccMBbMyn.s:1120   .text:000000000000037a enableSpiMCP3008
+     /tmp/ccMBbMyn.s:1145   .text:0000000000000384 disableSpiMCP3008
+     /tmp/ccMBbMyn.s:1170   .text:000000000000038e enableSpiMCP4150
+     /tmp/ccMBbMyn.s:1195   .text:0000000000000398 disableSpiMCP4150
+     /tmp/ccMBbMyn.s:1220   .text:00000000000003a2 spiEnableDS1305
+     /tmp/ccMBbMyn.s:1245   .text:00000000000003ac spiDisableDS1305
+     /tmp/ccMBbMyn.s:1270   .text:00000000000003b6 __vector_17
+     /tmp/ccMBbMyn.s:1351   .bss:0000000000000001 data.3498
+                             .bss:0000000000000000 xHigherPriorityTaskWoken.3497
+                            *COM*:0000000000000001 portB
+                            *COM*:0000000000000001 portA
+                            *COM*:0000000000000007 czasRtc
+                            *COM*:0000000000000002 sockets
+                            *COM*:0000000000000001 tcpDebugLevel
+                            *COM*:0000000000000002 tcpDebugStream
+                            *COM*:000000000000000f IpMyConfig
+                            *COM*:0000000000000001 udpDbgLevel
+                            *COM*:0000000000000002 udpDbgStream
+                            *COM*:0000000000000002 udpSocket
+                            *COM*:0000000000000001 icmpDebugLevel
+                            *COM*:0000000000000002 icmpDebug
+                            *COM*:0000000000000001 arpDebugLevel
+                            *COM*:0000000000000002 arpDebug
+                            *COM*:000000000000000e nicState
+                            *COM*:0000000000000002 xSemaphoreSpiSS
+                            *COM*:0000000000000002 xSemaphoreRs485
+                            *COM*:0000000000000002 rollers
+                            *COM*:0000000000000080 klastry
+                            *COM*:0000000000000001 wwwport
+
+UNDEFINED SYMBOLS
+xQueueCreate
+xmalloc
+fprintf_P
+MPC23s17SetBitsOnPortA
+vTaskDelay
+MCP3008_getSampleSingle
+MPC23s17ClearBitsOnPortA
+xQueueGenericReceive
+xQueueGenericSendFromISR
+vPortYield
+__do_clear_bss

@@ -1,0 +1,1 @@
+/media/truecrypt1/mgr/withCLI/svn/Tools/netClient/CMakeFiles/netConsole.dir

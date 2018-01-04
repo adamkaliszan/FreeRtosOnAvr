@@ -1,0 +1,1041 @@
+   1               		.file	"serial.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  10               		.text
+  11               	.Ltext0:
+ 276               	.global	VtyGetChar
+ 278               	VtyGetChar:
+ 279               		.stabd	46,0,0
+   1:serial.c      **** #include <stdlib.h>
+   2:serial.c      **** #include <avr/interrupt.h>
+   3:serial.c      **** #include "FreeRTOS.h"
+   4:serial.c      **** #include "queue.h"
+   5:serial.c      **** #include "task.h"
+   6:serial.c      **** #include "serial.h"
+   7:serial.c      **** #include "hardware.h"
+   8:serial.c      **** 
+   9:serial.c      **** #define debug 1
+  10:serial.c      **** 
+  11:serial.c      **** /*-----------------------------------------------------------*/
+  12:serial.c      **** 
+  13:serial.c      **** void initQueueStreamUSB(FILE *stream)
+  14:serial.c      **** {
+  15:serial.c      ****   fdev_setup_stream(stream, VtyPutChar, VtyGetChar, _FDEV_SETUP_RW);
+  16:serial.c      ****   fdev_set_udata(stream, NULL);
+  17:serial.c      ****   return;
+  18:serial.c      **** }
+  19:serial.c      **** 
+  20:serial.c      **** int VtyGetChar(FILE *stream)
+  21:serial.c      **** {
+ 281               	.LM0:
+ 282               	.LFBB1:
+ 283 0000 CF93      		push r28
+ 284 0002 DF93      		push r29
+ 285 0004 1F92      		push __zero_reg__
+ 286 0006 CDB7      		in r28,__SP_L__
+ 287 0008 DEB7      		in r29,__SP_H__
+ 288               	/* prologue: function */
+ 289               	/* frame size = 1 */
+ 290               	/* stack size = 3 */
+ 291               	.L__stack_usage = 3
+  22:serial.c      ****   (void) stream;
+  23:serial.c      ****   uint8_t c;
+  24:serial.c      ****   if (xQueueReceive(xVtyRec, &c, portMAX_DELAY) == 0)
+ 293               	.LM1:
+ 294 000a 20E0      		ldi r18,0
+ 295 000c 4FEF      		ldi r20,lo8(-1)
+ 296 000e 5FEF      		ldi r21,lo8(-1)
+ 297 0010 BE01      		movw r22,r28
+ 298 0012 6F5F      		subi r22,-1
+ 299 0014 7F4F      		sbci r23,-1
+ 300 0016 8091 0000 		lds r24,xVtyRec
+ 301 001a 9091 0000 		lds r25,xVtyRec+1
+ 302 001e 0E94 0000 		call xQueueGenericReceive
+ 303 0022 8823      		tst r24
+ 304 0024 01F0      		breq .L3
+  25:serial.c      ****     return EOF;
+  26:serial.c      ****   return c;
+ 306               	.LM2:
+ 307 0026 8981      		ldd r24,Y+1
+ 308 0028 90E0      		ldi r25,0
+ 309 002a 00C0      		rjmp .L2
+ 310               	.L3:
+  25:serial.c      ****     return EOF;
+ 312               	.LM3:
+ 313 002c 8FEF      		ldi r24,lo8(-1)
+ 314 002e 9FEF      		ldi r25,lo8(-1)
+ 315               	.L2:
+ 316               	/* epilogue start */
+  27:serial.c      **** }
+ 318               	.LM4:
+ 319 0030 0F90      		pop __tmp_reg__
+ 320 0032 DF91      		pop r29
+ 321 0034 CF91      		pop r28
+ 322 0036 0895      		ret
+ 327               	.Lscope1:
+ 329               		.stabd	78,0,0
+ 332               	.global	initQueueStreamUSB
+ 334               	initQueueStreamUSB:
+ 335               		.stabd	46,0,0
+  14:serial.c      ****   fdev_setup_stream(stream, VtyPutChar, VtyGetChar, _FDEV_SETUP_RW);
+ 337               	.LM5:
+ 338               	.LFBB2:
+ 339               	/* prologue: function */
+ 340               	/* frame size = 0 */
+ 341               	/* stack size = 0 */
+ 342               	.L__stack_usage = 0
+ 343 0038 FC01      		movw r30,r24
+  15:serial.c      ****   fdev_set_udata(stream, NULL);
+ 345               	.LM6:
+ 346 003a 80E0      		ldi r24,lo8(gs(VtyPutChar))
+ 347 003c 90E0      		ldi r25,hi8(gs(VtyPutChar))
+ 348 003e 9187      		std Z+9,r25
+ 349 0040 8087      		std Z+8,r24
+ 350 0042 80E0      		ldi r24,lo8(gs(VtyGetChar))
+ 351 0044 90E0      		ldi r25,hi8(gs(VtyGetChar))
+ 352 0046 9387      		std Z+11,r25
+ 353 0048 8287      		std Z+10,r24
+ 354 004a 83E0      		ldi r24,lo8(3)
+ 355 004c 8383      		std Z+3,r24
+ 356 004e 1586      		std Z+13,__zero_reg__
+ 357 0050 1486      		std Z+12,__zero_reg__
+ 358 0052 0895      		ret
+ 360               	.Lscope2:
+ 362               		.stabd	78,0,0
+ 364               	.global	xSerialPortInitMinimal
+ 366               	xSerialPortInitMinimal:
+ 367               		.stabd	46,0,0
+  28:serial.c      **** 
+  29:serial.c      **** int VtyPutChar(char c, FILE *stream)
+  30:serial.c      **** {
+  31:serial.c      ****   (void) stream;
+  32:serial.c      ****   uartVtySendByte(c);
+  33:serial.c      ****   return 0;
+  34:serial.c      **** }
+  35:serial.c      **** 
+  36:serial.c      **** void xSerialPortInitMinimal(void)
+  37:serial.c      **** {
+ 369               	.LM7:
+ 370               	.LFBB3:
+ 371               	/* prologue: function */
+ 372               	/* frame size = 0 */
+ 373               	/* stack size = 0 */
+ 374               	.L__stack_usage = 0
+  38:serial.c      ****   portENTER_CRITICAL();
+ 376               	.LM8:
+ 377               	/* #APP */
+ 378               	 ;  38 "serial.c" 1
+ 379 0054 0FB6      		in		__tmp_reg__, __SREG__
+ 380               	 ;  0 "" 2
+ 381               	 ;  38 "serial.c" 1
+ 382 0056 F894      		cli
+ 383               	 ;  0 "" 2
+ 384               	 ;  38 "serial.c" 1
+ 385 0058 0F92      		push	__tmp_reg__
+ 386               	 ;  0 "" 2
+  39:serial.c      ****   {
+  40:serial.c      ****     xVtyRec = xQueueCreate(64, ( unsigned portBASE_TYPE ) sizeof( signed portCHAR ));
+ 388               	.LM9:
+ 389               	/* #NOAPP */
+ 390 005a 61E0      		ldi r22,lo8(1)
+ 391 005c 80E4      		ldi r24,lo8(64)
+ 392 005e 0E94 0000 		call xQueueCreate
+ 393 0062 9093 0000 		sts xVtyRec+1,r25
+ 394 0066 8093 0000 		sts xVtyRec,r24
+  41:serial.c      ****     xVtyTx = xQueueCreate(32, ( unsigned portBASE_TYPE ) sizeof( signed portCHAR ));
+ 396               	.LM10:
+ 397 006a 61E0      		ldi r22,lo8(1)
+ 398 006c 80E2      		ldi r24,lo8(32)
+ 399 006e 0E94 0000 		call xQueueCreate
+ 400 0072 9093 0000 		sts xVtyTx+1,r25
+ 401 0076 8093 0000 		sts xVtyTx,r24
+  42:serial.c      ****     xRs485Rec = xQueueCreate( 16, ( unsigned portBASE_TYPE ) sizeof( signed portCHAR ) );
+ 403               	.LM11:
+ 404 007a 61E0      		ldi r22,lo8(1)
+ 405 007c 80E1      		ldi r24,lo8(16)
+ 406 007e 0E94 0000 		call xQueueCreate
+ 407 0082 9093 0000 		sts xRs485Rec+1,r25
+ 408 0086 8093 0000 		sts xRs485Rec,r24
+  43:serial.c      ****     xRs485Tx = xQueueCreate( 4, ( unsigned portBASE_TYPE ) sizeof( signed portCHAR ) );
+ 410               	.LM12:
+ 411 008a 61E0      		ldi r22,lo8(1)
+ 412 008c 84E0      		ldi r24,lo8(4)
+ 413 008e 0E94 0000 		call xQueueCreate
+ 414 0092 9093 0000 		sts xRs485Tx+1,r25
+ 415 0096 8093 0000 		sts xRs485Tx,r24
+  44:serial.c      **** 
+  45:serial.c      ****     vSemaphoreCreateBinary(xSemaphoreRs485);
+ 417               	.LM13:
+ 418 009a 60E0      		ldi r22,0
+ 419 009c 81E0      		ldi r24,lo8(1)
+ 420 009e 0E94 0000 		call xQueueCreate
+ 421 00a2 9093 0000 		sts xSemaphoreRs485+1,r25
+ 422 00a6 8093 0000 		sts xSemaphoreRs485,r24
+ 423 00aa 0097      		sbiw r24,0
+ 424 00ac 01F0      		breq .L7
+ 426               	.LM14:
+ 427 00ae 20E0      		ldi r18,0
+ 428 00b0 40E0      		ldi r20,0
+ 429 00b2 50E0      		ldi r21,0
+ 430 00b4 60E0      		ldi r22,0
+ 431 00b6 70E0      		ldi r23,0
+ 432 00b8 0E94 0000 		call xQueueGenericSend
+ 433               	.L7:
+  46:serial.c      ****   }
+  47:serial.c      ****   portEXIT_CRITICAL();
+ 435               	.LM15:
+ 436               	/* #APP */
+ 437               	 ;  47 "serial.c" 1
+ 438 00bc 0F90      		pop		__tmp_reg__
+ 439               	 ;  0 "" 2
+ 440               	 ;  47 "serial.c" 1
+ 441 00be 0FBE      		out		__SREG__, __tmp_reg__
+ 442               	 ;  0 "" 2
+  48:serial.c      **** 
+  49:serial.c      ****   UBRR0L = 7;
+ 444               	.LM16:
+ 445               	/* #NOAPP */
+ 446 00c0 87E0      		ldi r24,lo8(7)
+ 447 00c2 89B9      		out 0x9,r24
+  50:serial.c      ****   UBRR0H = 0;
+ 449               	.LM17:
+ 450 00c4 1092 9000 		sts 144,__zero_reg__
+  51:serial.c      **** 
+  52:serial.c      ****   UBRR1L = 7;
+ 452               	.LM18:
+ 453 00c8 8093 9900 		sts 153,r24
+  53:serial.c      ****   UBRR1H = 0;
+ 455               	.LM19:
+ 456 00cc 1092 9800 		sts 152,__zero_reg__
+  54:serial.c      **** 
+  55:serial.c      ****   UCSR0B = ((1<<TXCIE0)|(1<<RXCIE0)|(1<<TXEN0)|(1<<RXEN0));
+ 458               	.LM20:
+ 459 00d0 88ED      		ldi r24,lo8(-40)
+ 460 00d2 8AB9      		out 0xa,r24
+  56:serial.c      ****   UCSR0C = ( serUCSRC_SELECT | serEIGHT_DATA_BITS );     /* Set the data bits to 8. */
+ 462               	.LM21:
+ 463 00d4 86E8      		ldi r24,lo8(-122)
+ 464 00d6 8093 9500 		sts 149,r24
+  57:serial.c      ****   UCSR1B = ((1<<RXCIE1)|(1<<TXEN1)|(1<<RXEN1));
+ 466               	.LM22:
+ 467 00da 98E9      		ldi r25,lo8(-104)
+ 468 00dc 9093 9A00 		sts 154,r25
+  58:serial.c      ****   UCSR1C = ( serUCSRC_SELECT | serEIGHT_DATA_BITS );     /* Set the data bits to 8. */
+ 470               	.LM23:
+ 471 00e0 8093 9D00 		sts 157,r24
+ 472 00e4 0895      		ret
+ 474               	.Lscope3:
+ 476               		.stabd	78,0,0
+ 478               	.global	__vector_18
+ 480               	__vector_18:
+ 481               		.stabd	46,0,0
+  59:serial.c      ****   return;
+  60:serial.c      **** }
+  61:serial.c      **** 
+  62:serial.c      **** /*-----------------------------------------------------------*/
+  63:serial.c      **** ISR(USART0_RX_vect)
+  64:serial.c      **** {
+ 483               	.LM24:
+ 484               	.LFBB4:
+ 485 00e6 1F92      		push r1
+ 486 00e8 0F92      		push r0
+ 487 00ea 0FB6      		in r0,__SREG__
+ 488 00ec 0F92      		push r0
+ 489 00ee 1124      		clr __zero_reg__
+ 490 00f0 0BB6      		in r0,__RAMPZ__
+ 491 00f2 0F92      		push r0
+ 492 00f4 2F93      		push r18
+ 493 00f6 3F93      		push r19
+ 494 00f8 4F93      		push r20
+ 495 00fa 5F93      		push r21
+ 496 00fc 6F93      		push r22
+ 497 00fe 7F93      		push r23
+ 498 0100 8F93      		push r24
+ 499 0102 9F93      		push r25
+ 500 0104 AF93      		push r26
+ 501 0106 BF93      		push r27
+ 502 0108 EF93      		push r30
+ 503 010a FF93      		push r31
+ 504 010c CF93      		push r28
+ 505 010e DF93      		push r29
+ 506 0110 1F92      		push __zero_reg__
+ 507 0112 CDB7      		in r28,__SP_L__
+ 508 0114 DEB7      		in r29,__SP_H__
+ 509               	/* prologue: Signal */
+ 510               	/* frame size = 1 */
+ 511               	/* stack size = 19 */
+ 512               	.L__stack_usage = 19
+  65:serial.c      ****   static signed portBASE_TYPE xHigherPriorityTaskWoken = pdTRUE;
+  66:serial.c      ****   signed portCHAR cChar;
+  67:serial.c      **** 
+  68:serial.c      ****   cChar = UDR0;
+ 514               	.LM25:
+ 515 0116 8CB1      		in r24,0xc
+ 516 0118 8983      		std Y+1,r24
+  69:serial.c      **** 
+  70:serial.c      ****   xHigherPriorityTaskWoken = pdFALSE;
+ 518               	.LM26:
+ 519 011a 1092 0000 		sts xHigherPriorityTaskWoken.3440,__zero_reg__
+  71:serial.c      **** 
+  72:serial.c      **** //  xQueueSendFromISR( xRs485Rec, &cChar, NULL);
+  73:serial.c      ****   xQueueSendFromISR( xRs485Rec, &cChar, &xHigherPriorityTaskWoken );
+ 521               	.LM27:
+ 522 011e 20E0      		ldi r18,0
+ 523 0120 40E0      		ldi r20,lo8(xHigherPriorityTaskWoken.3440)
+ 524 0122 50E0      		ldi r21,hi8(xHigherPriorityTaskWoken.3440)
+ 525 0124 BE01      		movw r22,r28
+ 526 0126 6F5F      		subi r22,-1
+ 527 0128 7F4F      		sbci r23,-1
+ 528 012a 8091 0000 		lds r24,xRs485Rec
+ 529 012e 9091 0000 		lds r25,xRs485Rec+1
+ 530 0132 0E94 0000 		call xQueueGenericSendFromISR
+  74:serial.c      ****   if( xHigherPriorityTaskWoken )
+ 532               	.LM28:
+ 533 0136 8091 0000 		lds r24,xHigherPriorityTaskWoken.3440
+ 534 013a 8111      		cpse r24,__zero_reg__
+  75:serial.c      ****   {
+  76:serial.c      ****     taskYIELD();
+ 536               	.LM29:
+ 537 013c 0E94 0000 		call vPortYield
+ 538               	.L11:
+ 539               	/* epilogue start */
+  77:serial.c      ****   }
+  78:serial.c      **** }
+ 541               	.LM30:
+ 542 0140 0F90      		pop __tmp_reg__
+ 543 0142 DF91      		pop r29
+ 544 0144 CF91      		pop r28
+ 545 0146 FF91      		pop r31
+ 546 0148 EF91      		pop r30
+ 547 014a BF91      		pop r27
+ 548 014c AF91      		pop r26
+ 549 014e 9F91      		pop r25
+ 550 0150 8F91      		pop r24
+ 551 0152 7F91      		pop r23
+ 552 0154 6F91      		pop r22
+ 553 0156 5F91      		pop r21
+ 554 0158 4F91      		pop r20
+ 555 015a 3F91      		pop r19
+ 556 015c 2F91      		pop r18
+ 557 015e 0F90      		pop r0
+ 558 0160 0BBE      		out __RAMPZ__,r0
+ 559 0162 0F90      		pop r0
+ 560 0164 0FBE      		out __SREG__,r0
+ 561 0166 0F90      		pop r0
+ 562 0168 1F90      		pop r1
+ 563 016a 1895      		reti
+ 569               	.Lscope4:
+ 571               		.stabd	78,0,0
+ 574               		.weak	uartRs485SendByte
+ 576               	uartRs485SendByte:
+ 577               		.stabd	46,0,0
+  79:serial.c      **** 
+  80:serial.c      **** void uartRs485SendByte(uint8_t data)
+  81:serial.c      **** {
+ 579               	.LM31:
+ 580               	.LFBB5:
+ 581 016c CF93      		push r28
+ 582 016e DF93      		push r29
+ 583 0170 1F92      		push __zero_reg__
+ 584 0172 CDB7      		in r28,__SP_L__
+ 585 0174 DEB7      		in r29,__SP_H__
+ 586               	/* prologue: function */
+ 587               	/* frame size = 1 */
+ 588               	/* stack size = 3 */
+ 589               	.L__stack_usage = 3
+ 590 0176 8983      		std Y+1,r24
+  82:serial.c      ****   xQueueSend(xRs485Tx, &data, portMAX_DELAY);
+ 592               	.LM32:
+ 593 0178 20E0      		ldi r18,0
+ 594 017a 4FEF      		ldi r20,lo8(-1)
+ 595 017c 5FEF      		ldi r21,lo8(-1)
+ 596 017e BE01      		movw r22,r28
+ 597 0180 6F5F      		subi r22,-1
+ 598 0182 7F4F      		sbci r23,-1
+ 599 0184 8091 0000 		lds r24,xRs485Tx
+ 600 0188 9091 0000 		lds r25,xRs485Tx+1
+ 601 018c 0E94 0000 		call xQueueGenericSend
+ 602               	.LBB2:
+  83:serial.c      ****   vInterruptRs485On();
+ 604               	.LM33:
+ 605 0190 559A      		sbi 0xa,5
+ 606               	/* epilogue start */
+ 607               	.LBE2:
+  84:serial.c      **** }
+ 609               	.LM34:
+ 610 0192 0F90      		pop __tmp_reg__
+ 611 0194 DF91      		pop r29
+ 612 0196 CF91      		pop r28
+ 613 0198 0895      		ret
+ 615               	.Lscope5:
+ 617               		.stabd	78,0,0
+ 621               		.weak	rs485Receive
+ 623               	rs485Receive:
+ 624               		.stabd	46,0,0
+  85:serial.c      **** 
+  86:serial.c      **** uint8_t rs485Receive(uint8_t *c, uint8_t timeout)
+  87:serial.c      **** {
+ 626               	.LM35:
+ 627               	.LFBB6:
+ 628               	/* prologue: function */
+ 629               	/* frame size = 0 */
+ 630               	/* stack size = 0 */
+ 631               	.L__stack_usage = 0
+  88:serial.c      ****   return xQueueReceive(xRs485Rec, c, timeout);
+ 633               	.LM36:
+ 634 019a 462F      		mov r20,r22
+ 635 019c 50E0      		ldi r21,0
+ 636 019e 20E0      		ldi r18,0
+ 637 01a0 BC01      		movw r22,r24
+ 638 01a2 8091 0000 		lds r24,xRs485Rec
+ 639 01a6 9091 0000 		lds r25,xRs485Rec+1
+ 640 01aa 0C94 0000 		jmp xQueueGenericReceive
+ 642               	.Lscope6:
+ 644               		.stabd	78,0,0
+ 646               	.global	__vector_19
+ 648               	__vector_19:
+ 649               		.stabd	46,0,0
+  89:serial.c      **** }
+  90:serial.c      **** 
+  91:serial.c      **** ISR(USART0_UDRE_vect)
+  92:serial.c      **** {
+ 651               	.LM37:
+ 652               	.LFBB7:
+ 653 01ae 1F92      		push r1
+ 654 01b0 0F92      		push r0
+ 655 01b2 0FB6      		in r0,__SREG__
+ 656 01b4 0F92      		push r0
+ 657 01b6 1124      		clr __zero_reg__
+ 658 01b8 0BB6      		in r0,__RAMPZ__
+ 659 01ba 0F92      		push r0
+ 660 01bc 2F93      		push r18
+ 661 01be 3F93      		push r19
+ 662 01c0 4F93      		push r20
+ 663 01c2 5F93      		push r21
+ 664 01c4 6F93      		push r22
+ 665 01c6 7F93      		push r23
+ 666 01c8 8F93      		push r24
+ 667 01ca 9F93      		push r25
+ 668 01cc AF93      		push r26
+ 669 01ce BF93      		push r27
+ 670 01d0 EF93      		push r30
+ 671 01d2 FF93      		push r31
+ 672               	/* prologue: Signal */
+ 673               	/* frame size = 0 */
+ 674               	/* stack size = 16 */
+ 675               	.L__stack_usage = 16
+  93:serial.c      ****   static signed portBASE_TYPE xHigherPriorityTaskWoken;
+  94:serial.c      ****   static char data;
+  95:serial.c      ****   if(xQueueReceiveFromISR(xRs485Tx, (void *)(&data), &xHigherPriorityTaskWoken) == pdTRUE)
+ 677               	.LM38:
+ 678 01d4 40E0      		ldi r20,lo8(xHigherPriorityTaskWoken.3455)
+ 679 01d6 50E0      		ldi r21,hi8(xHigherPriorityTaskWoken.3455)
+ 680 01d8 60E0      		ldi r22,lo8(data.3456)
+ 681 01da 70E0      		ldi r23,hi8(data.3456)
+ 682 01dc 8091 0000 		lds r24,xRs485Tx
+ 683 01e0 9091 0000 		lds r25,xRs485Tx+1
+ 684 01e4 0E94 0000 		call xQueueReceiveFromISR
+ 685 01e8 8130      		cpi r24,lo8(1)
+ 686 01ea 01F4      		brne .L19
+  96:serial.c      ****   {
+  97:serial.c      ****     Rs485TxStart();
+ 688               	.LM39:
+ 689 01ec 8091 6500 		lds r24,101
+ 690 01f0 8061      		ori r24,lo8(16)
+ 691 01f2 8093 6500 		sts 101,r24
+  98:serial.c      ****     UDR0 = data;
+ 693               	.LM40:
+ 694 01f6 8091 0000 		lds r24,data.3456
+ 695 01fa 8CB9      		out 0xc,r24
+ 696 01fc 00C0      		rjmp .L20
+ 697               	.L19:
+  99:serial.c      ****   }
+ 100:serial.c      ****   else
+ 101:serial.c      ****   {
+ 102:serial.c      ****     xHigherPriorityTaskWoken = pdFALSE;
+ 699               	.LM41:
+ 700 01fe 1092 0000 		sts xHigherPriorityTaskWoken.3455,__zero_reg__
+ 701               	.LBB3:
+ 103:serial.c      ****     vInterruptRs485Off();
+ 703               	.LM42:
+ 704 0202 5598      		cbi 0xa,5
+ 705               	.L20:
+ 706               	.LBE3:
+ 104:serial.c      ****   }
+ 105:serial.c      ****   if( xHigherPriorityTaskWoken )
+ 708               	.LM43:
+ 709 0204 8091 0000 		lds r24,xHigherPriorityTaskWoken.3455
+ 710 0208 8111      		cpse r24,__zero_reg__
+ 106:serial.c      ****   {
+ 107:serial.c      ****     taskYIELD();
+ 712               	.LM44:
+ 713 020a 0E94 0000 		call vPortYield
+ 714               	.L18:
+ 715               	/* epilogue start */
+ 108:serial.c      ****   }
+ 109:serial.c      **** }
+ 717               	.LM45:
+ 718 020e FF91      		pop r31
+ 719 0210 EF91      		pop r30
+ 720 0212 BF91      		pop r27
+ 721 0214 AF91      		pop r26
+ 722 0216 9F91      		pop r25
+ 723 0218 8F91      		pop r24
+ 724 021a 7F91      		pop r23
+ 725 021c 6F91      		pop r22
+ 726 021e 5F91      		pop r21
+ 727 0220 4F91      		pop r20
+ 728 0222 3F91      		pop r19
+ 729 0224 2F91      		pop r18
+ 730 0226 0F90      		pop r0
+ 731 0228 0BBE      		out __RAMPZ__,r0
+ 732 022a 0F90      		pop r0
+ 733 022c 0FBE      		out __SREG__,r0
+ 734 022e 0F90      		pop r0
+ 735 0230 1F90      		pop r1
+ 736 0232 1895      		reti
+ 742               	.Lscope7:
+ 744               		.stabd	78,0,0
+ 746               	.global	__vector_20
+ 748               	__vector_20:
+ 749               		.stabd	46,0,0
+ 110:serial.c      **** 
+ 111:serial.c      **** ISR(USART0_TX_vect)
+ 112:serial.c      **** {
+ 751               	.LM46:
+ 752               	.LFBB8:
+ 753 0234 1F92      		push r1
+ 754 0236 0F92      		push r0
+ 755 0238 0FB6      		in r0,__SREG__
+ 756 023a 0F92      		push r0
+ 757 023c 1124      		clr __zero_reg__
+ 758 023e 8F93      		push r24
+ 759               	/* prologue: Signal */
+ 760               	/* frame size = 0 */
+ 761               	/* stack size = 4 */
+ 762               	.L__stack_usage = 4
+ 113:serial.c      ****   if (!vIsInterruptRs485On())
+ 764               	.LM47:
+ 765 0240 5599      		sbic 0xa,5
+ 766 0242 00C0      		rjmp .L25
+ 114:serial.c      ****     Rs485TxStop();
+ 768               	.LM48:
+ 769 0244 8091 6500 		lds r24,101
+ 770 0248 8F7E      		andi r24,lo8(-17)
+ 771 024a 8093 6500 		sts 101,r24
+ 772               	.L25:
+ 773               	/* epilogue start */
+ 115:serial.c      **** }
+ 775               	.LM49:
+ 776 024e 8F91      		pop r24
+ 777 0250 0F90      		pop r0
+ 778 0252 0FBE      		out __SREG__,r0
+ 779 0254 0F90      		pop r0
+ 780 0256 1F90      		pop r1
+ 781 0258 1895      		reti
+ 783               	.Lscope8:
+ 785               		.stabd	78,0,0
+ 787               		.weak	flushRs485RecBuffer
+ 789               	flushRs485RecBuffer:
+ 790               		.stabd	46,0,0
+ 116:serial.c      **** 
+ 117:serial.c      **** uint8_t flushRs485RecBuffer(void)
+ 118:serial.c      **** {
+ 792               	.LM50:
+ 793               	.LFBB9:
+ 794 025a 1F93      		push r17
+ 795 025c CF93      		push r28
+ 796 025e DF93      		push r29
+ 797 0260 1F92      		push __zero_reg__
+ 798 0262 CDB7      		in r28,__SP_L__
+ 799 0264 DEB7      		in r29,__SP_H__
+ 800               	/* prologue: function */
+ 801               	/* frame size = 1 */
+ 802               	/* stack size = 4 */
+ 803               	.L__stack_usage = 4
+ 119:serial.c      ****   uint8_t temp;
+ 120:serial.c      ****   uint8_t wynik = 0;
+ 805               	.LM51:
+ 806 0266 10E0      		ldi r17,0
+ 807               	.L28:
+ 121:serial.c      ****   while(xQueueReceive(xRs485Rec, &temp, 10) == pdTRUE)
+ 809               	.LM52:
+ 810 0268 20E0      		ldi r18,0
+ 811 026a 4AE0      		ldi r20,lo8(10)
+ 812 026c 50E0      		ldi r21,0
+ 813 026e BE01      		movw r22,r28
+ 814 0270 6F5F      		subi r22,-1
+ 815 0272 7F4F      		sbci r23,-1
+ 816 0274 8091 0000 		lds r24,xRs485Rec
+ 817 0278 9091 0000 		lds r25,xRs485Rec+1
+ 818 027c 0E94 0000 		call xQueueGenericReceive
+ 819 0280 8130      		cpi r24,lo8(1)
+ 820 0282 01F4      		brne .L30
+ 122:serial.c      ****     wynik++;
+ 822               	.LM53:
+ 823 0284 1F5F      		subi r17,lo8(-(1))
+ 824 0286 00C0      		rjmp .L28
+ 825               	.L30:
+ 123:serial.c      **** 
+ 124:serial.c      ****   return wynik;
+ 125:serial.c      **** }
+ 827               	.LM54:
+ 828 0288 812F      		mov r24,r17
+ 829               	/* epilogue start */
+ 830 028a 0F90      		pop __tmp_reg__
+ 831 028c DF91      		pop r29
+ 832 028e CF91      		pop r28
+ 833 0290 1F91      		pop r17
+ 834 0292 0895      		ret
+ 840               	.Lscope9:
+ 842               		.stabd	78,0,0
+ 844               		.weak	takeRs485
+ 846               	takeRs485:
+ 847               		.stabd	46,0,0
+ 126:serial.c      **** 
+ 127:serial.c      **** void    takeRs485(void)
+ 128:serial.c      **** {
+ 849               	.LM55:
+ 850               	.LFBB10:
+ 851               	/* prologue: function */
+ 852               	/* frame size = 0 */
+ 853               	/* stack size = 0 */
+ 854               	.L__stack_usage = 0
+ 129:serial.c      ****   xSemaphoreTake(xSemaphoreRs485, portMAX_DELAY);
+ 856               	.LM56:
+ 857 0294 20E0      		ldi r18,0
+ 858 0296 4FEF      		ldi r20,lo8(-1)
+ 859 0298 5FEF      		ldi r21,lo8(-1)
+ 860 029a 60E0      		ldi r22,0
+ 861 029c 70E0      		ldi r23,0
+ 862 029e 8091 0000 		lds r24,xSemaphoreRs485
+ 863 02a2 9091 0000 		lds r25,xSemaphoreRs485+1
+ 864 02a6 0C94 0000 		jmp xQueueGenericReceive
+ 866               	.Lscope10:
+ 868               		.stabd	78,0,0
+ 870               		.weak	releaseRs485
+ 872               	releaseRs485:
+ 873               		.stabd	46,0,0
+ 130:serial.c      **** }
+ 131:serial.c      **** 
+ 132:serial.c      **** void    releaseRs485(void)
+ 133:serial.c      **** {
+ 875               	.LM57:
+ 876               	.LFBB11:
+ 877               	/* prologue: function */
+ 878               	/* frame size = 0 */
+ 879               	/* stack size = 0 */
+ 880               	.L__stack_usage = 0
+ 134:serial.c      ****   xSemaphoreGive(xSemaphoreRs485);
+ 882               	.LM58:
+ 883 02aa 20E0      		ldi r18,0
+ 884 02ac 40E0      		ldi r20,0
+ 885 02ae 50E0      		ldi r21,0
+ 886 02b0 60E0      		ldi r22,0
+ 887 02b2 70E0      		ldi r23,0
+ 888 02b4 8091 0000 		lds r24,xSemaphoreRs485
+ 889 02b8 9091 0000 		lds r25,xSemaphoreRs485+1
+ 890 02bc 0C94 0000 		jmp xQueueGenericSend
+ 892               	.Lscope11:
+ 894               		.stabd	78,0,0
+ 896               	.global	InterruptVtyOn
+ 898               	InterruptVtyOn:
+ 899               		.stabd	46,0,0
+ 135:serial.c      **** }
+ 136:serial.c      **** 
+ 137:serial.c      **** void InterruptVtyOn(void)
+ 138:serial.c      **** {
+ 901               	.LM59:
+ 902               	.LFBB12:
+ 903               	/* prologue: function */
+ 904               	/* frame size = 0 */
+ 905               	/* stack size = 0 */
+ 906               	.L__stack_usage = 0
+ 139:serial.c      ****   unsigned portCHAR ucByte;
+ 140:serial.c      ****   ucByte = UCSR1B;
+ 908               	.LM60:
+ 909 02c0 EAE9      		ldi r30,lo8(-102)
+ 910 02c2 F0E0      		ldi r31,0
+ 911 02c4 8081      		ld r24,Z
+ 141:serial.c      ****   ucByte |= serDATA_INT_ENABLE;
+ 913               	.LM61:
+ 914 02c6 8062      		ori r24,lo8(32)
+ 142:serial.c      ****   UCSR1B = ucByte;
+ 916               	.LM62:
+ 917 02c8 8083      		st Z,r24
+ 918 02ca 0895      		ret
+ 920               	.Lscope12:
+ 922               		.stabd	78,0,0
+ 924               	.global	__vector_30
+ 926               	__vector_30:
+ 927               		.stabd	46,0,0
+ 143:serial.c      **** }
+ 144:serial.c      **** 
+ 145:serial.c      **** /*-----------------------------------------------------------*/
+ 146:serial.c      **** ISR(USART1_RX_vect)
+ 147:serial.c      **** {
+ 929               	.LM63:
+ 930               	.LFBB13:
+ 931 02cc 1F92      		push r1
+ 932 02ce 0F92      		push r0
+ 933 02d0 0FB6      		in r0,__SREG__
+ 934 02d2 0F92      		push r0
+ 935 02d4 1124      		clr __zero_reg__
+ 936 02d6 0BB6      		in r0,__RAMPZ__
+ 937 02d8 0F92      		push r0
+ 938 02da 2F93      		push r18
+ 939 02dc 3F93      		push r19
+ 940 02de 4F93      		push r20
+ 941 02e0 5F93      		push r21
+ 942 02e2 6F93      		push r22
+ 943 02e4 7F93      		push r23
+ 944 02e6 8F93      		push r24
+ 945 02e8 9F93      		push r25
+ 946 02ea AF93      		push r26
+ 947 02ec BF93      		push r27
+ 948 02ee EF93      		push r30
+ 949 02f0 FF93      		push r31
+ 950 02f2 CF93      		push r28
+ 951 02f4 DF93      		push r29
+ 952 02f6 1F92      		push __zero_reg__
+ 953 02f8 CDB7      		in r28,__SP_L__
+ 954 02fa DEB7      		in r29,__SP_H__
+ 955               	/* prologue: Signal */
+ 956               	/* frame size = 1 */
+ 957               	/* stack size = 19 */
+ 958               	.L__stack_usage = 19
+ 148:serial.c      ****   static signed portBASE_TYPE xHigherPriorityTaskWoken;
+ 149:serial.c      ****   signed portCHAR cChar;
+ 150:serial.c      **** 
+ 151:serial.c      ****   cChar = UDR1;
+ 960               	.LM64:
+ 961 02fc 8091 9C00 		lds r24,156
+ 962 0300 8983      		std Y+1,r24
+ 152:serial.c      **** //  xQueueSendFromISR(xVtyRec, &cChar, NULL);
+ 153:serial.c      **** 
+ 154:serial.c      ****   xHigherPriorityTaskWoken = pdFALSE;
+ 964               	.LM65:
+ 965 0302 1092 0000 		sts xHigherPriorityTaskWoken.3486,__zero_reg__
+ 155:serial.c      ****   xQueueSendFromISR(xVtyRec, &cChar, &xHigherPriorityTaskWoken);
+ 967               	.LM66:
+ 968 0306 20E0      		ldi r18,0
+ 969 0308 40E0      		ldi r20,lo8(xHigherPriorityTaskWoken.3486)
+ 970 030a 50E0      		ldi r21,hi8(xHigherPriorityTaskWoken.3486)
+ 971 030c BE01      		movw r22,r28
+ 972 030e 6F5F      		subi r22,-1
+ 973 0310 7F4F      		sbci r23,-1
+ 974 0312 8091 0000 		lds r24,xVtyRec
+ 975 0316 9091 0000 		lds r25,xVtyRec+1
+ 976 031a 0E94 0000 		call xQueueGenericSendFromISR
+ 156:serial.c      ****   if( xHigherPriorityTaskWoken )
+ 978               	.LM67:
+ 979 031e 8091 0000 		lds r24,xHigherPriorityTaskWoken.3486
+ 980 0322 8111      		cpse r24,__zero_reg__
+ 157:serial.c      ****   {
+ 158:serial.c      ****     taskYIELD();
+ 982               	.LM68:
+ 983 0324 0E94 0000 		call vPortYield
+ 984               	.L34:
+ 985               	/* epilogue start */
+ 159:serial.c      ****   }
+ 160:serial.c      **** }
+ 987               	.LM69:
+ 988 0328 0F90      		pop __tmp_reg__
+ 989 032a DF91      		pop r29
+ 990 032c CF91      		pop r28
+ 991 032e FF91      		pop r31
+ 992 0330 EF91      		pop r30
+ 993 0332 BF91      		pop r27
+ 994 0334 AF91      		pop r26
+ 995 0336 9F91      		pop r25
+ 996 0338 8F91      		pop r24
+ 997 033a 7F91      		pop r23
+ 998 033c 6F91      		pop r22
+ 999 033e 5F91      		pop r21
+ 1000 0340 4F91      		pop r20
+ 1001 0342 3F91      		pop r19
+ 1002 0344 2F91      		pop r18
+ 1003 0346 0F90      		pop r0
+ 1004 0348 0BBE      		out __RAMPZ__,r0
+ 1005 034a 0F90      		pop r0
+ 1006 034c 0FBE      		out __SREG__,r0
+ 1007 034e 0F90      		pop r0
+ 1008 0350 1F90      		pop r1
+ 1009 0352 1895      		reti
+ 1015               	.Lscope13:
+ 1017               		.stabd	78,0,0
+ 1020               	.global	uartVtySendByte
+ 1022               	uartVtySendByte:
+ 1023               		.stabd	46,0,0
+ 161:serial.c      **** 
+ 162:serial.c      **** void uartVtySendByte(uint8_t data)
+ 163:serial.c      **** {
+ 1025               	.LM70:
+ 1026               	.LFBB14:
+ 1027 0354 CF93      		push r28
+ 1028 0356 DF93      		push r29
+ 1029 0358 1F92      		push __zero_reg__
+ 1030 035a CDB7      		in r28,__SP_L__
+ 1031 035c DEB7      		in r29,__SP_H__
+ 1032               	/* prologue: function */
+ 1033               	/* frame size = 1 */
+ 1034               	/* stack size = 3 */
+ 1035               	.L__stack_usage = 3
+ 1036 035e 8983      		std Y+1,r24
+ 164:serial.c      ****   xQueueSend(xVtyTx, &data, portMAX_DELAY);
+ 1038               	.LM71:
+ 1039 0360 20E0      		ldi r18,0
+ 1040 0362 4FEF      		ldi r20,lo8(-1)
+ 1041 0364 5FEF      		ldi r21,lo8(-1)
+ 1042 0366 BE01      		movw r22,r28
+ 1043 0368 6F5F      		subi r22,-1
+ 1044 036a 7F4F      		sbci r23,-1
+ 1045 036c 8091 0000 		lds r24,xVtyTx
+ 1046 0370 9091 0000 		lds r25,xVtyTx+1
+ 1047 0374 0E94 0000 		call xQueueGenericSend
+ 1048               	.LBB4:
+ 165:serial.c      ****   vInterruptVtyOn();
+ 1050               	.LM72:
+ 1051 0378 EAE9      		ldi r30,lo8(-102)
+ 1052 037a F0E0      		ldi r31,0
+ 1053 037c 8081      		ld r24,Z
+ 1054 037e 8062      		ori r24,lo8(32)
+ 1055 0380 8083      		st Z,r24
+ 1056               	/* epilogue start */
+ 1057               	.LBE4:
+ 166:serial.c      **** }
+ 1059               	.LM73:
+ 1060 0382 0F90      		pop __tmp_reg__
+ 1061 0384 DF91      		pop r29
+ 1062 0386 CF91      		pop r28
+ 1063 0388 0895      		ret
+ 1065               	.Lscope14:
+ 1067               		.stabd	78,0,0
+ 1071               	.global	VtyPutChar
+ 1073               	VtyPutChar:
+ 1074               		.stabd	46,0,0
+  30:serial.c      ****   (void) stream;
+ 1076               	.LM74:
+ 1077               	.LFBB15:
+ 1078               	/* prologue: function */
+ 1079               	/* frame size = 0 */
+ 1080               	/* stack size = 0 */
+ 1081               	.L__stack_usage = 0
+  32:serial.c      ****   return 0;
+ 1083               	.LM75:
+ 1084 038a 0E94 0000 		call uartVtySendByte
+  34:serial.c      **** 
+ 1086               	.LM76:
+ 1087 038e 80E0      		ldi r24,0
+ 1088 0390 90E0      		ldi r25,0
+ 1089 0392 0895      		ret
+ 1091               	.Lscope15:
+ 1093               		.stabd	78,0,0
+ 1095               	.global	__vector_31
+ 1097               	__vector_31:
+ 1098               		.stabd	46,0,0
+ 167:serial.c      **** 
+ 168:serial.c      **** ISR(USART1_UDRE_vect)
+ 169:serial.c      **** {
+ 1100               	.LM77:
+ 1101               	.LFBB16:
+ 1102 0394 1F92      		push r1
+ 1103 0396 0F92      		push r0
+ 1104 0398 0FB6      		in r0,__SREG__
+ 1105 039a 0F92      		push r0
+ 1106 039c 1124      		clr __zero_reg__
+ 1107 039e 0BB6      		in r0,__RAMPZ__
+ 1108 03a0 0F92      		push r0
+ 1109 03a2 2F93      		push r18
+ 1110 03a4 3F93      		push r19
+ 1111 03a6 4F93      		push r20
+ 1112 03a8 5F93      		push r21
+ 1113 03aa 6F93      		push r22
+ 1114 03ac 7F93      		push r23
+ 1115 03ae 8F93      		push r24
+ 1116 03b0 9F93      		push r25
+ 1117 03b2 AF93      		push r26
+ 1118 03b4 BF93      		push r27
+ 1119 03b6 EF93      		push r30
+ 1120 03b8 FF93      		push r31
+ 1121               	/* prologue: Signal */
+ 1122               	/* frame size = 0 */
+ 1123               	/* stack size = 16 */
+ 1124               	.L__stack_usage = 16
+ 170:serial.c      ****   static signed portBASE_TYPE xHigherPriorityTaskWoken;
+ 171:serial.c      ****   static char data;
+ 172:serial.c      ****   if(xQueueReceiveFromISR(xVtyTx, &data, &xHigherPriorityTaskWoken) == pdTRUE)
+ 1126               	.LM78:
+ 1127 03ba 40E0      		ldi r20,lo8(xHigherPriorityTaskWoken.3497)
+ 1128 03bc 50E0      		ldi r21,hi8(xHigherPriorityTaskWoken.3497)
+ 1129 03be 60E0      		ldi r22,lo8(data.3498)
+ 1130 03c0 70E0      		ldi r23,hi8(data.3498)
+ 1131 03c2 8091 0000 		lds r24,xVtyTx
+ 1132 03c6 9091 0000 		lds r25,xVtyTx+1
+ 1133 03ca 0E94 0000 		call xQueueReceiveFromISR
+ 1134 03ce 8130      		cpi r24,lo8(1)
+ 1135 03d0 01F4      		brne .L42
+ 173:serial.c      ****   {
+ 174:serial.c      ****     UDR1 = data;
+ 1137               	.LM79:
+ 1138 03d2 8091 0000 		lds r24,data.3498
+ 1139 03d6 8093 9C00 		sts 156,r24
+ 1140 03da 00C0      		rjmp .L43
+ 1141               	.L42:
+ 175:serial.c      ****   }
+ 176:serial.c      ****   else
+ 177:serial.c      ****   {
+ 178:serial.c      ****     xHigherPriorityTaskWoken = pdFALSE;
+ 1143               	.LM80:
+ 1144 03dc 1092 0000 		sts xHigherPriorityTaskWoken.3497,__zero_reg__
+ 1145               	.LBB5:
+ 179:serial.c      ****     vInterruptVtyOff();
+ 1147               	.LM81:
+ 1148 03e0 8091 9A00 		lds r24,154
+ 1149 03e4 8F7D      		andi r24,lo8(-33)
+ 1150 03e6 8093 9A00 		sts 154,r24
+ 1151               	.L43:
+ 1152               	.LBE5:
+ 180:serial.c      ****   }
+ 181:serial.c      ****   if( xHigherPriorityTaskWoken )
+ 1154               	.LM82:
+ 1155 03ea 8091 0000 		lds r24,xHigherPriorityTaskWoken.3497
+ 1156 03ee 8111      		cpse r24,__zero_reg__
+ 182:serial.c      ****   {
+ 183:serial.c      ****     taskYIELD();
+ 1158               	.LM83:
+ 1159 03f0 0E94 0000 		call vPortYield
+ 1160               	.L41:
+ 1161               	/* epilogue start */
+ 184:serial.c      ****   }
+ 185:serial.c      **** }
+ 1163               	.LM84:
+ 1164 03f4 FF91      		pop r31
+ 1165 03f6 EF91      		pop r30
+ 1166 03f8 BF91      		pop r27
+ 1167 03fa AF91      		pop r26
+ 1168 03fc 9F91      		pop r25
+ 1169 03fe 8F91      		pop r24
+ 1170 0400 7F91      		pop r23
+ 1171 0402 6F91      		pop r22
+ 1172 0404 5F91      		pop r21
+ 1173 0406 4F91      		pop r20
+ 1174 0408 3F91      		pop r19
+ 1175 040a 2F91      		pop r18
+ 1176 040c 0F90      		pop r0
+ 1177 040e 0BBE      		out __RAMPZ__,r0
+ 1178 0410 0F90      		pop r0
+ 1179 0412 0FBE      		out __SREG__,r0
+ 1180 0414 0F90      		pop r0
+ 1181 0416 1F90      		pop r1
+ 1182 0418 1895      		reti
+ 1188               	.Lscope16:
+ 1190               		.stabd	78,0,0
+ 1191               		.local	xHigherPriorityTaskWoken.3497
+ 1192               		.comm	xHigherPriorityTaskWoken.3497,1,1
+ 1193               		.local	data.3498
+ 1194               		.comm	data.3498,1,1
+ 1195               		.local	xHigherPriorityTaskWoken.3486
+ 1196               		.comm	xHigherPriorityTaskWoken.3486,1,1
+ 1197               		.local	xHigherPriorityTaskWoken.3455
+ 1198               		.comm	xHigherPriorityTaskWoken.3455,1,1
+ 1199               		.local	data.3456
+ 1200               		.comm	data.3456,1,1
+ 1201               		.data
+ 1204               	xHigherPriorityTaskWoken.3440:
+ 1205 0000 01        		.byte	1
+ 1206               		.comm	xSemaphoreRs485,2,1
+ 1207               		.comm	czasRtc,7,1
+ 1208               		.comm	sockets,2,1
+ 1209               		.comm	tcpDebugLevel,1,1
+ 1210               		.comm	tcpDebugStream,2,1
+ 1211               		.comm	IpMyConfig,15,1
+ 1212               		.comm	udpDbgLevel,1,1
+ 1213               		.comm	udpDbgStream,2,1
+ 1214               		.comm	udpSocket,2,1
+ 1215               		.comm	icmpDebugLevel,1,1
+ 1216               		.comm	icmpDebug,2,1
+ 1217               		.comm	arpDebugLevel,1,1
+ 1218               		.comm	arpDebug,2,1
+ 1219               		.comm	nicState,14,1
+ 1220               		.comm	lockSensors,2,1
+ 1221               		.comm	portB,1,1
+ 1222               		.comm	portA,1,1
+ 1223               		.comm	xSemaphoreSpiSS,2,1
+ 1224               		.comm	rollers,2,1
+ 1225               		.comm	wwwport,1,1
+ 1226               		.comm	klastry,128,1
+ 1248               		.text
+ 1250               	.Letext0:
+ 1251               		.ident	"GCC: (GNU) 4.9.2"
+ 1252               	.global __do_copy_data
+ 1253               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 serial.c
+     /tmp/ccWBq85i.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccWBq85i.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccWBq85i.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccWBq85i.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccWBq85i.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccWBq85i.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccWBq85i.s:278    .text:0000000000000000 VtyGetChar
+     /tmp/ccWBq85i.s:334    .text:0000000000000038 initQueueStreamUSB
+     /tmp/ccWBq85i.s:1073   .text:000000000000038a VtyPutChar
+     /tmp/ccWBq85i.s:366    .text:0000000000000054 xSerialPortInitMinimal
+                            *COM*:0000000000000002 xSemaphoreRs485
+     /tmp/ccWBq85i.s:480    .text:00000000000000e6 __vector_18
+     /tmp/ccWBq85i.s:1204   .data:0000000000000000 xHigherPriorityTaskWoken.3440
+     /tmp/ccWBq85i.s:576    .text:000000000000016c uartRs485SendByte
+     /tmp/ccWBq85i.s:623    .text:000000000000019a rs485Receive
+     /tmp/ccWBq85i.s:648    .text:00000000000001ae __vector_19
+     /tmp/ccWBq85i.s:1196   .bss:0000000000000003 xHigherPriorityTaskWoken.3455
+     /tmp/ccWBq85i.s:1198   .bss:0000000000000004 data.3456
+     /tmp/ccWBq85i.s:748    .text:0000000000000234 __vector_20
+     /tmp/ccWBq85i.s:789    .text:000000000000025a flushRs485RecBuffer
+     /tmp/ccWBq85i.s:846    .text:0000000000000294 takeRs485
+     /tmp/ccWBq85i.s:872    .text:00000000000002aa releaseRs485
+     /tmp/ccWBq85i.s:898    .text:00000000000002c0 InterruptVtyOn
+     /tmp/ccWBq85i.s:926    .text:00000000000002cc __vector_30
+     /tmp/ccWBq85i.s:1194   .bss:0000000000000002 xHigherPriorityTaskWoken.3486
+     /tmp/ccWBq85i.s:1022   .text:0000000000000354 uartVtySendByte
+     /tmp/ccWBq85i.s:1097   .text:0000000000000394 __vector_31
+                             .bss:0000000000000000 xHigherPriorityTaskWoken.3497
+     /tmp/ccWBq85i.s:1192   .bss:0000000000000001 data.3498
+                            *COM*:0000000000000007 czasRtc
+                            *COM*:0000000000000002 sockets
+                            *COM*:0000000000000001 tcpDebugLevel
+                            *COM*:0000000000000002 tcpDebugStream
+                            *COM*:000000000000000f IpMyConfig
+                            *COM*:0000000000000001 udpDbgLevel
+                            *COM*:0000000000000002 udpDbgStream
+                            *COM*:0000000000000002 udpSocket
+                            *COM*:0000000000000001 icmpDebugLevel
+                            *COM*:0000000000000002 icmpDebug
+                            *COM*:0000000000000001 arpDebugLevel
+                            *COM*:0000000000000002 arpDebug
+                            *COM*:000000000000000e nicState
+                            *COM*:0000000000000002 lockSensors
+                            *COM*:0000000000000001 portB
+                            *COM*:0000000000000001 portA
+                            *COM*:0000000000000002 xSemaphoreSpiSS
+                            *COM*:0000000000000002 rollers
+                            *COM*:0000000000000001 wwwport
+                            *COM*:0000000000000080 klastry
+
+UNDEFINED SYMBOLS
+xVtyRec
+xQueueGenericReceive
+xQueueCreate
+xVtyTx
+xRs485Rec
+xRs485Tx
+xQueueGenericSend
+xQueueGenericSendFromISR
+vPortYield
+xQueueReceiveFromISR
+__do_copy_data
+__do_clear_bss

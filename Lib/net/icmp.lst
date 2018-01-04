@@ -1,0 +1,580 @@
+   1               		.file	"icmp.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  10               		.text
+  11               	.Ltext0:
+ 164               	.global	icmpInit
+ 166               	icmpInit:
+ 167               		.stabd	46,0,0
+   1:../../../../Lib/net/icmp.c **** /*! \file icmp.c \brief ICMP Protocol Library. */
+   2:../../../../Lib/net/icmp.c **** //*****************************************************************************
+   3:../../../../Lib/net/icmp.c **** //
+   4:../../../../Lib/net/icmp.c **** // File Name	: 'icmp.c'
+   5:../../../../Lib/net/icmp.c **** // Title		: ICMP (Internet Control Message Protocol) Protocol Library
+   6:../../../../Lib/net/icmp.c **** // Author		: Pascal Stang
+   7:../../../../Lib/net/icmp.c **** // Created		: 9/10/2004
+   8:../../../../Lib/net/icmp.c **** // Revised		: 7/3/2005
+   9:../../../../Lib/net/icmp.c **** // Version		: 0.1
+  10:../../../../Lib/net/icmp.c **** // Target MCU	: Atmel AVR series
+  11:../../../../Lib/net/icmp.c **** // Editor Tabs	: 4
+  12:../../../../Lib/net/icmp.c **** //
+  13:../../../../Lib/net/icmp.c **** //*****************************************************************************
+  14:../../../../Lib/net/icmp.c **** 
+  15:../../../../Lib/net/icmp.c **** 
+  16:../../../../Lib/net/icmp.c **** #include "icmp.h"
+  17:../../../../Lib/net/icmp.c **** 
+  18:../../../../Lib/net/icmp.c **** 
+  19:../../../../Lib/net/icmp.c **** //extern void nicSend(unsigned int len, unsigned char* packet);
+  20:../../../../Lib/net/icmp.c **** 
+  21:../../../../Lib/net/icmp.c **** // global variables
+  22:../../../../Lib/net/icmp.c **** 
+  23:../../../../Lib/net/icmp.c **** 
+  24:../../../../Lib/net/icmp.c **** // functions
+  25:../../../../Lib/net/icmp.c **** void icmpInit(void)
+  26:../../../../Lib/net/icmp.c **** {
+ 169               	.LM0:
+ 170               	.LFBB1:
+ 171               	/* prologue: function */
+ 172               	/* frame size = 0 */
+ 173               	/* stack size = 0 */
+ 174               	.L__stack_usage = 0
+  27:../../../../Lib/net/icmp.c ****   icmpDebug = NULL;
+ 176               	.LM1:
+ 177 0000 1092 0000 		sts icmpDebug+1,__zero_reg__
+ 178 0004 1092 0000 		sts icmpDebug,__zero_reg__
+  28:../../../../Lib/net/icmp.c ****   icmpDebugLevel = 0;
+ 180               	.LM2:
+ 181 0008 1092 0000 		sts icmpDebugLevel,__zero_reg__
+ 182 000c 0895      		ret
+ 184               	.Lscope1:
+ 186               		.stabd	78,0,0
+ 190               	.global	setIcmpDebug
+ 192               	setIcmpDebug:
+ 193               		.stabd	46,0,0
+  29:../../../../Lib/net/icmp.c **** }
+  30:../../../../Lib/net/icmp.c **** 
+  31:../../../../Lib/net/icmp.c **** void icmpIpIn(void)
+  32:../../../../Lib/net/icmp.c **** {
+  33:../../../../Lib/net/icmp.c ****   // check ICMP type
+  34:../../../../Lib/net/icmp.c ****   switch(nicState.layer4.icmp->type)
+  35:../../../../Lib/net/icmp.c ****   {
+  36:../../../../Lib/net/icmp.c ****     case ICMP_TYPE_ECHOREQUEST:
+  37:../../../../Lib/net/icmp.c ****       icmpEchoRequest();       // echo request
+  38:../../../../Lib/net/icmp.c ****       break;
+  39:../../../../Lib/net/icmp.c ****     default:
+  40:../../../../Lib/net/icmp.c **** #if ICMP_DEBUG
+  41:../../../../Lib/net/icmp.c ****       if (icmpDebug != NULL)
+  42:../../../../Lib/net/icmp.c ****       {
+  43:../../../../Lib/net/icmp.c ****         if (icmpDebugLevel > 0)
+  44:../../../../Lib/net/icmp.c ****           fprintf_P(icmpDebug, PSTR("Unknown ICMP typeReceived ICMP request: "));
+  45:../../../../Lib/net/icmp.c ****       }
+  46:../../../../Lib/net/icmp.c **** #endif
+  47:../../../../Lib/net/icmp.c ****       break;
+  48:../../../../Lib/net/icmp.c ****   }
+  49:../../../../Lib/net/icmp.c **** }
+  50:../../../../Lib/net/icmp.c **** 
+  51:../../../../Lib/net/icmp.c **** void icmpEchoRequest(void)
+  52:../../../../Lib/net/icmp.c **** {
+  53:../../../../Lib/net/icmp.c **** #if ICMP_DEBUG
+  54:../../../../Lib/net/icmp.c ****   if (icmpDebug != NULL)
+  55:../../../../Lib/net/icmp.c ****   {
+  56:../../../../Lib/net/icmp.c ****     if (icmpDebugLevel > 1)
+  57:../../../../Lib/net/icmp.c ****       fprintf_P(icmpDebug, PSTR("Received ICMP request: "));
+  58:../../../../Lib/net/icmp.c ****   }
+  59:../../../../Lib/net/icmp.c **** #endif
+  60:../../../../Lib/net/icmp.c ****   uint32_t tempIp;
+  61:../../../../Lib/net/icmp.c **** 
+  62:../../../../Lib/net/icmp.c ****   // change type to reply
+  63:../../../../Lib/net/icmp.c ****   nicState.layer4.icmp->type = ICMP_TYPE_ECHOREPLY;
+  64:../../../../Lib/net/icmp.c ****   // recalculate checksum
+  65:../../../../Lib/net/icmp.c ****   nicState.layer4.icmp->icmpchksum = 0;
+  66:../../../../Lib/net/icmp.c ****   nicState.layer4.icmp->icmpchksum = netChecksum((uint8_t*)(nicState.layer4.icmp), htons(nicState.l
+  67:../../../../Lib/net/icmp.c ****   // return to sender
+  68:../../../../Lib/net/icmp.c ****   tempIp = nicState.layer3.ip->destipaddr;
+  69:../../../../Lib/net/icmp.c ****   nicState.layer3.ip->destipaddr = nicState.layer3.ip->srcipaddr;
+  70:../../../../Lib/net/icmp.c ****   nicState.layer3.ip->srcipaddr = tempIp;
+  71:../../../../Lib/net/icmp.c ****   // add ethernet routing
+  72:../../../../Lib/net/icmp.c ****   arpIpOut(0);
+  73:../../../../Lib/net/icmp.c **** 
+  74:../../../../Lib/net/icmp.c ****   // debugging
+  75:../../../../Lib/net/icmp.c ****   if (icmpDebug != NULL)
+  76:../../../../Lib/net/icmp.c ****     icmpPrintHeader(icmpDebug, nicState.layer3.ip, nicState.layer4.icmp);
+  77:../../../../Lib/net/icmp.c ****   //debugPrintHexTable(htons(packet->ip.len), (uint8_t*)packet);
+  78:../../../../Lib/net/icmp.c **** 
+  79:../../../../Lib/net/icmp.c ****   // send it (packet->ip.len+ETH_HEADER_LEN
+  80:../../../../Lib/net/icmp.c ****   nicSend(htons(nicState.layer3.ip->len) + ETH_HEADER_LEN);
+  81:../../../../Lib/net/icmp.c **** #if ICMP_DEBUG
+  82:../../../../Lib/net/icmp.c ****   if (icmpDebug != NULL)
+  83:../../../../Lib/net/icmp.c ****   {
+  84:../../../../Lib/net/icmp.c ****     if (icmpDebugLevel > 1)
+  85:../../../../Lib/net/icmp.c ****       fprintf_P(icmpDebug, PSTR("Sending ICMP PONG\r\n"));
+  86:../../../../Lib/net/icmp.c ****   }
+  87:../../../../Lib/net/icmp.c **** #endif
+  88:../../../../Lib/net/icmp.c **** }
+  89:../../../../Lib/net/icmp.c **** 
+  90:../../../../Lib/net/icmp.c **** #if ICMP_DEBUG
+  91:../../../../Lib/net/icmp.c **** void setIcmpDebug(FILE *stream, uint8_t level)
+  92:../../../../Lib/net/icmp.c **** {
+ 195               	.LM3:
+ 196               	.LFBB2:
+ 197               	/* prologue: function */
+ 198               	/* frame size = 0 */
+ 199               	/* stack size = 0 */
+ 200               	.L__stack_usage = 0
+  93:../../../../Lib/net/icmp.c ****   icmpDebug = stream;
+ 202               	.LM4:
+ 203 000e 9093 0000 		sts icmpDebug+1,r25
+ 204 0012 8093 0000 		sts icmpDebug,r24
+  94:../../../../Lib/net/icmp.c ****   icmpDebugLevel = level;
+ 206               	.LM5:
+ 207 0016 6093 0000 		sts icmpDebugLevel,r22
+ 208 001a 0895      		ret
+ 210               	.Lscope2:
+ 212               		.stabd	78,0,0
+ 216               	.global	icmpPrintHeader
+ 218               	icmpPrintHeader:
+ 219               		.stabd	46,0,0
+  95:../../../../Lib/net/icmp.c **** }
+  96:../../../../Lib/net/icmp.c **** #endif
+  97:../../../../Lib/net/icmp.c **** 
+  98:../../../../Lib/net/icmp.c **** void icmpPrintHeader(FILE *stream, struct netIpHeader *ipPacket, struct netIcmpHeader *icmpPacket)
+  99:../../../../Lib/net/icmp.c **** {
+ 221               	.LM6:
+ 222               	.LFBB3:
+ 223 001c EF92      		push r14
+ 224 001e FF92      		push r15
+ 225 0020 0F93      		push r16
+ 226 0022 1F93      		push r17
+ 227 0024 CF93      		push r28
+ 228 0026 DF93      		push r29
+ 229               	/* prologue: function */
+ 230               	/* frame size = 0 */
+ 231               	/* stack size = 6 */
+ 232               	.L__stack_usage = 6
+ 233 0028 EC01      		movw r28,r24
+ 234 002a 7B01      		movw r14,r22
+ 235 002c 8A01      		movw r16,r20
+ 100:../../../../Lib/net/icmp.c ****   fprintf_P(stream, PSTR("ICMP Packet:\r\n"));
+ 237               	.LM7:
+ 238 002e 80E0      		ldi r24,lo8(__c.2502)
+ 239 0030 90E0      		ldi r25,hi8(__c.2502)
+ 240 0032 9F93      		push r25
+ 241 0034 8F93      		push r24
+ 242 0036 DF93      		push r29
+ 243 0038 CF93      		push r28
+ 244 003a 0E94 0000 		call fprintf_P
+ 101:../../../../Lib/net/icmp.c **** // print source IP address
+ 102:../../../../Lib/net/icmp.c ****   fprintf_P(stream, PSTR("SrcIpAddr: "));  netPrintIPAddr(stream, ipPacket->srcipaddr);  fprintf_P(
+ 246               	.LM8:
+ 247 003e 80E0      		ldi r24,lo8(__c.2504)
+ 248 0040 90E0      		ldi r25,hi8(__c.2504)
+ 249 0042 9F93      		push r25
+ 250 0044 8F93      		push r24
+ 251 0046 DF93      		push r29
+ 252 0048 CF93      		push r28
+ 253 004a 0E94 0000 		call fprintf_P
+ 254 004e F701      		movw r30,r14
+ 255 0050 4485      		ldd r20,Z+12
+ 256 0052 5585      		ldd r21,Z+13
+ 257 0054 6685      		ldd r22,Z+14
+ 258 0056 7785      		ldd r23,Z+15
+ 259 0058 CE01      		movw r24,r28
+ 260 005a 0E94 0000 		call netPrintIPAddr
+ 261 005e 80E0      		ldi r24,lo8(__c.2506)
+ 262 0060 90E0      		ldi r25,hi8(__c.2506)
+ 263 0062 9F93      		push r25
+ 264 0064 8F93      		push r24
+ 265 0066 DF93      		push r29
+ 266 0068 CF93      		push r28
+ 267 006a 0E94 0000 		call fprintf_P
+ 103:../../../../Lib/net/icmp.c **** // print dest IP address
+ 104:../../../../Lib/net/icmp.c ****   fprintf_P(stream, PSTR("DstIpAddr: "));  netPrintIPAddr(stream, ipPacket->destipaddr); fprintf_P(
+ 269               	.LM9:
+ 270 006e 80E0      		ldi r24,lo8(__c.2508)
+ 271 0070 90E0      		ldi r25,hi8(__c.2508)
+ 272 0072 9F93      		push r25
+ 273 0074 8F93      		push r24
+ 274 0076 DF93      		push r29
+ 275 0078 CF93      		push r28
+ 276 007a 0E94 0000 		call fprintf_P
+ 277 007e F701      		movw r30,r14
+ 278 0080 4089      		ldd r20,Z+16
+ 279 0082 5189      		ldd r21,Z+17
+ 280 0084 6289      		ldd r22,Z+18
+ 281 0086 7389      		ldd r23,Z+19
+ 282 0088 CE01      		movw r24,r28
+ 283 008a 0E94 0000 		call netPrintIPAddr
+ 284 008e 80E0      		ldi r24,lo8(__c.2510)
+ 285 0090 90E0      		ldi r25,hi8(__c.2510)
+ 286 0092 9F93      		push r25
+ 287 0094 8F93      		push r24
+ 288 0096 DF93      		push r29
+ 289 0098 CF93      		push r28
+ 290 009a 0E94 0000 		call fprintf_P
+ 105:../../../../Lib/net/icmp.c **** // print type
+ 106:../../../../Lib/net/icmp.c ****   fprintf_P(stream, PSTR("Type: 0x%x    "), icmpPacket->type);
+ 292               	.LM10:
+ 293 009e F801      		movw r30,r16
+ 294 00a0 8081      		ld r24,Z
+ 295 00a2 1F92      		push __zero_reg__
+ 296 00a4 8F93      		push r24
+ 297 00a6 80E0      		ldi r24,lo8(__c.2512)
+ 298 00a8 90E0      		ldi r25,hi8(__c.2512)
+ 299 00aa 9F93      		push r25
+ 300 00ac 8F93      		push r24
+ 301 00ae DF93      		push r29
+ 302 00b0 CF93      		push r28
+ 303 00b2 0E94 0000 		call fprintf_P
+ 107:../../../../Lib/net/icmp.c **** //switch(icmpPacket->type)
+ 108:../../../../Lib/net/icmp.c **** //{
+ 109:../../../../Lib/net/icmp.c **** //  case ICMP_TYPE_ECHOREQUEST:
+ 110:../../../../Lib/net/icmp.c **** //    fprintf_P(stream, PSTR("E REQ"));
+ 111:../../../../Lib/net/icmp.c **** //    break;
+ 112:../../../../Lib/net/icmp.c **** //  case ICMP_TYPE_ECHOREPLY:
+ 113:../../../../Lib/net/icmp.c **** //    fprintf_P(stream, PSTR("E REP"));
+ 114:../../../../Lib/net/icmp.c **** //    break;
+ 115:../../../../Lib/net/icmp.c **** //  default:
+ 116:../../../../Lib/net/icmp.c **** //    fprintf_P(stream, ("???"));
+ 117:../../../../Lib/net/icmp.c **** //    break;
+ 118:../../../../Lib/net/icmp.c **** //}
+ 119:../../../../Lib/net/icmp.c **** //  fprintf_P(stream, PSTR("\r\n"));
+ 120:../../../../Lib/net/icmp.c **** // print code
+ 121:../../../../Lib/net/icmp.c ****   fprintf_P(stream, PSTR("Code   : 0x%x\r\n"), icmpPacket->icode);
+ 305               	.LM11:
+ 306 00b6 F801      		movw r30,r16
+ 307 00b8 8181      		ldd r24,Z+1
+ 308 00ba 1F92      		push __zero_reg__
+ 309 00bc 8F93      		push r24
+ 310 00be 80E0      		ldi r24,lo8(__c.2514)
+ 311 00c0 90E0      		ldi r25,hi8(__c.2514)
+ 312 00c2 9F93      		push r25
+ 313 00c4 8F93      		push r24
+ 314 00c6 DF93      		push r29
+ 315 00c8 CF93      		push r28
+ 316 00ca 0E94 0000 		call fprintf_P
+ 317 00ce 8DB7      		in r24,__SP_L__
+ 318 00d0 9EB7      		in r25,__SP_H__
+ 319 00d2 8096      		adiw r24,32
+ 320 00d4 0FB6      		in __tmp_reg__,__SREG__
+ 321 00d6 F894      		cli
+ 322 00d8 9EBF      		out __SP_H__,r25
+ 323 00da 0FBE      		out __SREG__,__tmp_reg__
+ 324 00dc 8DBF      		out __SP_L__,r24
+ 325               	/* epilogue start */
+ 122:../../../../Lib/net/icmp.c **** }
+ 327               	.LM12:
+ 328 00de DF91      		pop r29
+ 329 00e0 CF91      		pop r28
+ 330 00e2 1F91      		pop r17
+ 331 00e4 0F91      		pop r16
+ 332 00e6 FF90      		pop r15
+ 333 00e8 EF90      		pop r14
+ 334 00ea 0895      		ret
+ 336               	.Lscope3:
+ 338               		.stabd	78,0,0
+ 340               	.global	icmpEchoRequest
+ 342               	icmpEchoRequest:
+ 343               		.stabd	46,0,0
+  52:../../../../Lib/net/icmp.c **** #if ICMP_DEBUG
+ 345               	.LM13:
+ 346               	.LFBB4:
+ 347 00ec CF93      		push r28
+ 348 00ee DF93      		push r29
+ 349               	/* prologue: function */
+ 350               	/* frame size = 0 */
+ 351               	/* stack size = 2 */
+ 352               	.L__stack_usage = 2
+  54:../../../../Lib/net/icmp.c ****   {
+ 354               	.LM14:
+ 355 00f0 8091 0000 		lds r24,icmpDebug
+ 356 00f4 9091 0000 		lds r25,icmpDebug+1
+ 357 00f8 0097      		sbiw r24,0
+ 358 00fa 01F0      		breq .L5
+  56:../../../../Lib/net/icmp.c ****       fprintf_P(icmpDebug, PSTR("Received ICMP request: "));
+ 360               	.LM15:
+ 361 00fc 2091 0000 		lds r18,icmpDebugLevel
+ 362 0100 2230      		cpi r18,lo8(2)
+ 363 0102 00F0      		brlo .L5
+  57:../../../../Lib/net/icmp.c ****   }
+ 365               	.LM16:
+ 366 0104 20E0      		ldi r18,lo8(__c.2488)
+ 367 0106 30E0      		ldi r19,hi8(__c.2488)
+ 368 0108 3F93      		push r19
+ 369 010a 2F93      		push r18
+ 370 010c 9F93      		push r25
+ 371 010e 8F93      		push r24
+ 372 0110 0E94 0000 		call fprintf_P
+ 373 0114 0F90      		pop __tmp_reg__
+ 374 0116 0F90      		pop __tmp_reg__
+ 375 0118 0F90      		pop __tmp_reg__
+ 376 011a 0F90      		pop __tmp_reg__
+ 377               	.L5:
+  63:../../../../Lib/net/icmp.c ****   // recalculate checksum
+ 379               	.LM17:
+ 380 011c E091 0000 		lds r30,nicState+12
+ 381 0120 F091 0000 		lds r31,nicState+12+1
+ 382 0124 1082      		st Z,__zero_reg__
+  65:../../../../Lib/net/icmp.c ****   nicState.layer4.icmp->icmpchksum = netChecksum((uint8_t*)(nicState.layer4.icmp), htons(nicState.l
+ 384               	.LM18:
+ 385 0126 E091 0000 		lds r30,nicState+12
+ 386 012a F091 0000 		lds r31,nicState+12+1
+ 387 012e 1382      		std Z+3,__zero_reg__
+ 388 0130 1282      		std Z+2,__zero_reg__
+  66:../../../../Lib/net/icmp.c ****   // return to sender
+ 390               	.LM19:
+ 391 0132 E091 0000 		lds r30,nicState+10
+ 392 0136 F091 0000 		lds r31,nicState+10+1
+ 393 013a 8281      		ldd r24,Z+2
+ 394 013c 9381      		ldd r25,Z+3
+ 395 013e 0E94 0000 		call htons
+ 396 0142 C091 0000 		lds r28,nicState+12
+ 397 0146 D091 0000 		lds r29,nicState+12+1
+ 398 014a BC01      		movw r22,r24
+ 399 014c 6451      		subi r22,20
+ 400 014e 7109      		sbc r23,__zero_reg__
+ 401 0150 CE01      		movw r24,r28
+ 402 0152 0E94 0000 		call netChecksum
+ 403 0156 9B83      		std Y+3,r25
+ 404 0158 8A83      		std Y+2,r24
+  68:../../../../Lib/net/icmp.c ****   nicState.layer3.ip->destipaddr = nicState.layer3.ip->srcipaddr;
+ 406               	.LM20:
+ 407 015a E091 0000 		lds r30,nicState+10
+ 408 015e F091 0000 		lds r31,nicState+10+1
+ 409 0162 8089      		ldd r24,Z+16
+ 410 0164 9189      		ldd r25,Z+17
+ 411 0166 A289      		ldd r26,Z+18
+ 412 0168 B389      		ldd r27,Z+19
+  69:../../../../Lib/net/icmp.c ****   nicState.layer3.ip->srcipaddr = tempIp;
+ 414               	.LM21:
+ 415 016a 4485      		ldd r20,Z+12
+ 416 016c 5585      		ldd r21,Z+13
+ 417 016e 6685      		ldd r22,Z+14
+ 418 0170 7785      		ldd r23,Z+15
+ 419 0172 408B      		std Z+16,r20
+ 420 0174 518B      		std Z+17,r21
+ 421 0176 628B      		std Z+18,r22
+ 422 0178 738B      		std Z+19,r23
+  70:../../../../Lib/net/icmp.c ****   // add ethernet routing
+ 424               	.LM22:
+ 425 017a 8487      		std Z+12,r24
+ 426 017c 9587      		std Z+13,r25
+ 427 017e A687      		std Z+14,r26
+ 428 0180 B787      		std Z+15,r27
+  72:../../../../Lib/net/icmp.c **** 
+ 430               	.LM23:
+ 431 0182 60E0      		ldi r22,0
+ 432 0184 70E0      		ldi r23,0
+ 433 0186 CB01      		movw r24,r22
+ 434 0188 0E94 0000 		call arpIpOut
+  75:../../../../Lib/net/icmp.c ****     icmpPrintHeader(icmpDebug, nicState.layer3.ip, nicState.layer4.icmp);
+ 436               	.LM24:
+ 437 018c 8091 0000 		lds r24,icmpDebug
+ 438 0190 9091 0000 		lds r25,icmpDebug+1
+ 439 0194 0097      		sbiw r24,0
+ 440 0196 01F0      		breq .L6
+  76:../../../../Lib/net/icmp.c ****   //debugPrintHexTable(htons(packet->ip.len), (uint8_t*)packet);
+ 442               	.LM25:
+ 443 0198 4091 0000 		lds r20,nicState+12
+ 444 019c 5091 0000 		lds r21,nicState+12+1
+ 445 01a0 6091 0000 		lds r22,nicState+10
+ 446 01a4 7091 0000 		lds r23,nicState+10+1
+ 447 01a8 0E94 0000 		call icmpPrintHeader
+ 448               	.L6:
+  80:../../../../Lib/net/icmp.c **** #if ICMP_DEBUG
+ 450               	.LM26:
+ 451 01ac E091 0000 		lds r30,nicState+10
+ 452 01b0 F091 0000 		lds r31,nicState+10+1
+ 453 01b4 8281      		ldd r24,Z+2
+ 454 01b6 9381      		ldd r25,Z+3
+ 455 01b8 0E94 0000 		call htons
+ 456 01bc 0E96      		adiw r24,14
+ 457 01be 0E94 0000 		call nicSend
+  82:../../../../Lib/net/icmp.c ****   {
+ 459               	.LM27:
+ 460 01c2 8091 0000 		lds r24,icmpDebug
+ 461 01c6 9091 0000 		lds r25,icmpDebug+1
+ 462 01ca 0097      		sbiw r24,0
+ 463 01cc 01F0      		breq .L4
+  84:../../../../Lib/net/icmp.c ****       fprintf_P(icmpDebug, PSTR("Sending ICMP PONG\r\n"));
+ 465               	.LM28:
+ 466 01ce 2091 0000 		lds r18,icmpDebugLevel
+ 467 01d2 2230      		cpi r18,lo8(2)
+ 468 01d4 00F0      		brlo .L4
+  85:../../../../Lib/net/icmp.c ****   }
+ 470               	.LM29:
+ 471 01d6 20E0      		ldi r18,lo8(__c.2491)
+ 472 01d8 30E0      		ldi r19,hi8(__c.2491)
+ 473 01da 3F93      		push r19
+ 474 01dc 2F93      		push r18
+ 475 01de 9F93      		push r25
+ 476 01e0 8F93      		push r24
+ 477 01e2 0E94 0000 		call fprintf_P
+ 478 01e6 0F90      		pop __tmp_reg__
+ 479 01e8 0F90      		pop __tmp_reg__
+ 480 01ea 0F90      		pop __tmp_reg__
+ 481 01ec 0F90      		pop __tmp_reg__
+ 482               	.L4:
+ 483               	/* epilogue start */
+  88:../../../../Lib/net/icmp.c **** 
+ 485               	.LM30:
+ 486 01ee DF91      		pop r29
+ 487 01f0 CF91      		pop r28
+ 488 01f2 0895      		ret
+ 493               	.Lscope4:
+ 495               		.stabd	78,0,0
+ 497               	.global	icmpIpIn
+ 499               	icmpIpIn:
+ 500               		.stabd	46,0,0
+  32:../../../../Lib/net/icmp.c ****   // check ICMP type
+ 502               	.LM31:
+ 503               	.LFBB5:
+ 504               	/* prologue: function */
+ 505               	/* frame size = 0 */
+ 506               	/* stack size = 0 */
+ 507               	.L__stack_usage = 0
+  34:../../../../Lib/net/icmp.c ****   {
+ 509               	.LM32:
+ 510 01f4 E091 0000 		lds r30,nicState+12
+ 511 01f8 F091 0000 		lds r31,nicState+12+1
+ 512 01fc 8081      		ld r24,Z
+ 513 01fe 8830      		cpi r24,lo8(8)
+ 514 0200 01F4      		brne .L28
+  37:../../../../Lib/net/icmp.c ****       break;
+ 516               	.LM33:
+ 517 0202 0C94 0000 		jmp icmpEchoRequest
+ 518               	.L28:
+  41:../../../../Lib/net/icmp.c ****       {
+ 520               	.LM34:
+ 521 0206 8091 0000 		lds r24,icmpDebug
+ 522 020a 9091 0000 		lds r25,icmpDebug+1
+ 523 020e 0097      		sbiw r24,0
+ 524 0210 01F0      		breq .L18
+  43:../../../../Lib/net/icmp.c ****           fprintf_P(icmpDebug, PSTR("Unknown ICMP typeReceived ICMP request: "));
+ 526               	.LM35:
+ 527 0212 2091 0000 		lds r18,icmpDebugLevel
+ 528 0216 2223      		tst r18
+ 529 0218 01F0      		breq .L18
+  44:../../../../Lib/net/icmp.c ****       }
+ 531               	.LM36:
+ 532 021a 20E0      		ldi r18,lo8(__c.2483)
+ 533 021c 30E0      		ldi r19,hi8(__c.2483)
+ 534 021e 3F93      		push r19
+ 535 0220 2F93      		push r18
+ 536 0222 9F93      		push r25
+ 537 0224 8F93      		push r24
+ 538 0226 0E94 0000 		call fprintf_P
+ 539 022a 0F90      		pop __tmp_reg__
+ 540 022c 0F90      		pop __tmp_reg__
+ 541 022e 0F90      		pop __tmp_reg__
+ 542 0230 0F90      		pop __tmp_reg__
+ 543               	.L18:
+ 544 0232 0895      		ret
+ 546               	.Lscope5:
+ 548               		.stabd	78,0,0
+ 549               		.section	.progmem.data,"a",@progbits
+ 552               	__c.2514:
+ 553 0000 436F 6465 		.string	"Code   : 0x%x\r\n"
+ 553      2020 203A 
+ 553      2030 7825 
+ 553      780D 0A00 
+ 556               	__c.2512:
+ 557 0010 5479 7065 		.string	"Type: 0x%x    "
+ 557      3A20 3078 
+ 557      2578 2020 
+ 557      2020 00
+ 560               	__c.2510:
+ 561 001f 0D0A 00   		.string	"\r\n"
+ 564               	__c.2508:
+ 565 0022 4473 7449 		.string	"DstIpAddr: "
+ 565      7041 6464 
+ 565      723A 2000 
+ 568               	__c.2506:
+ 569 002e 0D0A 00   		.string	"\r\n"
+ 572               	__c.2504:
+ 573 0031 5372 6349 		.string	"SrcIpAddr: "
+ 573      7041 6464 
+ 573      723A 2000 
+ 576               	__c.2502:
+ 577 003d 4943 4D50 		.string	"ICMP Packet:\r\n"
+ 577      2050 6163 
+ 577      6B65 743A 
+ 577      0D0A 00
+ 580               	__c.2491:
+ 581 004c 5365 6E64 		.string	"Sending ICMP PONG\r\n"
+ 581      696E 6720 
+ 581      4943 4D50 
+ 581      2050 4F4E 
+ 581      470D 0A00 
+ 584               	__c.2488:
+ 585 0060 5265 6365 		.string	"Received ICMP request: "
+ 585      6976 6564 
+ 585      2049 434D 
+ 585      5020 7265 
+ 585      7175 6573 
+ 588               	__c.2483:
+ 589 0078 556E 6B6E 		.string	"Unknown ICMP typeReceived ICMP request: "
+ 589      6F77 6E20 
+ 589      4943 4D50 
+ 589      2074 7970 
+ 589      6552 6563 
+ 590               		.comm	icmpDebugLevel,1,1
+ 591               		.comm	icmpDebug,2,1
+ 592               		.comm	arpDebugLevel,1,1
+ 593               		.comm	arpDebug,2,1
+ 594               		.comm	IpMyConfig,15,1
+ 595               		.comm	udpDbgLevel,1,1
+ 596               		.comm	udpDbgStream,2,1
+ 597               		.comm	udpSocket,2,1
+ 598               		.comm	nicState,14,1
+ 599               		.comm	wwwport,1,1
+ 610               		.weak	nicSend
+ 611               		.text
+ 613               	.Letext0:
+ 614               		.ident	"GCC: (GNU) 4.9.2"
+ 615               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 icmp.c
+     /tmp/ccnAFgeb.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccnAFgeb.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccnAFgeb.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccnAFgeb.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccnAFgeb.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccnAFgeb.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccnAFgeb.s:166    .text:0000000000000000 icmpInit
+                            *COM*:0000000000000002 icmpDebug
+                            *COM*:0000000000000001 icmpDebugLevel
+     /tmp/ccnAFgeb.s:192    .text:000000000000000e setIcmpDebug
+     /tmp/ccnAFgeb.s:218    .text:000000000000001c icmpPrintHeader
+     /tmp/ccnAFgeb.s:576    .progmem.data:000000000000003d __c.2502
+     /tmp/ccnAFgeb.s:572    .progmem.data:0000000000000031 __c.2504
+     /tmp/ccnAFgeb.s:568    .progmem.data:000000000000002e __c.2506
+     /tmp/ccnAFgeb.s:564    .progmem.data:0000000000000022 __c.2508
+     /tmp/ccnAFgeb.s:560    .progmem.data:000000000000001f __c.2510
+     /tmp/ccnAFgeb.s:556    .progmem.data:0000000000000010 __c.2512
+     /tmp/ccnAFgeb.s:552    .progmem.data:0000000000000000 __c.2514
+     /tmp/ccnAFgeb.s:342    .text:00000000000000ec icmpEchoRequest
+     /tmp/ccnAFgeb.s:584    .progmem.data:0000000000000060 __c.2488
+                            *COM*:000000000000000e nicState
+     /tmp/ccnAFgeb.s:580    .progmem.data:000000000000004c __c.2491
+     /tmp/ccnAFgeb.s:499    .text:00000000000001f4 icmpIpIn
+     /tmp/ccnAFgeb.s:588    .progmem.data:0000000000000078 __c.2483
+                            *COM*:0000000000000001 arpDebugLevel
+                            *COM*:0000000000000002 arpDebug
+                            *COM*:000000000000000f IpMyConfig
+                            *COM*:0000000000000001 udpDbgLevel
+                            *COM*:0000000000000002 udpDbgStream
+                            *COM*:0000000000000002 udpSocket
+                            *COM*:0000000000000001 wwwport
+
+UNDEFINED SYMBOLS
+fprintf_P
+netPrintIPAddr
+htons
+netChecksum
+arpIpOut
+nicSend
+__do_clear_bss

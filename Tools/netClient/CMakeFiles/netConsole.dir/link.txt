@@ -1,0 +1,1 @@
+/usr/bin/gcc     CMakeFiles/netConsole.dir/netconsole.c.o CMakeFiles/netConsole.dir/vt100.c.o  -o netConsole -rdynamic 

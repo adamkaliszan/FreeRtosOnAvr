@@ -1,0 +1,17 @@
+#ifndef PROT485_H
+#define PROT485_H
+
+#include <avr/io.h>
+#include "main.h"
+
+#define Rs485TxStart() (PORTG |=  0x10)
+#define Rs485TxStop()  (PORTG &=  0xEF)
+
+
+/**
+ * Inicjalizacja sprzętu
+ */
+void hardwareInit(void);
+
+
+#endif

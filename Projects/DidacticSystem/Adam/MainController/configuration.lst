@@ -1,0 +1,164 @@
+   1               		.file	"configuration.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  10               		.text
+  11               	.Ltext0:
+ 271               	.global	loadConfiguration
+ 273               	loadConfiguration:
+ 274               		.stabd	46,0,0
+   1:configuration.c **** #include "configuration.h"
+   2:configuration.c **** #include <avr/eeprom.h>
+   3:configuration.c **** #include "hardware.h"
+   4:configuration.c **** #include "hardwareConfig.h"
+   5:configuration.c **** #include "softwareConfig.h"
+   6:configuration.c **** #include "nic.h"
+   7:configuration.c **** 
+   8:configuration.c **** 
+   9:configuration.c **** static struct lockerSensor lockerSensorsEEP[4] __attribute__((section (".eeprom"))) = {{LOCK_SENS_1
+  10:configuration.c ****                                                                                        {LOCK_SENS_2
+  11:configuration.c ****                                                                                        {LOCK_SENS_3
+  12:configuration.c ****                                                                                        {LOCK_SENS_4
+  13:configuration.c **** 
+  14:configuration.c **** uint32_t udpIpDst_eep   __attribute__((section (".eeprom")));
+  15:configuration.c **** uint16_t udpPortDstEep  __attribute__((section (".eeprom")));
+  16:configuration.c **** uint16_t udpPortSrcEep  __attribute__((section (".eeprom")));
+  17:configuration.c **** 
+  18:configuration.c **** 
+  19:configuration.c **** void loadConfiguration(void)
+  20:configuration.c **** {
+ 276               	.LM0:
+ 277               	.LFBB1:
+ 278               	/* prologue: function */
+ 279               	/* frame size = 0 */
+ 280               	/* stack size = 0 */
+ 281               	.L__stack_usage = 0
+  21:configuration.c ****   eeprom_read_block(lockSensors, lockerSensorsEEP, 4*sizeof(struct lockerSensor));
+ 283               	.LM1:
+ 284 0000 48E1      		ldi r20,lo8(24)
+ 285 0002 50E0      		ldi r21,0
+ 286 0004 60E0      		ldi r22,lo8(lockerSensorsEEP)
+ 287 0006 70E0      		ldi r23,hi8(lockerSensorsEEP)
+ 288 0008 8091 0000 		lds r24,lockSensors
+ 289 000c 9091 0000 		lds r25,lockSensors+1
+ 290 0010 0C94 0000 		jmp eeprom_read_block
+ 292               	.Lscope1:
+ 294               		.stabd	78,0,0
+ 296               	.global	saveConfiguration
+ 298               	saveConfiguration:
+ 299               		.stabd	46,0,0
+  22:configuration.c **** }
+  23:configuration.c **** 
+  24:configuration.c **** void saveConfiguration(void)
+  25:configuration.c **** {
+ 301               	.LM2:
+ 302               	.LFBB2:
+ 303               	/* prologue: function */
+ 304               	/* frame size = 0 */
+ 305               	/* stack size = 0 */
+ 306               	.L__stack_usage = 0
+  26:configuration.c ****   //saveNic();
+  27:configuration.c ****   ipSaveConfig();
+ 308               	.LM3:
+ 309 0014 0E94 0000 		call ipSaveConfig
+  28:configuration.c ****   udpSaveConfig();
+ 311               	.LM4:
+ 312 0018 0C94 0000 		jmp udpSaveConfig
+ 314               	.Lscope2:
+ 316               		.stabd	78,0,0
+ 317               	.global	udpPortSrcEep
+ 318               		.section	.eeprom,"aw",@progbits
+ 321               	udpPortSrcEep:
+ 322 0000 0000      		.zero	2
+ 323               	.global	udpPortDstEep
+ 326               	udpPortDstEep:
+ 327 0002 0000      		.zero	2
+ 328               	.global	udpIpDst_eep
+ 331               	udpIpDst_eep:
+ 332 0004 0000 0000 		.zero	4
+ 335               	lockerSensorsEEP:
+ 336 0008 00        		.byte	0
+ 337 0009 BC02      		.word	700
+ 338 000b 0000      		.word	0
+ 339 000d 00        		.byte	0
+ 340 000e 01        		.byte	1
+ 341 000f EE02      		.word	750
+ 342 0011 0000      		.word	0
+ 343 0013 00        		.byte	0
+ 344 0014 00        		.byte	0
+ 345 0015 BC02      		.word	700
+ 346 0017 0000      		.word	0
+ 347 0019 00        		.byte	0
+ 348 001a 01        		.byte	1
+ 349 001b 8403      		.word	900
+ 350 001d 0000      		.word	0
+ 351 001f 00        		.byte	0
+ 352               		.comm	czasRtc,7,1
+ 353               		.comm	sockets,2,1
+ 354               		.comm	tcpDebugLevel,1,1
+ 355               		.comm	tcpDebugStream,2,1
+ 356               		.comm	IpMyConfig,15,1
+ 357               		.comm	udpDbgLevel,1,1
+ 358               		.comm	udpDbgStream,2,1
+ 359               		.comm	udpSocket,2,1
+ 360               		.comm	icmpDebugLevel,1,1
+ 361               		.comm	icmpDebug,2,1
+ 362               		.comm	arpDebugLevel,1,1
+ 363               		.comm	arpDebug,2,1
+ 364               		.comm	nicState,14,1
+ 365               		.comm	xSemaphoreRs485,2,1
+ 366               		.comm	lockSensors,2,1
+ 367               		.comm	portB,1,1
+ 368               		.comm	portA,1,1
+ 369               		.comm	xSemaphoreSpiSS,2,1
+ 370               		.comm	rollers,2,1
+ 371               		.comm	wwwport,1,1
+ 372               		.comm	klastry,128,1
+ 398               		.text
+ 400               	.Letext0:
+ 401               		.ident	"GCC: (GNU) 4.9.2"
+ 402               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 configuration.c
+     /tmp/ccJ5Lj4f.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccJ5Lj4f.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccJ5Lj4f.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccJ5Lj4f.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccJ5Lj4f.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccJ5Lj4f.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccJ5Lj4f.s:273    .text:0000000000000000 loadConfiguration
+     /tmp/ccJ5Lj4f.s:335    .eeprom:0000000000000008 lockerSensorsEEP
+                            *COM*:0000000000000002 lockSensors
+     /tmp/ccJ5Lj4f.s:298    .text:0000000000000014 saveConfiguration
+     /tmp/ccJ5Lj4f.s:321    .eeprom:0000000000000000 udpPortSrcEep
+     /tmp/ccJ5Lj4f.s:326    .eeprom:0000000000000002 udpPortDstEep
+     /tmp/ccJ5Lj4f.s:331    .eeprom:0000000000000004 udpIpDst_eep
+                            *COM*:0000000000000007 czasRtc
+                            *COM*:0000000000000002 sockets
+                            *COM*:0000000000000001 tcpDebugLevel
+                            *COM*:0000000000000002 tcpDebugStream
+                            *COM*:000000000000000f IpMyConfig
+                            *COM*:0000000000000001 udpDbgLevel
+                            *COM*:0000000000000002 udpDbgStream
+                            *COM*:0000000000000002 udpSocket
+                            *COM*:0000000000000001 icmpDebugLevel
+                            *COM*:0000000000000002 icmpDebug
+                            *COM*:0000000000000001 arpDebugLevel
+                            *COM*:0000000000000002 arpDebug
+                            *COM*:000000000000000e nicState
+                            *COM*:0000000000000002 xSemaphoreRs485
+                            *COM*:0000000000000001 portB
+                            *COM*:0000000000000001 portA
+                            *COM*:0000000000000002 xSemaphoreSpiSS
+                            *COM*:0000000000000002 rollers
+                            *COM*:0000000000000001 wwwport
+                            *COM*:0000000000000080 klastry
+
+UNDEFINED SYMBOLS
+eeprom_read_block
+ipSaveConfig
+udpSaveConfig
+__do_clear_bss

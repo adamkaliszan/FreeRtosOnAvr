@@ -1,0 +1,5 @@
+/usr/lib/avr/include
+/usr/lib/avr/include/avr
+/student/adam/akme/FreeRtos/freeRtos/Lib/include
+/student/adam/akme/FreeRtos/freeRtos/Lib/net/include
+/student/adam/akme/FreeRtos/freeRtos/Source/include

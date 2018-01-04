@@ -1,0 +1,2881 @@
+   1               		.file	"serial.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   9               		.text
+  10               	.Ltext0:
+ 171               	_crc_xmodem_update:
+ 172               		.stabd	46,0,0
+ 174               	.Ltext1:
+   1:/usr/lib/avr/include/util/crc16.h **** /* Copyright (c) 2002, 2003, 2004  Marek Michalkiewicz
+   2:/usr/lib/avr/include/util/crc16.h ****    Copyright (c) 2005, 2007 Joerg Wunsch
+   3:/usr/lib/avr/include/util/crc16.h ****    Copyright (c) 2013 Dave Hylands
+   4:/usr/lib/avr/include/util/crc16.h ****    Copyright (c) 2013 Frederic Nadeau
+   5:/usr/lib/avr/include/util/crc16.h ****    All rights reserved.
+   6:/usr/lib/avr/include/util/crc16.h **** 
+   7:/usr/lib/avr/include/util/crc16.h ****    Redistribution and use in source and binary forms, with or without
+   8:/usr/lib/avr/include/util/crc16.h ****    modification, are permitted provided that the following conditions are met:
+   9:/usr/lib/avr/include/util/crc16.h **** 
+  10:/usr/lib/avr/include/util/crc16.h ****    * Redistributions of source code must retain the above copyright
+  11:/usr/lib/avr/include/util/crc16.h ****      notice, this list of conditions and the following disclaimer.
+  12:/usr/lib/avr/include/util/crc16.h **** 
+  13:/usr/lib/avr/include/util/crc16.h ****    * Redistributions in binary form must reproduce the above copyright
+  14:/usr/lib/avr/include/util/crc16.h ****      notice, this list of conditions and the following disclaimer in
+  15:/usr/lib/avr/include/util/crc16.h ****      the documentation and/or other materials provided with the
+  16:/usr/lib/avr/include/util/crc16.h ****      distribution.
+  17:/usr/lib/avr/include/util/crc16.h **** 
+  18:/usr/lib/avr/include/util/crc16.h ****    * Neither the name of the copyright holders nor the names of
+  19:/usr/lib/avr/include/util/crc16.h ****      contributors may be used to endorse or promote products derived
+  20:/usr/lib/avr/include/util/crc16.h ****      from this software without specific prior written permission.
+  21:/usr/lib/avr/include/util/crc16.h **** 
+  22:/usr/lib/avr/include/util/crc16.h ****   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  23:/usr/lib/avr/include/util/crc16.h ****   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  24:/usr/lib/avr/include/util/crc16.h ****   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  25:/usr/lib/avr/include/util/crc16.h ****   ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+  26:/usr/lib/avr/include/util/crc16.h ****   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  27:/usr/lib/avr/include/util/crc16.h ****   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  28:/usr/lib/avr/include/util/crc16.h ****   SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  29:/usr/lib/avr/include/util/crc16.h ****   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  30:/usr/lib/avr/include/util/crc16.h ****   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  31:/usr/lib/avr/include/util/crc16.h ****   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  32:/usr/lib/avr/include/util/crc16.h ****   POSSIBILITY OF SUCH DAMAGE. */
+  33:/usr/lib/avr/include/util/crc16.h **** 
+  34:/usr/lib/avr/include/util/crc16.h **** /* $Id$ */
+  35:/usr/lib/avr/include/util/crc16.h **** 
+  36:/usr/lib/avr/include/util/crc16.h **** #ifndef _UTIL_CRC16_H_
+  37:/usr/lib/avr/include/util/crc16.h **** #define _UTIL_CRC16_H_
+  38:/usr/lib/avr/include/util/crc16.h **** 
+  39:/usr/lib/avr/include/util/crc16.h **** #include <stdint.h>
+  40:/usr/lib/avr/include/util/crc16.h **** 
+  41:/usr/lib/avr/include/util/crc16.h **** /** \file */
+  42:/usr/lib/avr/include/util/crc16.h **** /** \defgroup util_crc <util/crc16.h>: CRC Computations
+  43:/usr/lib/avr/include/util/crc16.h ****     \code#include <util/crc16.h>\endcode
+  44:/usr/lib/avr/include/util/crc16.h **** 
+  45:/usr/lib/avr/include/util/crc16.h ****     This header file provides a optimized inline functions for calculating
+  46:/usr/lib/avr/include/util/crc16.h ****     cyclic redundancy checks (CRC) using common polynomials.
+  47:/usr/lib/avr/include/util/crc16.h **** 
+  48:/usr/lib/avr/include/util/crc16.h ****     \par References:
+  49:/usr/lib/avr/include/util/crc16.h **** 
+  50:/usr/lib/avr/include/util/crc16.h ****     \par
+  51:/usr/lib/avr/include/util/crc16.h **** 
+  52:/usr/lib/avr/include/util/crc16.h ****     See the Dallas Semiconductor app note 27 for 8051 assembler example and
+  53:/usr/lib/avr/include/util/crc16.h ****     general CRC optimization suggestions. The table on the last page of the
+  54:/usr/lib/avr/include/util/crc16.h ****     app note is the key to understanding these implementations.
+  55:/usr/lib/avr/include/util/crc16.h **** 
+  56:/usr/lib/avr/include/util/crc16.h ****     \par
+  57:/usr/lib/avr/include/util/crc16.h **** 
+  58:/usr/lib/avr/include/util/crc16.h ****     Jack Crenshaw's "Implementing CRCs" article in the January 1992 isue of \e
+  59:/usr/lib/avr/include/util/crc16.h ****     Embedded \e Systems \e Programming. This may be difficult to find, but it
+  60:/usr/lib/avr/include/util/crc16.h ****     explains CRC's in very clear and concise terms. Well worth the effort to
+  61:/usr/lib/avr/include/util/crc16.h ****     obtain a copy.
+  62:/usr/lib/avr/include/util/crc16.h **** 
+  63:/usr/lib/avr/include/util/crc16.h ****     A typical application would look like:
+  64:/usr/lib/avr/include/util/crc16.h **** 
+  65:/usr/lib/avr/include/util/crc16.h ****     \code
+  66:/usr/lib/avr/include/util/crc16.h ****     // Dallas iButton test vector.
+  67:/usr/lib/avr/include/util/crc16.h ****     uint8_t serno[] = { 0x02, 0x1c, 0xb8, 0x01, 0, 0, 0, 0xa2 };
+  68:/usr/lib/avr/include/util/crc16.h **** 
+  69:/usr/lib/avr/include/util/crc16.h ****     int
+  70:/usr/lib/avr/include/util/crc16.h ****     checkcrc(void)
+  71:/usr/lib/avr/include/util/crc16.h ****     {
+  72:/usr/lib/avr/include/util/crc16.h **** 	uint8_t crc = 0, i;
+  73:/usr/lib/avr/include/util/crc16.h **** 
+  74:/usr/lib/avr/include/util/crc16.h **** 	for (i = 0; i < sizeof serno / sizeof serno[0]; i++)
+  75:/usr/lib/avr/include/util/crc16.h **** 	    crc = _crc_ibutton_update(crc, serno[i]);
+  76:/usr/lib/avr/include/util/crc16.h **** 
+  77:/usr/lib/avr/include/util/crc16.h **** 	return crc; // must be 0
+  78:/usr/lib/avr/include/util/crc16.h ****     }
+  79:/usr/lib/avr/include/util/crc16.h ****     \endcode
+  80:/usr/lib/avr/include/util/crc16.h **** */
+  81:/usr/lib/avr/include/util/crc16.h **** 
+  82:/usr/lib/avr/include/util/crc16.h **** /** \ingroup util_crc
+  83:/usr/lib/avr/include/util/crc16.h ****     Optimized CRC-16 calculation.
+  84:/usr/lib/avr/include/util/crc16.h **** 
+  85:/usr/lib/avr/include/util/crc16.h ****     Polynomial: x^16 + x^15 + x^2 + 1 (0xa001)<br>
+  86:/usr/lib/avr/include/util/crc16.h ****     Initial value: 0xffff
+  87:/usr/lib/avr/include/util/crc16.h **** 
+  88:/usr/lib/avr/include/util/crc16.h ****     This CRC is normally used in disk-drive controllers.
+  89:/usr/lib/avr/include/util/crc16.h **** 
+  90:/usr/lib/avr/include/util/crc16.h ****     The following is the equivalent functionality written in C.
+  91:/usr/lib/avr/include/util/crc16.h **** 
+  92:/usr/lib/avr/include/util/crc16.h ****     \code
+  93:/usr/lib/avr/include/util/crc16.h ****     uint16_t
+  94:/usr/lib/avr/include/util/crc16.h ****     crc16_update(uint16_t crc, uint8_t a)
+  95:/usr/lib/avr/include/util/crc16.h ****     {
+  96:/usr/lib/avr/include/util/crc16.h **** 	int i;
+  97:/usr/lib/avr/include/util/crc16.h **** 
+  98:/usr/lib/avr/include/util/crc16.h **** 	crc ^= a;
+  99:/usr/lib/avr/include/util/crc16.h **** 	for (i = 0; i < 8; ++i)
+ 100:/usr/lib/avr/include/util/crc16.h **** 	{
+ 101:/usr/lib/avr/include/util/crc16.h **** 	    if (crc & 1)
+ 102:/usr/lib/avr/include/util/crc16.h **** 		crc = (crc >> 1) ^ 0xA001;
+ 103:/usr/lib/avr/include/util/crc16.h **** 	    else
+ 104:/usr/lib/avr/include/util/crc16.h **** 		crc = (crc >> 1);
+ 105:/usr/lib/avr/include/util/crc16.h **** 	}
+ 106:/usr/lib/avr/include/util/crc16.h **** 
+ 107:/usr/lib/avr/include/util/crc16.h **** 	return crc;
+ 108:/usr/lib/avr/include/util/crc16.h ****     }
+ 109:/usr/lib/avr/include/util/crc16.h **** 
+ 110:/usr/lib/avr/include/util/crc16.h ****     \endcode */
+ 111:/usr/lib/avr/include/util/crc16.h **** 
+ 112:/usr/lib/avr/include/util/crc16.h **** static __inline__ uint16_t
+ 113:/usr/lib/avr/include/util/crc16.h **** _crc16_update(uint16_t __crc, uint8_t __data)
+ 114:/usr/lib/avr/include/util/crc16.h **** {
+ 115:/usr/lib/avr/include/util/crc16.h **** 	uint8_t __tmp;
+ 116:/usr/lib/avr/include/util/crc16.h **** 	uint16_t __ret;
+ 117:/usr/lib/avr/include/util/crc16.h **** 
+ 118:/usr/lib/avr/include/util/crc16.h **** 	__asm__ __volatile__ (
+ 119:/usr/lib/avr/include/util/crc16.h **** 		"eor %A0,%2" "\n\t"
+ 120:/usr/lib/avr/include/util/crc16.h **** 		"mov %1,%A0" "\n\t"
+ 121:/usr/lib/avr/include/util/crc16.h **** 		"swap %1" "\n\t"
+ 122:/usr/lib/avr/include/util/crc16.h **** 		"eor %1,%A0" "\n\t"
+ 123:/usr/lib/avr/include/util/crc16.h **** 		"mov __tmp_reg__,%1" "\n\t"
+ 124:/usr/lib/avr/include/util/crc16.h **** 		"lsr %1" "\n\t"
+ 125:/usr/lib/avr/include/util/crc16.h **** 		"lsr %1" "\n\t"
+ 126:/usr/lib/avr/include/util/crc16.h **** 		"eor %1,__tmp_reg__" "\n\t"
+ 127:/usr/lib/avr/include/util/crc16.h **** 		"mov __tmp_reg__,%1" "\n\t"
+ 128:/usr/lib/avr/include/util/crc16.h **** 		"lsr %1" "\n\t"
+ 129:/usr/lib/avr/include/util/crc16.h **** 		"eor %1,__tmp_reg__" "\n\t"
+ 130:/usr/lib/avr/include/util/crc16.h **** 		"andi %1,0x07" "\n\t"
+ 131:/usr/lib/avr/include/util/crc16.h **** 		"mov __tmp_reg__,%A0" "\n\t"
+ 132:/usr/lib/avr/include/util/crc16.h **** 		"mov %A0,%B0" "\n\t"
+ 133:/usr/lib/avr/include/util/crc16.h **** 		"lsr %1" "\n\t"
+ 134:/usr/lib/avr/include/util/crc16.h **** 		"ror __tmp_reg__" "\n\t"
+ 135:/usr/lib/avr/include/util/crc16.h **** 		"ror %1" "\n\t"
+ 136:/usr/lib/avr/include/util/crc16.h **** 		"mov %B0,__tmp_reg__" "\n\t"
+ 137:/usr/lib/avr/include/util/crc16.h **** 		"eor %A0,%1" "\n\t"
+ 138:/usr/lib/avr/include/util/crc16.h **** 		"lsr __tmp_reg__" "\n\t"
+ 139:/usr/lib/avr/include/util/crc16.h **** 		"ror %1" "\n\t"
+ 140:/usr/lib/avr/include/util/crc16.h **** 		"eor %B0,__tmp_reg__" "\n\t"
+ 141:/usr/lib/avr/include/util/crc16.h **** 		"eor %A0,%1"
+ 142:/usr/lib/avr/include/util/crc16.h **** 		: "=r" (__ret), "=d" (__tmp)
+ 143:/usr/lib/avr/include/util/crc16.h **** 		: "r" (__data), "0" (__crc)
+ 144:/usr/lib/avr/include/util/crc16.h **** 		: "r0"
+ 145:/usr/lib/avr/include/util/crc16.h **** 	);
+ 146:/usr/lib/avr/include/util/crc16.h **** 	return __ret;
+ 147:/usr/lib/avr/include/util/crc16.h **** }
+ 148:/usr/lib/avr/include/util/crc16.h **** 
+ 149:/usr/lib/avr/include/util/crc16.h **** /** \ingroup util_crc
+ 150:/usr/lib/avr/include/util/crc16.h ****     Optimized CRC-XMODEM calculation.
+ 151:/usr/lib/avr/include/util/crc16.h **** 
+ 152:/usr/lib/avr/include/util/crc16.h ****     Polynomial: x^16 + x^12 + x^5 + 1 (0x1021)<br>
+ 153:/usr/lib/avr/include/util/crc16.h ****     Initial value: 0x0
+ 154:/usr/lib/avr/include/util/crc16.h **** 
+ 155:/usr/lib/avr/include/util/crc16.h ****     This is the CRC used by the Xmodem-CRC protocol.
+ 156:/usr/lib/avr/include/util/crc16.h **** 
+ 157:/usr/lib/avr/include/util/crc16.h ****     The following is the equivalent functionality written in C.
+ 158:/usr/lib/avr/include/util/crc16.h **** 
+ 159:/usr/lib/avr/include/util/crc16.h ****     \code
+ 160:/usr/lib/avr/include/util/crc16.h ****     uint16_t
+ 161:/usr/lib/avr/include/util/crc16.h ****     crc_xmodem_update (uint16_t crc, uint8_t data)
+ 162:/usr/lib/avr/include/util/crc16.h ****     {
+ 163:/usr/lib/avr/include/util/crc16.h ****         int i;
+ 164:/usr/lib/avr/include/util/crc16.h **** 
+ 165:/usr/lib/avr/include/util/crc16.h ****         crc = crc ^ ((uint16_t)data << 8);
+ 166:/usr/lib/avr/include/util/crc16.h ****         for (i=0; i<8; i++)
+ 167:/usr/lib/avr/include/util/crc16.h ****         {
+ 168:/usr/lib/avr/include/util/crc16.h ****             if (crc & 0x8000)
+ 169:/usr/lib/avr/include/util/crc16.h ****                 crc = (crc << 1) ^ 0x1021;
+ 170:/usr/lib/avr/include/util/crc16.h ****             else
+ 171:/usr/lib/avr/include/util/crc16.h ****                 crc <<= 1;
+ 172:/usr/lib/avr/include/util/crc16.h ****         }
+ 173:/usr/lib/avr/include/util/crc16.h **** 
+ 174:/usr/lib/avr/include/util/crc16.h ****         return crc;
+ 175:/usr/lib/avr/include/util/crc16.h ****     }
+ 176:/usr/lib/avr/include/util/crc16.h ****     \endcode */
+ 177:/usr/lib/avr/include/util/crc16.h **** 
+ 178:/usr/lib/avr/include/util/crc16.h **** static __inline__ uint16_t
+ 179:/usr/lib/avr/include/util/crc16.h **** _crc_xmodem_update(uint16_t __crc, uint8_t __data)
+ 180:/usr/lib/avr/include/util/crc16.h **** {
+ 176               	.LM0:
+ 177               	.LFBB1:
+ 178               	/* prologue: function */
+ 179               	/* frame size = 0 */
+ 180               	/* stack size = 0 */
+ 181               	.L__stack_usage = 0
+ 181:/usr/lib/avr/include/util/crc16.h ****     uint16_t __ret;             /* %B0:%A0 (alias for __crc) */
+ 182:/usr/lib/avr/include/util/crc16.h ****     uint8_t __tmp1;             /* %1 */
+ 183:/usr/lib/avr/include/util/crc16.h ****     uint8_t __tmp2;             /* %2 */
+ 184:/usr/lib/avr/include/util/crc16.h ****                                 /* %3  __data */
+ 185:/usr/lib/avr/include/util/crc16.h **** 
+ 186:/usr/lib/avr/include/util/crc16.h ****     __asm__ __volatile__ (
+ 187:/usr/lib/avr/include/util/crc16.h ****         "eor    %B0,%3"          "\n\t" /* crc.hi ^ data */
+ 188:/usr/lib/avr/include/util/crc16.h ****         "mov    __tmp_reg__,%B0" "\n\t"
+ 189:/usr/lib/avr/include/util/crc16.h ****         "swap   __tmp_reg__"     "\n\t" /* swap(crc.hi ^ data) */
+ 190:/usr/lib/avr/include/util/crc16.h **** 
+ 191:/usr/lib/avr/include/util/crc16.h ****         /* Calculate the ret.lo of the CRC. */
+ 192:/usr/lib/avr/include/util/crc16.h ****         "mov    %1,__tmp_reg__"  "\n\t"
+ 193:/usr/lib/avr/include/util/crc16.h ****         "andi   %1,0x0f"         "\n\t"
+ 194:/usr/lib/avr/include/util/crc16.h ****         "eor    %1,%B0"          "\n\t"
+ 195:/usr/lib/avr/include/util/crc16.h ****         "mov    %2,%B0"          "\n\t"
+ 196:/usr/lib/avr/include/util/crc16.h ****         "eor    %2,__tmp_reg__"  "\n\t"
+ 197:/usr/lib/avr/include/util/crc16.h ****         "lsl    %2"              "\n\t"
+ 198:/usr/lib/avr/include/util/crc16.h ****         "andi   %2,0xe0"         "\n\t"
+ 199:/usr/lib/avr/include/util/crc16.h ****         "eor    %1,%2"           "\n\t" /* __tmp1 is now ret.lo. */
+ 200:/usr/lib/avr/include/util/crc16.h **** 
+ 201:/usr/lib/avr/include/util/crc16.h ****         /* Calculate the ret.hi of the CRC. */
+ 202:/usr/lib/avr/include/util/crc16.h ****         "mov    %2,__tmp_reg__"  "\n\t"
+ 203:/usr/lib/avr/include/util/crc16.h ****         "eor    %2,%B0"          "\n\t"
+ 204:/usr/lib/avr/include/util/crc16.h ****         "andi   %2,0xf0"         "\n\t"
+ 205:/usr/lib/avr/include/util/crc16.h ****         "lsr    %2"              "\n\t"
+ 206:/usr/lib/avr/include/util/crc16.h ****         "mov    __tmp_reg__,%B0" "\n\t"
+ 207:/usr/lib/avr/include/util/crc16.h ****         "lsl    __tmp_reg__"     "\n\t"
+ 208:/usr/lib/avr/include/util/crc16.h ****         "rol    %2"              "\n\t"
+ 209:/usr/lib/avr/include/util/crc16.h ****         "lsr    %B0"             "\n\t"
+ 210:/usr/lib/avr/include/util/crc16.h ****         "lsr    %B0"             "\n\t"
+ 211:/usr/lib/avr/include/util/crc16.h ****         "lsr    %B0"             "\n\t"
+ 212:/usr/lib/avr/include/util/crc16.h ****         "andi   %B0,0x1f"        "\n\t"
+ 213:/usr/lib/avr/include/util/crc16.h ****         "eor    %B0,%2"          "\n\t"
+ 214:/usr/lib/avr/include/util/crc16.h ****         "eor    %B0,%A0"         "\n\t" /* ret.hi is now ready. */
+ 215:/usr/lib/avr/include/util/crc16.h ****         "mov    %A0,%1"          "\n\t" /* ret.lo is now ready. */
+ 216:/usr/lib/avr/include/util/crc16.h ****         : "=d" (__ret), "=d" (__tmp1), "=d" (__tmp2)
+ 217:/usr/lib/avr/include/util/crc16.h ****         : "r" (__data), "0" (__crc)
+ 218:/usr/lib/avr/include/util/crc16.h ****         : "r0"
+ 219:/usr/lib/avr/include/util/crc16.h ****     );
+ 220:/usr/lib/avr/include/util/crc16.h ****     return __ret;
+ 221:/usr/lib/avr/include/util/crc16.h **** }
+ 183               	.LM1:
+ 184               	/* #APP */
+ 185               	 ;  186 "/usr/lib/avr/include/util/crc16.h" 1
+ 186 0000 9627      		eor    r25,r22
+ 187 0002 092E      		mov    __tmp_reg__,r25
+ 188 0004 0294      		swap   __tmp_reg__
+ 189 0006 202D      		mov    r18,__tmp_reg__
+ 190 0008 2F70      		andi   r18,0x0f
+ 191 000a 2927      		eor    r18,r25
+ 192 000c 692F      		mov    r22,r25
+ 193 000e 6025      		eor    r22,__tmp_reg__
+ 194 0010 660F      		lsl    r22
+ 195 0012 607E      		andi   r22,0xe0
+ 196 0014 2627      		eor    r18,r22
+ 197 0016 602D      		mov    r22,__tmp_reg__
+ 198 0018 6927      		eor    r22,r25
+ 199 001a 607F      		andi   r22,0xf0
+ 200 001c 6695      		lsr    r22
+ 201 001e 092E      		mov    __tmp_reg__,r25
+ 202 0020 000C      		lsl    __tmp_reg__
+ 203 0022 661F      		rol    r22
+ 204 0024 9695      		lsr    r25
+ 205 0026 9695      		lsr    r25
+ 206 0028 9695      		lsr    r25
+ 207 002a 9F71      		andi   r25,0x1f
+ 208 002c 9627      		eor    r25,r22
+ 209 002e 9827      		eor    r25,r24
+ 210 0030 822F      		mov    r24,r18
+ 211               		
+ 212               	 ;  0 "" 2
+ 213               	/* #NOAPP */
+ 214 0032 0895      		ret
+ 216               	.Lscope1:
+ 218               		.stabd	78,0,0
+ 222               	.global	vProtocol
+ 224               	vProtocol:
+ 225               		.stabd	46,0,0
+ 227               	.Ltext2:
+   1:serial.c      **** /*
+   2:serial.c      **** 	FreeRTOS.org V5.2.0 - Copyright (C) 2003-2009 Richard Barry.
+   3:serial.c      **** 
+   4:serial.c      **** 	This file is part of the FreeRTOS.org distribution.
+   5:serial.c      **** 
+   6:serial.c      **** 	FreeRTOS.org is free software; you can redistribute it and/or modify it 
+   7:serial.c      **** 	under the terms of the GNU General Public License (version 2) as published
+   8:serial.c      **** 	by the Free Software Foundation and modified by the FreeRTOS exception.
+   9:serial.c      **** 
+  10:serial.c      **** 	FreeRTOS.org is distributed in the hope that it will be useful,	but WITHOUT
+  11:serial.c      **** 	ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+  12:serial.c      **** 	FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for 
+  13:serial.c      **** 	more details.
+  14:serial.c      **** 
+  15:serial.c      **** 	You should have received a copy of the GNU General Public License along 
+  16:serial.c      **** 	with FreeRTOS.org; if not, write to the Free Software Foundation, Inc., 59 
+  17:serial.c      **** 	Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+  18:serial.c      **** 
+  19:serial.c      **** 	A special exception to the GPL is included to allow you to distribute a 
+  20:serial.c      **** 	combined work that includes FreeRTOS.org without being obliged to provide
+  21:serial.c      **** 	the source code for any proprietary components.  See the licensing section
+  22:serial.c      **** 	of http://www.FreeRTOS.org for full details.
+  23:serial.c      **** 
+  24:serial.c      **** 
+  25:serial.c      **** 	***************************************************************************
+  26:serial.c      **** 	*                                                                         *
+  27:serial.c      **** 	* Get the FreeRTOS eBook!  See http://www.FreeRTOS.org/Documentation      *
+  28:serial.c      **** 	*                                                                         *
+  29:serial.c      **** 	* This is a concise, step by step, 'hands on' guide that describes both   *
+  30:serial.c      **** 	* general multitasking concepts and FreeRTOS specifics. It presents and   *
+  31:serial.c      **** 	* explains numerous examples that are written using the FreeRTOS API.     *
+  32:serial.c      **** 	* Full source code for all the examples is provided in an accompanying    *
+  33:serial.c      **** 	* .zip file.                                                              *
+  34:serial.c      **** 	*                                                                         *
+  35:serial.c      **** 	***************************************************************************
+  36:serial.c      **** 
+  37:serial.c      **** 	1 tab == 2 spaces!
+  38:serial.c      **** 
+  39:serial.c      **** 	Please ensure to read the configuration and relevant port sections of the
+  40:serial.c      **** 	online documentation.
+  41:serial.c      **** 
+  42:serial.c      **** 	http://www.FreeRTOS.org - Documentation, latest information, license and
+  43:serial.c      **** 	contact details.
+  44:serial.c      **** 
+  45:serial.c      **** 	http://www.SafeRTOS.com - A version that is certified for use in safety
+  46:serial.c      **** 	critical systems.
+  47:serial.c      **** 
+  48:serial.c      **** 	http://www.OpenRTOS.com - Commercial support, development, porting,
+  49:serial.c      **** 	licensing and training services.
+  50:serial.c      **** */
+  51:serial.c      **** #include <stdlib.h>
+  52:serial.c      **** #include <avr/interrupt.h>
+  53:serial.c      **** #include "FreeRTOS.h"
+  54:serial.c      **** #include "queue.h"
+  55:serial.c      **** #include "task.h"
+  56:serial.c      **** #include "serial.h"
+  57:serial.c      **** #include "hardware.h"
+  58:serial.c      **** 
+  59:serial.c      **** //#define debug 1
+  60:serial.c      **** 
+  61:serial.c      **** /*-----------------------------------------------------------*/
+  62:serial.c      **** 
+  63:serial.c      **** static xQueueHandle xRxedChars;
+  64:serial.c      **** static xQueueHandle xCharsForTx;
+  65:serial.c      **** 
+  66:serial.c      **** 
+  67:serial.c      **** static volatile uint8_t kodRozkazu;
+  68:serial.c      **** static volatile uint8_t dlDanych;
+  69:serial.c      **** static uint8_t bDane[MAX_DATA_LEN];
+  70:serial.c      **** 
+  71:serial.c      **** static uint8_t wiadomosc;
+  72:serial.c      **** 
+  73:serial.c      **** 
+  74:serial.c      **** static xSemaphoreHandle xSemaphore;
+  75:serial.c      **** static portBASE_TYPE xHigherPriorityTaskWoken; 
+  76:serial.c      **** 
+  77:serial.c      **** static uint8_t crcLo;
+  78:serial.c      **** static uint8_t crcHi;
+  79:serial.c      **** static uint16_t crc;
+  80:serial.c      **** 
+  81:serial.c      **** static uint8_t wykonajRozkaz(void)
+  82:serial.c      **** {
+  83:serial.c      **** //  static  portBASE_TYPE   xResult;
+  84:serial.c      ****   uint8_t                 wysylac   = 0;
+  85:serial.c      **** 
+  86:serial.c      ****   switch (kodRozkazu)
+  87:serial.c      ****   {
+  88:serial.c      ****     case rOpuscRolete1:
+  89:serial.c      ****       wiadomosc = 0x3F;
+  90:serial.c      ****       wysylac = 2;
+  91:serial.c      ****       break;
+  92:serial.c      **** 
+  93:serial.c      ****     case rOpuscRolete2:
+  94:serial.c      ****       wiadomosc = 0x3F;
+  95:serial.c      ****       wysylac = 3;
+  96:serial.c      ****       break;
+  97:serial.c      **** 
+  98:serial.c      ****     case rPodniesRolete1:
+  99:serial.c      ****       wiadomosc = 0xBF;
+ 100:serial.c      ****       wysylac = 2;
+ 101:serial.c      ****       break;
+ 102:serial.c      **** 
+ 103:serial.c      ****     case rPodniesRolete2:
+ 104:serial.c      ****       wiadomosc = 0xBF;
+ 105:serial.c      ****       wysylac = 3;
+ 106:serial.c      ****       break;
+ 107:serial.c      **** 
+ 108:serial.c      ****     case rZatrzymajRolete1:
+ 109:serial.c      ****       wiadomosc = 0x40;
+ 110:serial.c      ****       wysylac = 2;
+ 111:serial.c      ****       break;
+ 112:serial.c      **** 
+ 113:serial.c      ****     case rZatrzymajRolete2:
+ 114:serial.c      ****       wiadomosc = 0x40;
+ 115:serial.c      ****       wysylac = 3;
+ 116:serial.c      ****       break;
+ 117:serial.c      **** 
+ 118:serial.c      ****     case rPING:
+ 119:serial.c      ****       wysylac = 1;
+ 120:serial.c      ****       break;
+ 121:serial.c      ****     case rHELLO:
+ 122:serial.c      ****       wysylac = 4;
+ 123:serial.c      ****       break;
+ 124:serial.c      ****     case rFLASH:
+ 125:serial.c      ****       wysylac = 1;
+ 126:serial.c      ****       break;
+ 127:serial.c      ****   }
+ 128:serial.c      ****   return wysylac;
+ 129:serial.c      **** }
+ 130:serial.c      **** 
+ 131:serial.c      **** void vProtocol(xCoRoutineHandle xHandle, unsigned portBASE_TYPE uxIndex)
+ 132:serial.c      **** {
+ 229               	.LM2:
+ 230               	.LFBB2:
+ 231 0034 FF92      		push r15
+ 232 0036 0F93      		push r16
+ 233 0038 1F93      		push r17
+ 234 003a CF93      		push r28
+ 235 003c DF93      		push r29
+ 236 003e 1F92      		push __zero_reg__
+ 237 0040 CDB7      		in r28,__SP_L__
+ 238 0042 DEB7      		in r29,__SP_H__
+ 239               	/* prologue: function */
+ 240               	/* frame size = 1 */
+ 241               	/* stack size = 6 */
+ 242               	.L__stack_usage = 6
+ 243 0044 8C01      		movw r16,r24
+ 133:serial.c      ****   (void) uxIndex;
+ 134:serial.c      **** 
+ 135:serial.c      ****   crSTART( xHandle );
+ 245               	.LM3:
+ 246 0046 FC01      		movw r30,r24
+ 247 0048 208D      		ldd r18,Z+24
+ 248 004a 318D      		ldd r19,Z+25
+ 249 004c 2535      		cpi r18,85
+ 250 004e F2E0      		ldi r31,2
+ 251 0050 3F07      		cpc r19,r31
+ 252 0052 01F4      		brne .+2
+ 253 0054 00C0      		rjmp .L4
+ 254 0056 00F0      		brlo .+2
+ 255 0058 00C0      		rjmp .L5
+ 256 005a 223D      		cpi r18,-46
+ 257 005c E1E0      		ldi r30,1
+ 258 005e 3E07      		cpc r19,r30
+ 259 0060 01F4      		brne .+2
+ 260 0062 00C0      		rjmp .L6
+ 261 0064 00F0      		brlo .+2
+ 262 0066 00C0      		rjmp .L7
+ 263 0068 2136      		cpi r18,97
+ 264 006a 81E0      		ldi r24,1
+ 265 006c 3807      		cpc r19,r24
+ 266 006e 01F4      		brne .+2
+ 267 0070 00C0      		rjmp .L8
+ 268 0072 00F4      		brsh .L9
+ 269 0074 2C34      		cpi r18,76
+ 270 0076 F1E0      		ldi r31,1
+ 271 0078 3F07      		cpc r19,r31
+ 272 007a 01F4      		brne .+2
+ 273 007c 00C0      		rjmp .L10
+ 274 007e 00F4      		brsh .L11
+ 275 0080 232B      		or r18,r19
+ 276 0082 01F4      		brne .+2
+ 277 0084 00C0      		rjmp .L12
+ 278 0086 00C0      		rjmp .L2
+ 279               	.L11:
+ 280 0088 2D34      		cpi r18,77
+ 281 008a E1E0      		ldi r30,1
+ 282 008c 3E07      		cpc r19,r30
+ 283 008e 01F4      		brne .+2
+ 284 0090 00C0      		rjmp .L13
+ 285 0092 2036      		cpi r18,96
+ 286 0094 3140      		sbci r19,1
+ 287 0096 01F0      		breq .+2
+ 288 0098 00C0      		rjmp .L2
+ 289               	.LBB9:
+ 136:serial.c      ****   static t_serialState   stan;
+ 137:serial.c      ****   static uint8_t         znak;
+ 138:serial.c      ****   static portBASE_TYPE   xResult;
+ 139:serial.c      ****   static uint8_t         dobryAdres;
+ 140:serial.c      ****   static uint8_t         lOdebrDanych;
+ 141:serial.c      ****   static uint8_t         rezultat;
+ 142:serial.c      ****   stan = s_sync;
+ 143:serial.c      ****   
+ 144:serial.c      **** /*
+ 145:serial.c      ****   for ( ;; )
+ 146:serial.c      ****   {
+ 147:serial.c      ****     static uint8_t tmp = 'C';
+ 148:serial.c      ****     crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&tmp), 0, &xResult);
+ 149:serial.c      ****     Led1On();
+ 150:serial.c      ****     TxStart();
+ 151:serial.c      ****     vInterruptOn();  //W przypadku błędu wysyłamy wszystko z bufora przy wyłączonym nadajniku
+ 152:serial.c      ****     crDELAY(xHandle, 100);
+ 153:serial.c      **** 
+ 154:serial.c      ****     crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&tmp), 0, &xResult);
+ 155:serial.c      ****     Led1Off();
+ 156:serial.c      ****     TxStart();
+ 157:serial.c      ****     vInterruptOn();  //W przypadku błędu wysyłamy wszystko z bufora przy wyłączonym nadajniku
+ 158:serial.c      ****     crDELAY(xHandle, 100);
+ 159:serial.c      ****   }
+ 160:serial.c      **** */
+ 161:serial.c      ****   for( ;; )
+ 162:serial.c      ****   {
+ 163:serial.c      ****     if (stan == s_sync)
+ 164:serial.c      ****     {
+ 165:serial.c      ****       znak=0;
+ 166:serial.c      ****       crQUEUE_RECEIVE(xHandle, xRxedChars, &znak, portMAX_DELAY, &xResult);
+ 167:serial.c      ****       if ((xResult == pdPASS) && (znak == SYNC))
+ 168:serial.c      ****       {
+ 169:serial.c      ****         stan = s_addr;
+ 170:serial.c      **** 	//TODO tutaj jest zawsze wartość stała. Lepiej ją przypisać
+ 171:serial.c      ****         crc = _crc_xmodem_update(0, znak);
+ 172:serial.c      ****       }
+ 173:serial.c      ****     }
+ 174:serial.c      ****     if (stan == s_addr)
+ 175:serial.c      ****     {
+ 176:serial.c      ****       crQUEUE_RECEIVE(xHandle, xRxedChars, &znak, 1, &xResult);
+ 291               	.LM4:
+ 292 009a 40E0      		ldi r20,0
+ 293 009c 50E0      		ldi r21,0
+ 294 009e 60E0      		ldi r22,lo8(znak.2188)
+ 295 00a0 70E0      		ldi r23,hi8(znak.2188)
+ 296 00a2 8091 0000 		lds r24,xRxedChars
+ 297 00a6 9091 0000 		lds r25,xRxedChars+1
+ 298 00aa 0E94 0000 		call xQueueCRReceive
+ 299 00ae 8093 0000 		sts xResult.2189,r24
+ 300 00b2 00C0      		rjmp .L66
+ 301               	.L9:
+ 302               	.LBE9:
+ 135:serial.c      ****   static t_serialState   stan;
+ 304               	.LM5:
+ 305 00b4 2738      		cpi r18,-121
+ 306 00b6 81E0      		ldi r24,1
+ 307 00b8 3807      		cpc r19,r24
+ 308 00ba 01F4      		brne .+2
+ 309 00bc 00C0      		rjmp .L15
+ 310 00be 00F4      		brsh .L16
+ 311 00c0 2638      		cpi r18,-122
+ 312 00c2 3140      		sbci r19,1
+ 313 00c4 01F0      		breq .+2
+ 314 00c6 00C0      		rjmp .L2
+ 315               	.LBB24:
+ 177:serial.c      ****       if (xResult == pdPASS)
+ 178:serial.c      ****       {
+ 179:serial.c      ****         stan = s_rozkaz;
+ 180:serial.c      ****         crc = _crc_xmodem_update(crc, znak);
+ 181:serial.c      ****         if (znak == adres)
+ 182:serial.c      ****           dobryAdres = 1;
+ 183:serial.c      ****         else
+ 184:serial.c      ****           dobryAdres = 0;
+ 185:serial.c      ****       }
+ 186:serial.c      ****       else
+ 187:serial.c      ****       {
+ 188:serial.c      ****         stan = s_sync;
+ 189:serial.c      ****       }
+ 190:serial.c      ****     }
+ 191:serial.c      ****     if (stan == s_rozkaz)
+ 192:serial.c      ****     {
+ 193:serial.c      ****       Led1On();
+ 194:serial.c      ****       Led2Off();
+ 195:serial.c      ****       crQUEUE_RECEIVE(xHandle, xRxedChars, (void *)(&kodRozkazu), 1, &xResult);
+ 317               	.LM6:
+ 318 00c8 40E0      		ldi r20,0
+ 319 00ca 50E0      		ldi r21,0
+ 320 00cc 60E0      		ldi r22,lo8(kodRozkazu)
+ 321 00ce 70E0      		ldi r23,hi8(kodRozkazu)
+ 322 00d0 8091 0000 		lds r24,xRxedChars
+ 323 00d4 9091 0000 		lds r25,xRxedChars+1
+ 324 00d8 0E94 0000 		call xQueueCRReceive
+ 325 00dc 8093 0000 		sts xResult.2189,r24
+ 326 00e0 00C0      		rjmp .L71
+ 327               	.L16:
+ 328               	.LBE24:
+ 135:serial.c      ****   static t_serialState   stan;
+ 330               	.LM7:
+ 331 00e2 243A      		cpi r18,-92
+ 332 00e4 81E0      		ldi r24,1
+ 333 00e6 3807      		cpc r19,r24
+ 334 00e8 01F4      		brne .+2
+ 335 00ea 00C0      		rjmp .L18
+ 336 00ec 253A      		cpi r18,-91
+ 337 00ee 3140      		sbci r19,1
+ 338 00f0 01F0      		breq .+2
+ 339 00f2 00C0      		rjmp .L2
+ 340               	.LBB25:
+ 196:serial.c      ****       if (xResult == pdPASS)
+ 197:serial.c      ****       {
+ 198:serial.c      ****         crc = _crc_xmodem_update(crc, kodRozkazu);
+ 199:serial.c      ****         stan = s_len;
+ 200:serial.c      ****       }
+ 201:serial.c      ****       else
+ 202:serial.c      ****       {
+ 203:serial.c      ****         stan = s_sync;
+ 204:serial.c      ****       }
+ 205:serial.c      ****     }
+ 206:serial.c      ****     if (stan == s_len)
+ 207:serial.c      ****     {
+ 208:serial.c      ****       Led1Off();
+ 209:serial.c      ****       Led2On();
+ 210:serial.c      ****       crQUEUE_RECEIVE(xHandle, xRxedChars, (void *)(&dlDanych), 1, &xResult);
+ 342               	.LM8:
+ 343 00f4 81E0      		ldi r24,lo8(1)
+ 344 00f6 8093 0000 		sts xResult.2189,r24
+ 345 00fa 00C0      		rjmp .L76
+ 346               	.L7:
+ 347               	.LBE25:
+ 135:serial.c      ****   static t_serialState   stan;
+ 349               	.LM9:
+ 350 00fc 2F30      		cpi r18,15
+ 351 00fe F2E0      		ldi r31,2
+ 352 0100 3F07      		cpc r19,r31
+ 353 0102 01F4      		brne .+2
+ 354 0104 00C0      		rjmp .L20
+ 355 0106 00F4      		brsh .L21
+ 356 0108 243F      		cpi r18,-12
+ 357 010a E1E0      		ldi r30,1
+ 358 010c 3E07      		cpc r19,r30
+ 359 010e 01F4      		brne .+2
+ 360 0110 00C0      		rjmp .L22
+ 361 0112 00F4      		brsh .L23
+ 362 0114 233D      		cpi r18,-45
+ 363 0116 3140      		sbci r19,1
+ 364 0118 01F0      		breq .+2
+ 365 011a 00C0      		rjmp .L2
+ 366               	.LBB26:
+ 211:serial.c      ****       if (xResult == pdPASS)
+ 212:serial.c      ****       {
+ 213:serial.c      ****         crc = _crc_xmodem_update(crc, dlDanych);
+ 214:serial.c      ****         lOdebrDanych = 0;
+ 215:serial.c      ****         stan = s_dane;
+ 216:serial.c      ****         Led1On();
+ 217:serial.c      ****         Led2On();
+ 218:serial.c      ****       }
+ 219:serial.c      ****       else
+ 220:serial.c      ****       {
+ 221:serial.c      ****         stan = s_sync;
+ 222:serial.c      ****       }
+ 223:serial.c      ****     }
+ 224:serial.c      ****     if (stan == s_dane)
+ 225:serial.c      ****     {
+ 226:serial.c      ****       if (lOdebrDanych == dlDanych)
+ 227:serial.c      ****       {
+ 228:serial.c      ****         stan = s_CRC_HI;
+ 229:serial.c      ****       }
+ 230:serial.c      ****       else
+ 231:serial.c      ****       {
+ 232:serial.c      ****         //Led2Off();
+ 233:serial.c      ****         crQUEUE_RECEIVE(xHandle, xRxedChars, &znak, 1, &xResult);
+ 368               	.LM10:
+ 369 011c 81E0      		ldi r24,lo8(1)
+ 370 011e 8093 0000 		sts xResult.2189,r24
+ 371 0122 00C0      		rjmp .L81
+ 372               	.L23:
+ 373               	.LBE26:
+ 135:serial.c      ****   static t_serialState   stan;
+ 375               	.LM11:
+ 376 0124 253F      		cpi r18,-11
+ 377 0126 E1E0      		ldi r30,1
+ 378 0128 3E07      		cpc r19,r30
+ 379 012a 01F4      		brne .+2
+ 380 012c 00C0      		rjmp .L25
+ 381 012e 2E30      		cpi r18,14
+ 382 0130 3240      		sbci r19,2
+ 383 0132 01F0      		breq .+2
+ 384 0134 00C0      		rjmp .L2
+ 385               	.LBB27:
+ 234:serial.c      ****         if (xResult == pdPASS)
+ 235:serial.c      ****         {
+ 236:serial.c      ****           crc = _crc_xmodem_update(crc, znak);
+ 237:serial.c      ****           if (lOdebrDanych < MAX_DATA_LEN)
+ 238:serial.c      ****             bDane[lOdebrDanych] = znak;
+ 239:serial.c      ****           lOdebrDanych++; 
+ 240:serial.c      ****         }
+ 241:serial.c      ****         else
+ 242:serial.c      ****         {
+ 243:serial.c      ****           Led1Off();
+ 244:serial.c      ****           stan = s_sync;
+ 245:serial.c      ****         }
+ 246:serial.c      ****       }
+ 247:serial.c      ****     }
+ 248:serial.c      ****     if (stan == s_CRC_HI)
+ 249:serial.c      ****     {
+ 250:serial.c      ****       crQUEUE_RECEIVE(xHandle, xRxedChars, (void *)(&crcHi), 1, &xResult);
+ 251:serial.c      ****       if (xResult == pdPASS)
+ 252:serial.c      ****       {
+ 253:serial.c      ****         stan = s_CRC_LO;
+ 254:serial.c      ****       }
+ 255:serial.c      ****       else
+ 256:serial.c      ****       {
+ 257:serial.c      ****         Led1Off();
+ 258:serial.c      ****         stan = s_sync;
+ 259:serial.c      ****       }    
+ 260:serial.c      ****     }
+ 261:serial.c      ****     if (stan == s_CRC_LO)
+ 262:serial.c      ****     {
+ 263:serial.c      ****       crQUEUE_RECEIVE(xHandle, xRxedChars, (void *)(&crcLo), 1, &xResult);
+ 387               	.LM12:
+ 388 0136 40E0      		ldi r20,0
+ 389 0138 50E0      		ldi r21,0
+ 390 013a 60E0      		ldi r22,lo8(crcLo)
+ 391 013c 70E0      		ldi r23,hi8(crcLo)
+ 392 013e 8091 0000 		lds r24,xRxedChars
+ 393 0142 9091 0000 		lds r25,xRxedChars+1
+ 394 0146 0E94 0000 		call xQueueCRReceive
+ 395 014a 8093 0000 		sts xResult.2189,r24
+ 396 014e 00C0      		rjmp .L90
+ 397               	.L21:
+ 398               	.LBE27:
+ 135:serial.c      ****   static t_serialState   stan;
+ 400               	.LM13:
+ 401 0150 2C34      		cpi r18,76
+ 402 0152 82E0      		ldi r24,2
+ 403 0154 3807      		cpc r19,r24
+ 404 0156 01F4      		brne .+2
+ 405 0158 00C0      		rjmp .L27
+ 406 015a 00F4      		brsh .L28
+ 407 015c 2234      		cpi r18,66
+ 408 015e F2E0      		ldi r31,2
+ 409 0160 3F07      		cpc r19,r31
+ 410 0162 01F4      		brne .+2
+ 411 0164 00C0      		rjmp .L29
+ 412 0166 2334      		cpi r18,67
+ 413 0168 3240      		sbci r19,2
+ 414 016a 01F0      		breq .+2
+ 415 016c 00C0      		rjmp .L2
+ 416               	.LBB28:
+ 417               	.LBB10:
+ 264:serial.c      ****       if (xResult == pdPASS)
+ 265:serial.c      ****       {
+ 266:serial.c      ****         if ((crcHi != (uint8_t)(crc >> 8)) || (crcLo != (uint8_t)(crc & 0xFF)))
+ 267:serial.c      ****         {
+ 268:serial.c      ****           Led1Off();
+ 269:serial.c      ****           stan = s_sync;
+ 270:serial.c      ****         }
+ 271:serial.c      ****         else
+ 272:serial.c      ****         {
+ 273:serial.c      ****           stan = s_CRC_OK;
+ 274:serial.c      ****         }
+ 275:serial.c      ****       }
+ 276:serial.c      ****     }
+ 277:serial.c      ****     if (stan == s_CRC_OK)
+ 278:serial.c      ****     {
+ 279:serial.c      ****       if (dobryAdres == 1)
+ 280:serial.c      ****       {
+ 281:serial.c      ****         if (lOdebrDanych > MAX_DATA_LEN)
+ 282:serial.c      ****           lOdebrDanych = MAX_DATA_LEN;
+ 283:serial.c      ****         rezultat = wykonajRozkaz();
+ 284:serial.c      ****         if (rezultat == 1)
+ 285:serial.c      ****         {
+ 286:serial.c      ****           //SYNC
+ 287:serial.c      ****           uint8_t temp;
+ 288:serial.c      ****           temp = SYNC;
+ 289:serial.c      ****           crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&temp), 0, &xResult);
+ 419               	.LM14:
+ 420 016e 81E0      		ldi r24,lo8(1)
+ 421 0170 8093 0000 		sts xResult.2189,r24
+ 422 0174 00C0      		rjmp .L113
+ 423               	.L28:
+ 424               	.LBE10:
+ 425               	.LBE28:
+ 135:serial.c      ****   static t_serialState   stan;
+ 427               	.LM15:
+ 428 0176 2D34      		cpi r18,77
+ 429 0178 E2E0      		ldi r30,2
+ 430 017a 3E07      		cpc r19,r30
+ 431 017c 01F4      		brne .+2
+ 432 017e 00C0      		rjmp .L31
+ 433 0180 2435      		cpi r18,84
+ 434 0182 3240      		sbci r19,2
+ 435 0184 01F0      		breq .+2
+ 436 0186 00C0      		rjmp .L2
+ 437               	.LBB29:
+ 438               	.LBB12:
+ 290:serial.c      ****           crc = _crc_xmodem_update(0, temp);
+ 291:serial.c      **** 
+ 292:serial.c      ****          //ADRES 0x00 adres mastera
+ 293:serial.c      ****           temp = 0x00;
+ 294:serial.c      ****           crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&temp), 0, &xResult);
+ 295:serial.c      ****           crc = _crc_xmodem_update(crc, temp);
+ 296:serial.c      ****             
+ 297:serial.c      ****           //Rozkaz
+ 298:serial.c      ****           crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&kodRozkazu), 0, &xResult);
+ 440               	.LM16:
+ 441 0188 40E0      		ldi r20,0
+ 442 018a 50E0      		ldi r21,0
+ 443 018c 60E0      		ldi r22,lo8(kodRozkazu)
+ 444 018e 70E0      		ldi r23,hi8(kodRozkazu)
+ 445 0190 8091 0000 		lds r24,xCharsForTx
+ 446 0194 9091 0000 		lds r25,xCharsForTx+1
+ 447 0198 0E94 0000 		call xQueueCRSend
+ 448 019c 8093 0000 		sts xResult.2189,r24
+ 449 01a0 00C0      		rjmp .L116
+ 450               	.L5:
+ 451               	.LBE12:
+ 452               	.LBE29:
+ 135:serial.c      ****   static t_serialState   stan;
+ 454               	.LM17:
+ 455 01a2 2E39      		cpi r18,-98
+ 456 01a4 82E0      		ldi r24,2
+ 457 01a6 3807      		cpc r19,r24
+ 458 01a8 01F4      		brne .+2
+ 459 01aa 00C0      		rjmp .L33
+ 460 01ac 00F0      		brlo .+2
+ 461 01ae 00C0      		rjmp .L34
+ 462 01b0 2237      		cpi r18,114
+ 463 01b2 F2E0      		ldi r31,2
+ 464 01b4 3F07      		cpc r19,r31
+ 465 01b6 01F4      		brne .+2
+ 466 01b8 00C0      		rjmp .L35
+ 467 01ba 00F4      		brsh .L36
+ 468 01bc 2D35      		cpi r18,93
+ 469 01be E2E0      		ldi r30,2
+ 470 01c0 3E07      		cpc r19,r30
+ 471 01c2 01F4      		brne .+2
+ 472 01c4 00C0      		rjmp .L37
+ 473 01c6 00F4      		brsh .L38
+ 474 01c8 2C35      		cpi r18,92
+ 475 01ca 3240      		sbci r19,2
+ 476 01cc 01F0      		breq .+2
+ 477 01ce 00C0      		rjmp .L2
+ 478               	.LBB30:
+ 479               	.LBB13:
+ 299:serial.c      ****           crc = _crc_xmodem_update(crc, kodRozkazu);
+ 300:serial.c      ****           
+ 301:serial.c      ****           //Długość danych
+ 302:serial.c      ****           crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&lOdebrDanych), 0, &xResult);
+ 481               	.LM18:
+ 482 01d0 40E0      		ldi r20,0
+ 483 01d2 50E0      		ldi r21,0
+ 484 01d4 60E0      		ldi r22,lo8(lOdebrDanych.2191)
+ 485 01d6 70E0      		ldi r23,hi8(lOdebrDanych.2191)
+ 486 01d8 8091 0000 		lds r24,xCharsForTx
+ 487 01dc 9091 0000 		lds r25,xCharsForTx+1
+ 488 01e0 0E94 0000 		call xQueueCRSend
+ 489 01e4 8093 0000 		sts xResult.2189,r24
+ 490 01e8 00C0      		rjmp .L118
+ 491               	.L38:
+ 492               	.LBE13:
+ 493               	.LBE30:
+ 135:serial.c      ****   static t_serialState   stan;
+ 495               	.LM19:
+ 496 01ea 2836      		cpi r18,104
+ 497 01ec E2E0      		ldi r30,2
+ 498 01ee 3E07      		cpc r19,r30
+ 499 01f0 01F4      		brne .+2
+ 500 01f2 00C0      		rjmp .L40
+ 501 01f4 2936      		cpi r18,105
+ 502 01f6 3240      		sbci r19,2
+ 503 01f8 01F0      		breq .+2
+ 504 01fa 00C0      		rjmp .L2
+ 505               	.LBB31:
+ 506               	.LBB14:
+ 303:serial.c      ****           crc = _crc_xmodem_update(crc, lOdebrDanych);
+ 304:serial.c      ****           
+ 305:serial.c      ****           //Dane
+ 306:serial.c      ****           for (temp = 0; temp < lOdebrDanych; temp++)
+ 307:serial.c      ****           {
+ 308:serial.c      ****             crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&bDane[temp]), 1, &xResult);
+ 508               	.LM20:
+ 509 01fc 81E0      		ldi r24,lo8(1)
+ 510 01fe 8093 0000 		sts xResult.2189,r24
+ 511 0202 00C0      		rjmp .L122
+ 512               	.L36:
+ 513               	.LBE14:
+ 514               	.LBE31:
+ 135:serial.c      ****   static t_serialState   stan;
+ 516               	.LM21:
+ 517 0204 2637      		cpi r18,118
+ 518 0206 82E0      		ldi r24,2
+ 519 0208 3807      		cpc r19,r24
+ 520 020a 01F4      		brne .+2
+ 521 020c 00C0      		rjmp .L42
+ 522 020e 00F4      		brsh .L43
+ 523 0210 2337      		cpi r18,115
+ 524 0212 3240      		sbci r19,2
+ 525 0214 01F0      		breq .+2
+ 526 0216 00C0      		rjmp .L2
+ 527               	.LBB32:
+ 528               	.LBB15:
+ 309:serial.c      ****             crc = _crc_xmodem_update(crc, bDane[temp]);
+ 310:serial.c      ****           }
+ 311:serial.c      ****   
+ 312:serial.c      ****           temp = (uint8_t)(crc>>8);
+ 313:serial.c      ****           crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&temp), 1, &xResult);
+ 530               	.LM22:
+ 531 0218 81E0      		ldi r24,lo8(1)
+ 532 021a 8093 0000 		sts xResult.2189,r24
+ 533 021e 00C0      		rjmp .L125
+ 534               	.L43:
+ 535               	.LBE15:
+ 536               	.LBE32:
+ 135:serial.c      ****   static t_serialState   stan;
+ 538               	.LM23:
+ 539 0220 2737      		cpi r18,119
+ 540 0222 82E0      		ldi r24,2
+ 541 0224 3807      		cpc r19,r24
+ 542 0226 01F4      		brne .+2
+ 543 0228 00C0      		rjmp .L45
+ 544 022a 2E38      		cpi r18,-114
+ 545 022c 3240      		sbci r19,2
+ 546 022e 01F0      		breq .+2
+ 547 0230 00C0      		rjmp .L2
+ 548               	.LBB33:
+ 549               	.LBB16:
+ 314:serial.c      ****           temp = (uint8_t)(crc & 0xFF);
+ 315:serial.c      ****           crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&temp), 1, &xResult);
+ 316:serial.c      **** 
+ 317:serial.c      ****           if (xResult == pdPASS)
+ 318:serial.c      ****           {
+ 319:serial.c      ****             TxStart();
+ 320:serial.c      ****           }
+ 321:serial.c      ****           vInterruptOn();  //W przypadku błędu wysyłamy wszystko z bufora przy wyłączonym nada
+ 322:serial.c      ****         
+ 323:serial.c      ****           if (kodRozkazu == rFLASH)
+ 324:serial.c      ****           {
+ 325:serial.c      ****             Led1On();
+ 326:serial.c      ****             Led2On();
+ 327:serial.c      ****             crDELAY(xHandle, 10);
+ 328:serial.c      ****             Led1Off();
+ 551               	.LM24:
+ 552 0232 0E94 0000 		call Led1Off
+ 329:serial.c      ****             Led2Off();
+ 554               	.LM25:
+ 555 0236 0E94 0000 		call Led2Off
+ 330:serial.c      ****             (*((void(*)(void))BOOT_START))();            //reboot
+ 557               	.LM26:
+ 558 023a E0E0      		ldi r30,0
+ 559 023c FCE1      		ldi r31,lo8(28)
+ 560 023e 0995      		icall
+ 561 0240 00C0      		rjmp .L130
+ 562               	.L34:
+ 563               	.LBE16:
+ 564               	.LBE33:
+ 135:serial.c      ****   static t_serialState   stan;
+ 566               	.LM27:
+ 567 0242 2D3B      		cpi r18,-67
+ 568 0244 F2E0      		ldi r31,2
+ 569 0246 3F07      		cpc r19,r31
+ 570 0248 01F4      		brne .+2
+ 571 024a 00C0      		rjmp .L47
+ 572 024c 00F4      		brsh .L48
+ 573 024e 263A      		cpi r18,-90
+ 574 0250 E2E0      		ldi r30,2
+ 575 0252 3E07      		cpc r19,r30
+ 576 0254 01F4      		brne .+2
+ 577 0256 00C0      		rjmp .L49
+ 578 0258 00F4      		brsh .L50
+ 579 025a 2F39      		cpi r18,-97
+ 580 025c 3240      		sbci r19,2
+ 581 025e 01F0      		breq .L52
+ 582 0260 00C0      		rjmp .L2
+ 583               	.L50:
+ 584 0262 273A      		cpi r18,-89
+ 585 0264 E2E0      		ldi r30,2
+ 586 0266 3E07      		cpc r19,r30
+ 587 0268 01F0      		breq .L52
+ 588 026a 2C3B      		cpi r18,-68
+ 589 026c 3240      		sbci r19,2
+ 590 026e 01F0      		breq .+2
+ 591 0270 00C0      		rjmp .L2
+ 592               	.LBB34:
+ 593               	.LBB17:
+ 331:serial.c      ****           }
+ 332:serial.c      ****         }
+ 333:serial.c      ****         else if (rezultat == 2)
+ 334:serial.c      ****         {
+ 335:serial.c      ****           crQUEUE_SEND(xHandle, xRoleta[0], (void *)(&wiadomosc), 0, &xResult); 
+ 336:serial.c      ****         }
+ 337:serial.c      ****         else if (rezultat == 3)
+ 338:serial.c      ****         {
+ 339:serial.c      ****           crQUEUE_SEND(xHandle, xRoleta[1], (void *)(&wiadomosc), 0, &xResult); 
+ 340:serial.c      ****         }
+ 341:serial.c      ****         else if (rezultat == 4)
+ 342:serial.c      ****         {
+ 343:serial.c      ****           //SYNC
+ 344:serial.c      ****           crc = 0;
+ 345:serial.c      ****           uint8_t temp;
+ 346:serial.c      ****           
+ 347:serial.c      ****           //Dane 
+ 348:serial.c      ****           for (temp = 0; temp < 11; temp++)
+ 349:serial.c      ****           {
+ 350:serial.c      ****             crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&bHelloResp[temp]), 1, &xResult);
+ 595               	.LM28:
+ 596 0272 6981      		ldd r22,Y+1
+ 597 0274 70E0      		ldi r23,0
+ 598 0276 6050      		subi r22,lo8(-(bHelloResp))
+ 599 0278 7040      		sbci r23,hi8(-(bHelloResp))
+ 600 027a 40E0      		ldi r20,0
+ 601 027c 50E0      		ldi r21,0
+ 602 027e 8091 0000 		lds r24,xCharsForTx
+ 603 0282 9091 0000 		lds r25,xCharsForTx+1
+ 604 0286 0E94 0000 		call xQueueCRSend
+ 605 028a 8093 0000 		sts xResult.2189,r24
+ 606 028e 00C0      		rjmp .L137
+ 607               	.L48:
+ 608               	.LBE17:
+ 609               	.LBE34:
+ 135:serial.c      ****   static t_serialState   stan;
+ 611               	.LM29:
+ 612 0290 2A3C      		cpi r18,-54
+ 613 0292 82E0      		ldi r24,2
+ 614 0294 3807      		cpc r19,r24
+ 615 0296 01F4      		brne .+2
+ 616 0298 00C0      		rjmp .L54
+ 617 029a 00F4      		brsh .L55
+ 618 029c 263C      		cpi r18,-58
+ 619 029e F2E0      		ldi r31,2
+ 620 02a0 3F07      		cpc r19,r31
+ 621 02a2 01F4      		brne .+2
+ 622 02a4 00C0      		rjmp .L56
+ 623 02a6 273C      		cpi r18,-57
+ 624 02a8 3240      		sbci r19,2
+ 625 02aa 01F0      		breq .+2
+ 626 02ac 00C0      		rjmp .L2
+ 627               	.LBB35:
+ 628               	.LBB19:
+ 351:serial.c      ****             crc = _crc_xmodem_update(crc, bHelloResp[temp]);
+ 352:serial.c      ****           }
+ 353:serial.c      ****   
+ 354:serial.c      ****           temp = (uint8_t)(crc>>8);
+ 355:serial.c      ****           crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&temp), 1, &xResult);
+ 630               	.LM30:
+ 631 02ae 81E0      		ldi r24,lo8(1)
+ 632 02b0 8093 0000 		sts xResult.2189,r24
+ 633 02b4 00C0      		rjmp .L142
+ 634               	.L55:
+ 635               	.LBE19:
+ 636               	.LBE35:
+ 135:serial.c      ****   static t_serialState   stan;
+ 638               	.LM31:
+ 639 02b6 2B3C      		cpi r18,-53
+ 640 02b8 E2E0      		ldi r30,2
+ 641 02ba 3E07      		cpc r19,r30
+ 642 02bc 01F4      		brne .+2
+ 643 02be 00C0      		rjmp .L58
+ 644 02c0 223F      		cpi r18,-14
+ 645 02c2 3240      		sbci r19,2
+ 646 02c4 01F0      		breq .+2
+ 647 02c6 00C0      		rjmp .L2
+ 648               	.LBB36:
+ 356:serial.c      ****           temp = (uint8_t)(crc & 0xFF);
+ 357:serial.c      ****           crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&temp), 1, &xResult);
+ 358:serial.c      **** 
+ 359:serial.c      ****           if (xResult == pdPASS)
+ 360:serial.c      ****           {
+ 361:serial.c      ****             TxStart();
+ 362:serial.c      ****           }
+ 363:serial.c      ****           vInterruptOn();  //W przypadku błędu wysyłamy wszystko z bufora przy wyłączonym nada
+ 364:serial.c      ****         }
+ 365:serial.c      ****         Led1Off();
+ 366:serial.c      ****         Led2Off();
+ 367:serial.c      ****         stan = s_sync;
+ 368:serial.c      ****       }
+ 369:serial.c      ****       else //Zły adres
+ 370:serial.c      ****       {
+ 371:serial.c      ****         if (kodRozkazu == rFLASH)
+ 372:serial.c      ****         {
+ 373:serial.c      ****           DISABLE_RX();
+ 374:serial.c      ****           Led1On();
+ 375:serial.c      ****           Led2On();
+ 376:serial.c      ****           //TODO disable RX buffer
+ 377:serial.c      ****           crDELAY(xHandle, 1000);
+ 378:serial.c      ****           ENABLE_RX();
+ 650               	.LM32:
+ 651 02c8 8091 C100 		lds r24,193
+ 652 02cc 8061      		ori r24,lo8(16)
+ 653 02ce 8093 C100 		sts 193,r24
+ 654 02d2 00C0      		rjmp .L146
+ 655               	.L52:
+ 339:serial.c      ****         }
+ 657               	.LM33:
+ 658 02d4 81E0      		ldi r24,lo8(1)
+ 659 02d6 8093 0000 		sts xResult.2189,r24
+ 660               	.L130:
+ 365:serial.c      ****         Led2Off();
+ 662               	.LM34:
+ 663 02da 0E94 0000 		call Led1Off
+ 366:serial.c      ****         stan = s_sync;
+ 665               	.LM35:
+ 666 02de 0E94 0000 		call Led2Off
+ 667               	.L12:
+ 142:serial.c      ****   
+ 669               	.LM36:
+ 670 02e2 1092 0000 		sts stan.2187,__zero_reg__
+ 671               	.L95:
+ 163:serial.c      ****     {
+ 673               	.LM37:
+ 674 02e6 8091 0000 		lds r24,stan.2187
+ 675 02ea 8111      		cpse r24,__zero_reg__
+ 676 02ec 00C0      		rjmp .L61
+ 165:serial.c      ****       crQUEUE_RECEIVE(xHandle, xRxedChars, &znak, portMAX_DELAY, &xResult);
+ 678               	.LM38:
+ 679 02ee 1092 0000 		sts znak.2188,__zero_reg__
+ 166:serial.c      ****       if ((xResult == pdPASS) && (znak == SYNC))
+ 681               	.LM39:
+ 682 02f2 4FEF      		ldi r20,lo8(-1)
+ 683 02f4 5FEF      		ldi r21,lo8(-1)
+ 684 02f6 60E0      		ldi r22,lo8(znak.2188)
+ 685 02f8 70E0      		ldi r23,hi8(znak.2188)
+ 686 02fa 8091 0000 		lds r24,xRxedChars
+ 687 02fe 9091 0000 		lds r25,xRxedChars+1
+ 688 0302 0E94 0000 		call xQueueCRReceive
+ 689 0306 8093 0000 		sts xResult.2189,r24
+ 690 030a 8C3F      		cpi r24,lo8(-4)
+ 691 030c 01F4      		brne .L62
+ 166:serial.c      ****       if ((xResult == pdPASS) && (znak == SYNC))
+ 693               	.LM40:
+ 694 030e 8CE4      		ldi r24,lo8(76)
+ 695 0310 91E0      		ldi r25,lo8(1)
+ 696 0312 00C0      		rjmp .L150
+ 697               	.L10:
+ 166:serial.c      ****       if ((xResult == pdPASS) && (znak == SYNC))
+ 699               	.LM41:
+ 700 0314 40E0      		ldi r20,0
+ 701 0316 50E0      		ldi r21,0
+ 702 0318 60E0      		ldi r22,lo8(znak.2188)
+ 703 031a 70E0      		ldi r23,hi8(znak.2188)
+ 704 031c 8091 0000 		lds r24,xRxedChars
+ 705 0320 9091 0000 		lds r25,xRxedChars+1
+ 706 0324 0E94 0000 		call xQueueCRReceive
+ 707 0328 8093 0000 		sts xResult.2189,r24
+ 708               	.L62:
+ 166:serial.c      ****       if ((xResult == pdPASS) && (znak == SYNC))
+ 710               	.LM42:
+ 711 032c 8091 0000 		lds r24,xResult.2189
+ 712 0330 8B3F      		cpi r24,lo8(-5)
+ 713 0332 01F4      		brne .L63
+ 166:serial.c      ****       if ((xResult == pdPASS) && (znak == SYNC))
+ 715               	.LM43:
+ 716 0334 8DE4      		ldi r24,lo8(77)
+ 717 0336 91E0      		ldi r25,lo8(1)
+ 718 0338 00C0      		rjmp .L150
+ 719               	.L13:
+ 166:serial.c      ****       if ((xResult == pdPASS) && (znak == SYNC))
+ 721               	.LM44:
+ 722 033a 81E0      		ldi r24,lo8(1)
+ 723 033c 8093 0000 		sts xResult.2189,r24
+ 724               	.L63:
+ 167:serial.c      ****       {
+ 726               	.LM45:
+ 727 0340 8091 0000 		lds r24,xResult.2189
+ 728 0344 8130      		cpi r24,lo8(1)
+ 729 0346 01F4      		brne .L61
+ 167:serial.c      ****       {
+ 731               	.LM46:
+ 732 0348 9091 0000 		lds r25,znak.2188
+ 733 034c 9A35      		cpi r25,lo8(90)
+ 734 034e 01F4      		brne .L61
+ 169:serial.c      **** 	//TODO tutaj jest zawsze wartość stała. Lepiej ją przypisać
+ 736               	.LM47:
+ 737 0350 8093 0000 		sts stan.2187,r24
+ 171:serial.c      ****       }
+ 739               	.LM48:
+ 740 0354 6AE5      		ldi r22,lo8(90)
+ 741 0356 80E0      		ldi r24,0
+ 742 0358 90E0      		ldi r25,0
+ 743 035a 0E94 0000 		call _crc_xmodem_update
+ 744 035e 9093 0000 		sts crc+1,r25
+ 745 0362 8093 0000 		sts crc,r24
+ 746               	.L61:
+ 174:serial.c      ****     {
+ 748               	.LM49:
+ 749 0366 8091 0000 		lds r24,stan.2187
+ 750 036a 8130      		cpi r24,lo8(1)
+ 751 036c 01F4      		brne .L65
+ 176:serial.c      ****       if (xResult == pdPASS)
+ 753               	.LM50:
+ 754 036e 41E0      		ldi r20,lo8(1)
+ 755 0370 50E0      		ldi r21,0
+ 756 0372 60E0      		ldi r22,lo8(znak.2188)
+ 757 0374 70E0      		ldi r23,hi8(znak.2188)
+ 758 0376 8091 0000 		lds r24,xRxedChars
+ 759 037a 9091 0000 		lds r25,xRxedChars+1
+ 760 037e 0E94 0000 		call xQueueCRReceive
+ 761 0382 8093 0000 		sts xResult.2189,r24
+ 762 0386 8C3F      		cpi r24,lo8(-4)
+ 763 0388 01F4      		brne .L66
+ 176:serial.c      ****       if (xResult == pdPASS)
+ 765               	.LM51:
+ 766 038a 80E6      		ldi r24,lo8(96)
+ 767 038c 91E0      		ldi r25,lo8(1)
+ 768 038e 00C0      		rjmp .L150
+ 769               	.L66:
+ 176:serial.c      ****       if (xResult == pdPASS)
+ 771               	.LM52:
+ 772 0390 8091 0000 		lds r24,xResult.2189
+ 773 0394 8B3F      		cpi r24,lo8(-5)
+ 774 0396 01F4      		brne .L67
+ 176:serial.c      ****       if (xResult == pdPASS)
+ 776               	.LM53:
+ 777 0398 81E6      		ldi r24,lo8(97)
+ 778 039a 91E0      		ldi r25,lo8(1)
+ 779 039c 00C0      		rjmp .L150
+ 780               	.L8:
+ 176:serial.c      ****       if (xResult == pdPASS)
+ 782               	.LM54:
+ 783 039e 81E0      		ldi r24,lo8(1)
+ 784 03a0 8093 0000 		sts xResult.2189,r24
+ 785               	.L67:
+ 177:serial.c      ****       {
+ 787               	.LM55:
+ 788 03a4 F090 0000 		lds r15,xResult.2189
+ 789 03a8 F1E0      		ldi r31,lo8(1)
+ 790 03aa FF12      		cpse r15,r31
+ 791 03ac 00C0      		rjmp .L68
+ 179:serial.c      ****         crc = _crc_xmodem_update(crc, znak);
+ 793               	.LM56:
+ 794 03ae 82E0      		ldi r24,lo8(2)
+ 795 03b0 8093 0000 		sts stan.2187,r24
+ 180:serial.c      ****         if (znak == adres)
+ 797               	.LM57:
+ 798 03b4 6091 0000 		lds r22,znak.2188
+ 799 03b8 8091 0000 		lds r24,crc
+ 800 03bc 9091 0000 		lds r25,crc+1
+ 801 03c0 0E94 0000 		call _crc_xmodem_update
+ 802 03c4 9093 0000 		sts crc+1,r25
+ 803 03c8 8093 0000 		sts crc,r24
+ 181:serial.c      ****           dobryAdres = 1;
+ 805               	.LM58:
+ 806 03cc 9091 0000 		lds r25,znak.2188
+ 807 03d0 8091 0000 		lds r24,adres
+ 808 03d4 9813      		cpse r25,r24
+ 809 03d6 00C0      		rjmp .L69
+ 182:serial.c      ****         else
+ 811               	.LM59:
+ 812 03d8 F092 0000 		sts dobryAdres.2190,r15
+ 813 03dc 00C0      		rjmp .L65
+ 814               	.L69:
+ 184:serial.c      ****       }
+ 816               	.LM60:
+ 817 03de 1092 0000 		sts dobryAdres.2190,__zero_reg__
+ 818 03e2 00C0      		rjmp .L65
+ 819               	.L68:
+ 188:serial.c      ****       }
+ 821               	.LM61:
+ 822 03e4 1092 0000 		sts stan.2187,__zero_reg__
+ 823               	.L65:
+ 191:serial.c      ****     {
+ 825               	.LM62:
+ 826 03e8 8091 0000 		lds r24,stan.2187
+ 827 03ec 8230      		cpi r24,lo8(2)
+ 828 03ee 01F4      		brne .L70
+ 193:serial.c      ****       Led2Off();
+ 830               	.LM63:
+ 831 03f0 0E94 0000 		call Led1On
+ 194:serial.c      ****       crQUEUE_RECEIVE(xHandle, xRxedChars, (void *)(&kodRozkazu), 1, &xResult);
+ 833               	.LM64:
+ 834 03f4 0E94 0000 		call Led2Off
+ 195:serial.c      ****       if (xResult == pdPASS)
+ 836               	.LM65:
+ 837 03f8 41E0      		ldi r20,lo8(1)
+ 838 03fa 50E0      		ldi r21,0
+ 839 03fc 60E0      		ldi r22,lo8(kodRozkazu)
+ 840 03fe 70E0      		ldi r23,hi8(kodRozkazu)
+ 841 0400 8091 0000 		lds r24,xRxedChars
+ 842 0404 9091 0000 		lds r25,xRxedChars+1
+ 843 0408 0E94 0000 		call xQueueCRReceive
+ 844 040c 8093 0000 		sts xResult.2189,r24
+ 845 0410 8C3F      		cpi r24,lo8(-4)
+ 846 0412 01F4      		brne .L71
+ 195:serial.c      ****       if (xResult == pdPASS)
+ 848               	.LM66:
+ 849 0414 86E8      		ldi r24,lo8(-122)
+ 850 0416 91E0      		ldi r25,lo8(1)
+ 851 0418 00C0      		rjmp .L150
+ 852               	.L71:
+ 195:serial.c      ****       if (xResult == pdPASS)
+ 854               	.LM67:
+ 855 041a 8091 0000 		lds r24,xResult.2189
+ 856 041e 8B3F      		cpi r24,lo8(-5)
+ 857 0420 01F4      		brne .L72
+ 195:serial.c      ****       if (xResult == pdPASS)
+ 859               	.LM68:
+ 860 0422 87E8      		ldi r24,lo8(-121)
+ 861 0424 91E0      		ldi r25,lo8(1)
+ 862 0426 00C0      		rjmp .L150
+ 863               	.L15:
+ 195:serial.c      ****       if (xResult == pdPASS)
+ 865               	.LM69:
+ 866 0428 81E0      		ldi r24,lo8(1)
+ 867 042a 8093 0000 		sts xResult.2189,r24
+ 868               	.L72:
+ 196:serial.c      ****       {
+ 870               	.LM70:
+ 871 042e 8091 0000 		lds r24,xResult.2189
+ 872 0432 8130      		cpi r24,lo8(1)
+ 873 0434 01F4      		brne .L73
+ 198:serial.c      ****         stan = s_len;
+ 875               	.LM71:
+ 876 0436 6091 0000 		lds r22,kodRozkazu
+ 877 043a 8091 0000 		lds r24,crc
+ 878 043e 9091 0000 		lds r25,crc+1
+ 879 0442 0E94 0000 		call _crc_xmodem_update
+ 880 0446 9093 0000 		sts crc+1,r25
+ 881 044a 8093 0000 		sts crc,r24
+ 199:serial.c      ****       }
+ 883               	.LM72:
+ 884 044e 83E0      		ldi r24,lo8(3)
+ 885 0450 8093 0000 		sts stan.2187,r24
+ 886 0454 00C0      		rjmp .L70
+ 887               	.L73:
+ 203:serial.c      ****       }
+ 889               	.LM73:
+ 890 0456 1092 0000 		sts stan.2187,__zero_reg__
+ 891               	.L70:
+ 206:serial.c      ****     {
+ 893               	.LM74:
+ 894 045a 8091 0000 		lds r24,stan.2187
+ 895 045e 8330      		cpi r24,lo8(3)
+ 896 0460 01F0      		breq .+2
+ 897 0462 00C0      		rjmp .L74
+ 208:serial.c      ****       Led2On();
+ 899               	.LM75:
+ 900 0464 0E94 0000 		call Led1Off
+ 209:serial.c      ****       crQUEUE_RECEIVE(xHandle, xRxedChars, (void *)(&dlDanych), 1, &xResult);
+ 902               	.LM76:
+ 903 0468 0E94 0000 		call Led2On
+ 210:serial.c      ****       if (xResult == pdPASS)
+ 905               	.LM77:
+ 906 046c 41E0      		ldi r20,lo8(1)
+ 907 046e 50E0      		ldi r21,0
+ 908 0470 60E0      		ldi r22,lo8(dlDanych)
+ 909 0472 70E0      		ldi r23,hi8(dlDanych)
+ 910 0474 8091 0000 		lds r24,xRxedChars
+ 911 0478 9091 0000 		lds r25,xRxedChars+1
+ 912 047c 0E94 0000 		call xQueueCRReceive
+ 913 0480 8093 0000 		sts xResult.2189,r24
+ 914 0484 8C3F      		cpi r24,lo8(-4)
+ 915 0486 01F4      		brne .L75
+ 210:serial.c      ****       if (xResult == pdPASS)
+ 917               	.LM78:
+ 918 0488 84EA      		ldi r24,lo8(-92)
+ 919 048a 91E0      		ldi r25,lo8(1)
+ 920 048c 00C0      		rjmp .L150
+ 921               	.L18:
+ 210:serial.c      ****       if (xResult == pdPASS)
+ 923               	.LM79:
+ 924 048e 40E0      		ldi r20,0
+ 925 0490 50E0      		ldi r21,0
+ 926 0492 60E0      		ldi r22,lo8(dlDanych)
+ 927 0494 70E0      		ldi r23,hi8(dlDanych)
+ 928 0496 8091 0000 		lds r24,xRxedChars
+ 929 049a 9091 0000 		lds r25,xRxedChars+1
+ 930 049e 0E94 0000 		call xQueueCRReceive
+ 931 04a2 8093 0000 		sts xResult.2189,r24
+ 932               	.L75:
+ 210:serial.c      ****       if (xResult == pdPASS)
+ 934               	.LM80:
+ 935 04a6 8091 0000 		lds r24,xResult.2189
+ 936 04aa 8B3F      		cpi r24,lo8(-5)
+ 937 04ac 01F4      		brne .L76
+ 210:serial.c      ****       if (xResult == pdPASS)
+ 939               	.LM81:
+ 940 04ae 85EA      		ldi r24,lo8(-91)
+ 941 04b0 91E0      		ldi r25,lo8(1)
+ 942 04b2 00C0      		rjmp .L150
+ 943               	.L76:
+ 211:serial.c      ****       {
+ 945               	.LM82:
+ 946 04b4 8091 0000 		lds r24,xResult.2189
+ 947 04b8 8130      		cpi r24,lo8(1)
+ 948 04ba 01F4      		brne .L77
+ 213:serial.c      ****         lOdebrDanych = 0;
+ 950               	.LM83:
+ 951 04bc 6091 0000 		lds r22,dlDanych
+ 952 04c0 8091 0000 		lds r24,crc
+ 953 04c4 9091 0000 		lds r25,crc+1
+ 954 04c8 0E94 0000 		call _crc_xmodem_update
+ 955 04cc 9093 0000 		sts crc+1,r25
+ 956 04d0 8093 0000 		sts crc,r24
+ 214:serial.c      ****         stan = s_dane;
+ 958               	.LM84:
+ 959 04d4 1092 0000 		sts lOdebrDanych.2191,__zero_reg__
+ 215:serial.c      ****         Led1On();
+ 961               	.LM85:
+ 962 04d8 84E0      		ldi r24,lo8(4)
+ 963 04da 8093 0000 		sts stan.2187,r24
+ 216:serial.c      ****         Led2On();
+ 965               	.LM86:
+ 966 04de 0E94 0000 		call Led1On
+ 217:serial.c      ****       }
+ 968               	.LM87:
+ 969 04e2 0E94 0000 		call Led2On
+ 970 04e6 00C0      		rjmp .L74
+ 971               	.L77:
+ 221:serial.c      ****       }
+ 973               	.LM88:
+ 974 04e8 1092 0000 		sts stan.2187,__zero_reg__
+ 975               	.L74:
+ 224:serial.c      ****     {
+ 977               	.LM89:
+ 978 04ec 8091 0000 		lds r24,stan.2187
+ 979 04f0 8430      		cpi r24,lo8(4)
+ 980 04f2 01F0      		breq .+2
+ 981 04f4 00C0      		rjmp .L78
+ 226:serial.c      ****       {
+ 983               	.LM90:
+ 984 04f6 8091 0000 		lds r24,dlDanych
+ 985 04fa 9091 0000 		lds r25,lOdebrDanych.2191
+ 986 04fe 9813      		cpse r25,r24
+ 987 0500 00C0      		rjmp .L79
+ 228:serial.c      ****       }
+ 989               	.LM91:
+ 990 0502 85E0      		ldi r24,lo8(5)
+ 991 0504 8093 0000 		sts stan.2187,r24
+ 992 0508 00C0      		rjmp .L78
+ 993               	.L79:
+ 233:serial.c      ****         if (xResult == pdPASS)
+ 995               	.LM92:
+ 996 050a 41E0      		ldi r20,lo8(1)
+ 997 050c 50E0      		ldi r21,0
+ 998 050e 60E0      		ldi r22,lo8(znak.2188)
+ 999 0510 70E0      		ldi r23,hi8(znak.2188)
+ 1000 0512 8091 0000 		lds r24,xRxedChars
+ 1001 0516 9091 0000 		lds r25,xRxedChars+1
+ 1002 051a 0E94 0000 		call xQueueCRReceive
+ 1003 051e 8093 0000 		sts xResult.2189,r24
+ 1004 0522 8C3F      		cpi r24,lo8(-4)
+ 1005 0524 01F4      		brne .L80
+ 233:serial.c      ****         if (xResult == pdPASS)
+ 1007               	.LM93:
+ 1008 0526 82ED      		ldi r24,lo8(-46)
+ 1009 0528 91E0      		ldi r25,lo8(1)
+ 1010 052a 00C0      		rjmp .L150
+ 1011               	.L6:
+ 233:serial.c      ****         if (xResult == pdPASS)
+ 1013               	.LM94:
+ 1014 052c 40E0      		ldi r20,0
+ 1015 052e 50E0      		ldi r21,0
+ 1016 0530 60E0      		ldi r22,lo8(znak.2188)
+ 1017 0532 70E0      		ldi r23,hi8(znak.2188)
+ 1018 0534 8091 0000 		lds r24,xRxedChars
+ 1019 0538 9091 0000 		lds r25,xRxedChars+1
+ 1020 053c 0E94 0000 		call xQueueCRReceive
+ 1021 0540 8093 0000 		sts xResult.2189,r24
+ 1022               	.L80:
+ 233:serial.c      ****         if (xResult == pdPASS)
+ 1024               	.LM95:
+ 1025 0544 8091 0000 		lds r24,xResult.2189
+ 1026 0548 8B3F      		cpi r24,lo8(-5)
+ 1027 054a 01F4      		brne .L81
+ 233:serial.c      ****         if (xResult == pdPASS)
+ 1029               	.LM96:
+ 1030 054c 83ED      		ldi r24,lo8(-45)
+ 1031 054e 91E0      		ldi r25,lo8(1)
+ 1032 0550 00C0      		rjmp .L150
+ 1033               	.L81:
+ 234:serial.c      ****         {
+ 1035               	.LM97:
+ 1036 0552 8091 0000 		lds r24,xResult.2189
+ 1037 0556 8130      		cpi r24,lo8(1)
+ 1038 0558 01F4      		brne .L82
+ 236:serial.c      ****           if (lOdebrDanych < MAX_DATA_LEN)
+ 1040               	.LM98:
+ 1041 055a 6091 0000 		lds r22,znak.2188
+ 1042 055e 8091 0000 		lds r24,crc
+ 1043 0562 9091 0000 		lds r25,crc+1
+ 1044 0566 0E94 0000 		call _crc_xmodem_update
+ 1045 056a 9093 0000 		sts crc+1,r25
+ 1046 056e 8093 0000 		sts crc,r24
+ 237:serial.c      ****             bDane[lOdebrDanych] = znak;
+ 1048               	.LM99:
+ 1049 0572 8091 0000 		lds r24,lOdebrDanych.2191
+ 1050 0576 8E30      		cpi r24,lo8(14)
+ 1051 0578 00F4      		brsh .L83
+ 238:serial.c      ****           lOdebrDanych++; 
+ 1053               	.LM100:
+ 1054 057a E82F      		mov r30,r24
+ 1055 057c F0E0      		ldi r31,0
+ 1056 057e E050      		subi r30,lo8(-(bDane))
+ 1057 0580 F040      		sbci r31,hi8(-(bDane))
+ 1058 0582 9091 0000 		lds r25,znak.2188
+ 1059 0586 9083      		st Z,r25
+ 1060               	.L83:
+ 239:serial.c      ****         }
+ 1062               	.LM101:
+ 1063 0588 8F5F      		subi r24,lo8(-(1))
+ 1064 058a 8093 0000 		sts lOdebrDanych.2191,r24
+ 1065 058e 00C0      		rjmp .L78
+ 1066               	.L82:
+ 243:serial.c      ****           stan = s_sync;
+ 1068               	.LM102:
+ 1069 0590 0E94 0000 		call Led1Off
+ 244:serial.c      ****         }
+ 1071               	.LM103:
+ 1072 0594 1092 0000 		sts stan.2187,__zero_reg__
+ 1073               	.L78:
+ 248:serial.c      ****     {
+ 1075               	.LM104:
+ 1076 0598 8091 0000 		lds r24,stan.2187
+ 1077 059c 8530      		cpi r24,lo8(5)
+ 1078 059e 01F4      		brne .L84
+ 250:serial.c      ****       if (xResult == pdPASS)
+ 1080               	.LM105:
+ 1081 05a0 41E0      		ldi r20,lo8(1)
+ 1082 05a2 50E0      		ldi r21,0
+ 1083 05a4 60E0      		ldi r22,lo8(crcHi)
+ 1084 05a6 70E0      		ldi r23,hi8(crcHi)
+ 1085 05a8 8091 0000 		lds r24,xRxedChars
+ 1086 05ac 9091 0000 		lds r25,xRxedChars+1
+ 1087 05b0 0E94 0000 		call xQueueCRReceive
+ 1088 05b4 8093 0000 		sts xResult.2189,r24
+ 1089 05b8 8C3F      		cpi r24,lo8(-4)
+ 1090 05ba 01F4      		brne .L85
+ 250:serial.c      ****       if (xResult == pdPASS)
+ 1092               	.LM106:
+ 1093 05bc 84EF      		ldi r24,lo8(-12)
+ 1094 05be 91E0      		ldi r25,lo8(1)
+ 1095 05c0 00C0      		rjmp .L150
+ 1096               	.L22:
+ 250:serial.c      ****       if (xResult == pdPASS)
+ 1098               	.LM107:
+ 1099 05c2 40E0      		ldi r20,0
+ 1100 05c4 50E0      		ldi r21,0
+ 1101 05c6 60E0      		ldi r22,lo8(crcHi)
+ 1102 05c8 70E0      		ldi r23,hi8(crcHi)
+ 1103 05ca 8091 0000 		lds r24,xRxedChars
+ 1104 05ce 9091 0000 		lds r25,xRxedChars+1
+ 1105 05d2 0E94 0000 		call xQueueCRReceive
+ 1106 05d6 8093 0000 		sts xResult.2189,r24
+ 1107               	.L85:
+ 250:serial.c      ****       if (xResult == pdPASS)
+ 1109               	.LM108:
+ 1110 05da 8091 0000 		lds r24,xResult.2189
+ 1111 05de 8B3F      		cpi r24,lo8(-5)
+ 1112 05e0 01F4      		brne .L86
+ 250:serial.c      ****       if (xResult == pdPASS)
+ 1114               	.LM109:
+ 1115 05e2 85EF      		ldi r24,lo8(-11)
+ 1116 05e4 91E0      		ldi r25,lo8(1)
+ 1117 05e6 00C0      		rjmp .L150
+ 1118               	.L25:
+ 250:serial.c      ****       if (xResult == pdPASS)
+ 1120               	.LM110:
+ 1121 05e8 81E0      		ldi r24,lo8(1)
+ 1122 05ea 8093 0000 		sts xResult.2189,r24
+ 1123               	.L86:
+ 251:serial.c      ****       {
+ 1125               	.LM111:
+ 1126 05ee 8091 0000 		lds r24,xResult.2189
+ 1127 05f2 8130      		cpi r24,lo8(1)
+ 1128 05f4 01F4      		brne .L87
+ 253:serial.c      ****       }
+ 1130               	.LM112:
+ 1131 05f6 86E0      		ldi r24,lo8(6)
+ 1132 05f8 8093 0000 		sts stan.2187,r24
+ 1133 05fc 00C0      		rjmp .L84
+ 1134               	.L87:
+ 257:serial.c      ****         stan = s_sync;
+ 1136               	.LM113:
+ 1137 05fe 0E94 0000 		call Led1Off
+ 258:serial.c      ****       }    
+ 1139               	.LM114:
+ 1140 0602 1092 0000 		sts stan.2187,__zero_reg__
+ 1141               	.L84:
+ 261:serial.c      ****     {
+ 1143               	.LM115:
+ 1144 0606 8091 0000 		lds r24,stan.2187
+ 1145 060a 8630      		cpi r24,lo8(6)
+ 1146 060c 01F4      		brne .L89
+ 263:serial.c      ****       if (xResult == pdPASS)
+ 1148               	.LM116:
+ 1149 060e 41E0      		ldi r20,lo8(1)
+ 1150 0610 50E0      		ldi r21,0
+ 1151 0612 60E0      		ldi r22,lo8(crcLo)
+ 1152 0614 70E0      		ldi r23,hi8(crcLo)
+ 1153 0616 8091 0000 		lds r24,xRxedChars
+ 1154 061a 9091 0000 		lds r25,xRxedChars+1
+ 1155 061e 0E94 0000 		call xQueueCRReceive
+ 1156 0622 8093 0000 		sts xResult.2189,r24
+ 1157 0626 8C3F      		cpi r24,lo8(-4)
+ 1158 0628 01F4      		brne .L90
+ 263:serial.c      ****       if (xResult == pdPASS)
+ 1160               	.LM117:
+ 1161 062a 8EE0      		ldi r24,lo8(14)
+ 1162 062c 92E0      		ldi r25,lo8(2)
+ 1163 062e 00C0      		rjmp .L150
+ 1164               	.L90:
+ 263:serial.c      ****       if (xResult == pdPASS)
+ 1166               	.LM118:
+ 1167 0630 8091 0000 		lds r24,xResult.2189
+ 1168 0634 8B3F      		cpi r24,lo8(-5)
+ 1169 0636 01F4      		brne .L91
+ 263:serial.c      ****       if (xResult == pdPASS)
+ 1171               	.LM119:
+ 1172 0638 8FE0      		ldi r24,lo8(15)
+ 1173 063a 92E0      		ldi r25,lo8(2)
+ 1174 063c 00C0      		rjmp .L150
+ 1175               	.L20:
+ 263:serial.c      ****       if (xResult == pdPASS)
+ 1177               	.LM120:
+ 1178 063e 81E0      		ldi r24,lo8(1)
+ 1179 0640 8093 0000 		sts xResult.2189,r24
+ 1180               	.L91:
+ 264:serial.c      ****       {
+ 1182               	.LM121:
+ 1183 0644 8091 0000 		lds r24,xResult.2189
+ 1184 0648 8130      		cpi r24,lo8(1)
+ 1185 064a 01F4      		brne .L89
+ 266:serial.c      ****         {
+ 1187               	.LM122:
+ 1188 064c 8091 0000 		lds r24,crc
+ 1189 0650 9091 0000 		lds r25,crc+1
+ 1190 0654 2091 0000 		lds r18,crcHi
+ 1191 0658 2913      		cpse r18,r25
+ 1192 065a 00C0      		rjmp .L93
+ 266:serial.c      ****         {
+ 1194               	.LM123:
+ 1195 065c 9091 0000 		lds r25,crcLo
+ 1196 0660 9817      		cp r25,r24
+ 1197 0662 01F0      		breq .L94
+ 1198               	.L93:
+ 268:serial.c      ****           stan = s_sync;
+ 1200               	.LM124:
+ 1201 0664 0E94 0000 		call Led1Off
+ 269:serial.c      ****         }
+ 1203               	.LM125:
+ 1204 0668 1092 0000 		sts stan.2187,__zero_reg__
+ 1205 066c 00C0      		rjmp .L89
+ 1206               	.L94:
+ 273:serial.c      ****         }
+ 1208               	.LM126:
+ 1209 066e 87E0      		ldi r24,lo8(7)
+ 1210 0670 8093 0000 		sts stan.2187,r24
+ 1211               	.L89:
+ 277:serial.c      ****     {
+ 1213               	.LM127:
+ 1214 0674 8091 0000 		lds r24,stan.2187
+ 1215 0678 8730      		cpi r24,lo8(7)
+ 1216 067a 01F0      		breq .+2
+ 1217 067c 00C0      		rjmp .L95
+ 279:serial.c      ****       {
+ 1219               	.LM128:
+ 1220 067e 8091 0000 		lds r24,dobryAdres.2190
+ 1221 0682 8130      		cpi r24,lo8(1)
+ 1222 0684 01F0      		breq .+2
+ 1223 0686 00C0      		rjmp .L96
+ 281:serial.c      ****           lOdebrDanych = MAX_DATA_LEN;
+ 1225               	.LM129:
+ 1226 0688 8091 0000 		lds r24,lOdebrDanych.2191
+ 1227 068c 8F30      		cpi r24,lo8(15)
+ 1228 068e 00F0      		brlo .L97
+ 282:serial.c      ****         rezultat = wykonajRozkaz();
+ 1230               	.LM130:
+ 1231 0690 8EE0      		ldi r24,lo8(14)
+ 1232 0692 8093 0000 		sts lOdebrDanych.2191,r24
+ 1233               	.L97:
+ 1234               	.LBB20:
+ 1235               	.LBB21:
+  86:serial.c      ****   {
+ 1237               	.LM131:
+ 1238 0696 8091 0000 		lds r24,kodRozkazu
+ 1239 069a 8033      		cpi r24,lo8(48)
+ 1240 069c 01F0      		breq .L99
+ 1241 069e 00F4      		brsh .L100
+ 1242 06a0 8131      		cpi r24,lo8(17)
+ 1243 06a2 01F0      		breq .L101
+ 1244 06a4 00F4      		brsh .L102
+ 1245 06a6 8031      		cpi r24,lo8(16)
+ 1246 06a8 01F4      		brne .L147
+  89:serial.c      ****       wysylac = 2;
+ 1248               	.LM132:
+ 1249 06aa 8FE3      		ldi r24,lo8(63)
+ 1250 06ac 00C0      		rjmp .L148
+ 1251               	.L102:
+  86:serial.c      ****   {
+ 1253               	.LM133:
+ 1254 06ae 8032      		cpi r24,lo8(32)
+ 1255 06b0 01F0      		breq .L104
+ 1256 06b2 8132      		cpi r24,lo8(33)
+ 1257 06b4 01F4      		brne .L147
+ 104:serial.c      ****       wysylac = 3;
+ 1259               	.LM134:
+ 1260 06b6 8FEB      		ldi r24,lo8(-65)
+ 1261 06b8 00C0      		rjmp .L149
+ 1262               	.L100:
+  86:serial.c      ****   {
+ 1264               	.LM135:
+ 1265 06ba 8238      		cpi r24,lo8(-126)
+ 1266 06bc 00F4      		brsh .L106
+ 1267 06be 8038      		cpi r24,lo8(-128)
+ 1268 06c0 00F4      		brsh .L107
+ 1269 06c2 8133      		cpi r24,lo8(49)
+ 1270 06c4 01F4      		brne .L147
+ 114:serial.c      ****       wysylac = 3;
+ 1272               	.LM136:
+ 1273 06c6 80E4      		ldi r24,lo8(64)
+ 1274 06c8 00C0      		rjmp .L149
+ 1275               	.L106:
+  86:serial.c      ****   {
+ 1277               	.LM137:
+ 1278 06ca 8238      		cpi r24,lo8(-126)
+ 1279 06cc 01F4      		brne .L147
+ 122:serial.c      ****       break;
+ 1281               	.LM138:
+ 1282 06ce 84E0      		ldi r24,lo8(4)
+ 1283 06d0 00C0      		rjmp .L98
+ 1284               	.L107:
+ 119:serial.c      ****       break;
+ 1286               	.LM139:
+ 1287 06d2 81E0      		ldi r24,lo8(1)
+ 1288 06d4 00C0      		rjmp .L98
+ 1289               	.L101:
+  94:serial.c      ****       wysylac = 3;
+ 1291               	.LM140:
+ 1292 06d6 8FE3      		ldi r24,lo8(63)
+ 1293 06d8 00C0      		rjmp .L149
+ 1294               	.L104:
+  99:serial.c      ****       wysylac = 2;
+ 1296               	.LM141:
+ 1297 06da 8FEB      		ldi r24,lo8(-65)
+ 1298               	.L148:
+ 1299 06dc 8093 0000 		sts wiadomosc,r24
+ 100:serial.c      ****       break;
+ 1301               	.LM142:
+ 1302 06e0 82E0      		ldi r24,lo8(2)
+ 1303 06e2 00C0      		rjmp .L98
+ 1304               	.L149:
+ 104:serial.c      ****       wysylac = 3;
+ 1306               	.LM143:
+ 1307 06e4 8093 0000 		sts wiadomosc,r24
+ 105:serial.c      ****       break;
+ 1309               	.LM144:
+ 1310 06e8 83E0      		ldi r24,lo8(3)
+ 1311 06ea 00C0      		rjmp .L98
+ 1312               	.L99:
+ 109:serial.c      ****       wysylac = 2;
+ 1314               	.LM145:
+ 1315 06ec 80E4      		ldi r24,lo8(64)
+ 1316 06ee 00C0      		rjmp .L148
+ 1317               	.L147:
+  84:serial.c      **** 
+ 1319               	.LM146:
+ 1320 06f0 80E0      		ldi r24,0
+ 1321               	.L98:
+ 1322               	.LBE21:
+ 1323               	.LBE20:
+ 283:serial.c      ****         if (rezultat == 1)
+ 1325               	.LM147:
+ 1326 06f2 8093 0000 		sts rezultat.2192,r24
+ 284:serial.c      ****         {
+ 1328               	.LM148:
+ 1329 06f6 8130      		cpi r24,lo8(1)
+ 1330 06f8 01F0      		breq .+2
+ 1331 06fa 00C0      		rjmp .L110
+ 1332               	.LBB22:
+ 288:serial.c      ****           crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&temp), 0, &xResult);
+ 1334               	.LM149:
+ 1335 06fc 8AE5      		ldi r24,lo8(90)
+ 1336 06fe 8983      		std Y+1,r24
+ 289:serial.c      ****           crc = _crc_xmodem_update(0, temp);
+ 1338               	.LM150:
+ 1339 0700 40E0      		ldi r20,0
+ 1340 0702 50E0      		ldi r21,0
+ 1341 0704 BE01      		movw r22,r28
+ 1342 0706 6F5F      		subi r22,-1
+ 1343 0708 7F4F      		sbci r23,-1
+ 1344 070a 8091 0000 		lds r24,xCharsForTx
+ 1345 070e 9091 0000 		lds r25,xCharsForTx+1
+ 1346 0712 0E94 0000 		call xQueueCRSend
+ 1347 0716 8093 0000 		sts xResult.2189,r24
+ 1348 071a 8C3F      		cpi r24,lo8(-4)
+ 1349 071c 01F4      		brne .L111
+ 289:serial.c      ****           crc = _crc_xmodem_update(0, temp);
+ 1351               	.LM151:
+ 1352 071e 82E4      		ldi r24,lo8(66)
+ 1353 0720 92E0      		ldi r25,lo8(2)
+ 1354 0722 00C0      		rjmp .L150
+ 1355               	.L29:
+ 289:serial.c      ****           crc = _crc_xmodem_update(0, temp);
+ 1357               	.LM152:
+ 1358 0724 40E0      		ldi r20,0
+ 1359 0726 50E0      		ldi r21,0
+ 1360 0728 BE01      		movw r22,r28
+ 1361 072a 6F5F      		subi r22,-1
+ 1362 072c 7F4F      		sbci r23,-1
+ 1363 072e 8091 0000 		lds r24,xCharsForTx
+ 1364 0732 9091 0000 		lds r25,xCharsForTx+1
+ 1365 0736 0E94 0000 		call xQueueCRSend
+ 1366 073a 8093 0000 		sts xResult.2189,r24
+ 1367               	.L111:
+ 289:serial.c      ****           crc = _crc_xmodem_update(0, temp);
+ 1369               	.LM153:
+ 1370 073e 8091 0000 		lds r24,xResult.2189
+ 1371 0742 8B3F      		cpi r24,lo8(-5)
+ 1372 0744 01F4      		brne .L113
+ 289:serial.c      ****           crc = _crc_xmodem_update(0, temp);
+ 1374               	.LM154:
+ 1375 0746 83E4      		ldi r24,lo8(67)
+ 1376 0748 92E0      		ldi r25,lo8(2)
+ 1377 074a 00C0      		rjmp .L150
+ 1378               	.L113:
+ 290:serial.c      **** 
+ 1380               	.LM155:
+ 1381 074c 6981      		ldd r22,Y+1
+ 1382 074e 80E0      		ldi r24,0
+ 1383 0750 90E0      		ldi r25,0
+ 1384 0752 0E94 0000 		call _crc_xmodem_update
+ 1385 0756 9093 0000 		sts crc+1,r25
+ 1386 075a 8093 0000 		sts crc,r24
+ 293:serial.c      ****           crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&temp), 0, &xResult);
+ 1388               	.LM156:
+ 1389 075e 1982      		std Y+1,__zero_reg__
+ 294:serial.c      ****           crc = _crc_xmodem_update(crc, temp);
+ 1391               	.LM157:
+ 1392 0760 40E0      		ldi r20,0
+ 1393 0762 50E0      		ldi r21,0
+ 1394 0764 BE01      		movw r22,r28
+ 1395 0766 6F5F      		subi r22,-1
+ 1396 0768 7F4F      		sbci r23,-1
+ 1397 076a 8091 0000 		lds r24,xCharsForTx
+ 1398 076e 9091 0000 		lds r25,xCharsForTx+1
+ 1399 0772 0E94 0000 		call xQueueCRSend
+ 1400 0776 8093 0000 		sts xResult.2189,r24
+ 1401 077a 8C3F      		cpi r24,lo8(-4)
+ 1402 077c 01F4      		brne .L114
+ 294:serial.c      ****           crc = _crc_xmodem_update(crc, temp);
+ 1404               	.LM158:
+ 1405 077e 8CE4      		ldi r24,lo8(76)
+ 1406 0780 92E0      		ldi r25,lo8(2)
+ 1407 0782 00C0      		rjmp .L150
+ 1408               	.L27:
+ 294:serial.c      ****           crc = _crc_xmodem_update(crc, temp);
+ 1410               	.LM159:
+ 1411 0784 40E0      		ldi r20,0
+ 1412 0786 50E0      		ldi r21,0
+ 1413 0788 BE01      		movw r22,r28
+ 1414 078a 6F5F      		subi r22,-1
+ 1415 078c 7F4F      		sbci r23,-1
+ 1416 078e 8091 0000 		lds r24,xCharsForTx
+ 1417 0792 9091 0000 		lds r25,xCharsForTx+1
+ 1418 0796 0E94 0000 		call xQueueCRSend
+ 1419 079a 8093 0000 		sts xResult.2189,r24
+ 1420               	.L114:
+ 294:serial.c      ****           crc = _crc_xmodem_update(crc, temp);
+ 1422               	.LM160:
+ 1423 079e 8091 0000 		lds r24,xResult.2189
+ 1424 07a2 8B3F      		cpi r24,lo8(-5)
+ 1425 07a4 01F4      		brne .L115
+ 294:serial.c      ****           crc = _crc_xmodem_update(crc, temp);
+ 1427               	.LM161:
+ 1428 07a6 8DE4      		ldi r24,lo8(77)
+ 1429 07a8 92E0      		ldi r25,lo8(2)
+ 1430 07aa 00C0      		rjmp .L150
+ 1431               	.L31:
+ 294:serial.c      ****           crc = _crc_xmodem_update(crc, temp);
+ 1433               	.LM162:
+ 1434 07ac 81E0      		ldi r24,lo8(1)
+ 1435 07ae 8093 0000 		sts xResult.2189,r24
+ 1436               	.L115:
+ 295:serial.c      ****             
+ 1438               	.LM163:
+ 1439 07b2 6981      		ldd r22,Y+1
+ 1440 07b4 8091 0000 		lds r24,crc
+ 1441 07b8 9091 0000 		lds r25,crc+1
+ 1442 07bc 0E94 0000 		call _crc_xmodem_update
+ 1443 07c0 9093 0000 		sts crc+1,r25
+ 1444 07c4 8093 0000 		sts crc,r24
+ 298:serial.c      ****           crc = _crc_xmodem_update(crc, kodRozkazu);
+ 1446               	.LM164:
+ 1447 07c8 40E0      		ldi r20,0
+ 1448 07ca 50E0      		ldi r21,0
+ 1449 07cc 60E0      		ldi r22,lo8(kodRozkazu)
+ 1450 07ce 70E0      		ldi r23,hi8(kodRozkazu)
+ 1451 07d0 8091 0000 		lds r24,xCharsForTx
+ 1452 07d4 9091 0000 		lds r25,xCharsForTx+1
+ 1453 07d8 0E94 0000 		call xQueueCRSend
+ 1454 07dc 8093 0000 		sts xResult.2189,r24
+ 1455 07e0 8C3F      		cpi r24,lo8(-4)
+ 1456 07e2 01F4      		brne .L116
+ 298:serial.c      ****           crc = _crc_xmodem_update(crc, kodRozkazu);
+ 1458               	.LM165:
+ 1459 07e4 84E5      		ldi r24,lo8(84)
+ 1460 07e6 92E0      		ldi r25,lo8(2)
+ 1461 07e8 00C0      		rjmp .L150
+ 1462               	.L116:
+ 298:serial.c      ****           crc = _crc_xmodem_update(crc, kodRozkazu);
+ 1464               	.LM166:
+ 1465 07ea 8091 0000 		lds r24,xResult.2189
+ 1466 07ee 8B3F      		cpi r24,lo8(-5)
+ 1467 07f0 01F4      		brne .L117
+ 298:serial.c      ****           crc = _crc_xmodem_update(crc, kodRozkazu);
+ 1469               	.LM167:
+ 1470 07f2 85E5      		ldi r24,lo8(85)
+ 1471 07f4 92E0      		ldi r25,lo8(2)
+ 1472 07f6 00C0      		rjmp .L150
+ 1473               	.L4:
+ 298:serial.c      ****           crc = _crc_xmodem_update(crc, kodRozkazu);
+ 1475               	.LM168:
+ 1476 07f8 81E0      		ldi r24,lo8(1)
+ 1477 07fa 8093 0000 		sts xResult.2189,r24
+ 1478               	.L117:
+ 299:serial.c      ****           
+ 1480               	.LM169:
+ 1481 07fe 6091 0000 		lds r22,kodRozkazu
+ 1482 0802 8091 0000 		lds r24,crc
+ 1483 0806 9091 0000 		lds r25,crc+1
+ 1484 080a 0E94 0000 		call _crc_xmodem_update
+ 1485 080e 9093 0000 		sts crc+1,r25
+ 1486 0812 8093 0000 		sts crc,r24
+ 302:serial.c      ****           crc = _crc_xmodem_update(crc, lOdebrDanych);
+ 1488               	.LM170:
+ 1489 0816 40E0      		ldi r20,0
+ 1490 0818 50E0      		ldi r21,0
+ 1491 081a 60E0      		ldi r22,lo8(lOdebrDanych.2191)
+ 1492 081c 70E0      		ldi r23,hi8(lOdebrDanych.2191)
+ 1493 081e 8091 0000 		lds r24,xCharsForTx
+ 1494 0822 9091 0000 		lds r25,xCharsForTx+1
+ 1495 0826 0E94 0000 		call xQueueCRSend
+ 1496 082a 8093 0000 		sts xResult.2189,r24
+ 1497 082e 8C3F      		cpi r24,lo8(-4)
+ 1498 0830 01F4      		brne .L118
+ 302:serial.c      ****           crc = _crc_xmodem_update(crc, lOdebrDanych);
+ 1500               	.LM171:
+ 1501 0832 8CE5      		ldi r24,lo8(92)
+ 1502 0834 92E0      		ldi r25,lo8(2)
+ 1503 0836 00C0      		rjmp .L150
+ 1504               	.L118:
+ 302:serial.c      ****           crc = _crc_xmodem_update(crc, lOdebrDanych);
+ 1506               	.LM172:
+ 1507 0838 8091 0000 		lds r24,xResult.2189
+ 1508 083c 8B3F      		cpi r24,lo8(-5)
+ 1509 083e 01F4      		brne .L119
+ 302:serial.c      ****           crc = _crc_xmodem_update(crc, lOdebrDanych);
+ 1511               	.LM173:
+ 1512 0840 8DE5      		ldi r24,lo8(93)
+ 1513 0842 92E0      		ldi r25,lo8(2)
+ 1514 0844 00C0      		rjmp .L150
+ 1515               	.L37:
+ 302:serial.c      ****           crc = _crc_xmodem_update(crc, lOdebrDanych);
+ 1517               	.LM174:
+ 1518 0846 81E0      		ldi r24,lo8(1)
+ 1519 0848 8093 0000 		sts xResult.2189,r24
+ 1520               	.L119:
+ 303:serial.c      ****           
+ 1522               	.LM175:
+ 1523 084c 6091 0000 		lds r22,lOdebrDanych.2191
+ 1524 0850 8091 0000 		lds r24,crc
+ 1525 0854 9091 0000 		lds r25,crc+1
+ 1526 0858 0E94 0000 		call _crc_xmodem_update
+ 1527 085c 9093 0000 		sts crc+1,r25
+ 1528 0860 8093 0000 		sts crc,r24
+ 306:serial.c      ****           {
+ 1530               	.LM176:
+ 1531 0864 1982      		std Y+1,__zero_reg__
+ 1532 0866 00C0      		rjmp .L120
+ 1533               	.L40:
+ 308:serial.c      ****             crc = _crc_xmodem_update(crc, bDane[temp]);
+ 1535               	.LM177:
+ 1536 0868 6981      		ldd r22,Y+1
+ 1537 086a 70E0      		ldi r23,0
+ 1538 086c 6050      		subi r22,lo8(-(bDane))
+ 1539 086e 7040      		sbci r23,hi8(-(bDane))
+ 1540 0870 40E0      		ldi r20,0
+ 1541 0872 50E0      		ldi r21,0
+ 1542 0874 8091 0000 		lds r24,xCharsForTx
+ 1543 0878 9091 0000 		lds r25,xCharsForTx+1
+ 1544 087c 0E94 0000 		call xQueueCRSend
+ 1545 0880 8093 0000 		sts xResult.2189,r24
+ 1546               	.L121:
+ 308:serial.c      ****             crc = _crc_xmodem_update(crc, bDane[temp]);
+ 1548               	.LM178:
+ 1549 0884 8091 0000 		lds r24,xResult.2189
+ 1550 0888 8B3F      		cpi r24,lo8(-5)
+ 1551 088a 01F4      		brne .L122
+ 308:serial.c      ****             crc = _crc_xmodem_update(crc, bDane[temp]);
+ 1553               	.LM179:
+ 1554 088c 89E6      		ldi r24,lo8(105)
+ 1555 088e 92E0      		ldi r25,lo8(2)
+ 1556 0890 00C0      		rjmp .L150
+ 1557               	.L122:
+ 309:serial.c      ****           }
+ 1559               	.LM180:
+ 1560 0892 E981      		ldd r30,Y+1
+ 1561 0894 F0E0      		ldi r31,0
+ 1562 0896 E050      		subi r30,lo8(-(bDane))
+ 1563 0898 F040      		sbci r31,hi8(-(bDane))
+ 1564 089a 6081      		ld r22,Z
+ 1565 089c 8091 0000 		lds r24,crc
+ 1566 08a0 9091 0000 		lds r25,crc+1
+ 1567 08a4 0E94 0000 		call _crc_xmodem_update
+ 1568 08a8 9093 0000 		sts crc+1,r25
+ 1569 08ac 8093 0000 		sts crc,r24
+ 306:serial.c      ****           {
+ 1571               	.LM181:
+ 1572 08b0 8981      		ldd r24,Y+1
+ 1573 08b2 8F5F      		subi r24,lo8(-(1))
+ 1574 08b4 8983      		std Y+1,r24
+ 1575               	.L120:
+ 306:serial.c      ****           {
+ 1577               	.LM182:
+ 1578 08b6 6981      		ldd r22,Y+1
+ 1579 08b8 2091 0000 		lds r18,lOdebrDanych.2191
+ 1580 08bc 8091 0000 		lds r24,xCharsForTx
+ 1581 08c0 9091 0000 		lds r25,xCharsForTx+1
+ 1582 08c4 6217      		cp r22,r18
+ 1583 08c6 00F4      		brsh .L152
+ 308:serial.c      ****             crc = _crc_xmodem_update(crc, bDane[temp]);
+ 1585               	.LM183:
+ 1586 08c8 70E0      		ldi r23,0
+ 1587 08ca 6050      		subi r22,lo8(-(bDane))
+ 1588 08cc 7040      		sbci r23,hi8(-(bDane))
+ 1589 08ce 41E0      		ldi r20,lo8(1)
+ 1590 08d0 50E0      		ldi r21,0
+ 1591 08d2 0E94 0000 		call xQueueCRSend
+ 1592 08d6 8093 0000 		sts xResult.2189,r24
+ 1593 08da 8C3F      		cpi r24,lo8(-4)
+ 1594 08dc 01F4      		brne .L121
+ 308:serial.c      ****             crc = _crc_xmodem_update(crc, bDane[temp]);
+ 1596               	.LM184:
+ 1597 08de 88E6      		ldi r24,lo8(104)
+ 1598 08e0 92E0      		ldi r25,lo8(2)
+ 1599 08e2 00C0      		rjmp .L150
+ 1600               	.L152:
+ 312:serial.c      ****           crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&temp), 1, &xResult);
+ 1602               	.LM185:
+ 1603 08e4 2091 0000 		lds r18,crc+1
+ 1604 08e8 2983      		std Y+1,r18
+ 313:serial.c      ****           temp = (uint8_t)(crc & 0xFF);
+ 1606               	.LM186:
+ 1607 08ea 41E0      		ldi r20,lo8(1)
+ 1608 08ec 50E0      		ldi r21,0
+ 1609 08ee BE01      		movw r22,r28
+ 1610 08f0 6F5F      		subi r22,-1
+ 1611 08f2 7F4F      		sbci r23,-1
+ 1612 08f4 0E94 0000 		call xQueueCRSend
+ 1613 08f8 8093 0000 		sts xResult.2189,r24
+ 1614 08fc 8C3F      		cpi r24,lo8(-4)
+ 1615 08fe 01F4      		brne .L124
+ 313:serial.c      ****           temp = (uint8_t)(crc & 0xFF);
+ 1617               	.LM187:
+ 1618 0900 82E7      		ldi r24,lo8(114)
+ 1619 0902 92E0      		ldi r25,lo8(2)
+ 1620 0904 00C0      		rjmp .L150
+ 1621               	.L35:
+ 313:serial.c      ****           temp = (uint8_t)(crc & 0xFF);
+ 1623               	.LM188:
+ 1624 0906 40E0      		ldi r20,0
+ 1625 0908 50E0      		ldi r21,0
+ 1626 090a BE01      		movw r22,r28
+ 1627 090c 6F5F      		subi r22,-1
+ 1628 090e 7F4F      		sbci r23,-1
+ 1629 0910 8091 0000 		lds r24,xCharsForTx
+ 1630 0914 9091 0000 		lds r25,xCharsForTx+1
+ 1631 0918 0E94 0000 		call xQueueCRSend
+ 1632 091c 8093 0000 		sts xResult.2189,r24
+ 1633               	.L124:
+ 313:serial.c      ****           temp = (uint8_t)(crc & 0xFF);
+ 1635               	.LM189:
+ 1636 0920 8091 0000 		lds r24,xResult.2189
+ 1637 0924 8B3F      		cpi r24,lo8(-5)
+ 1638 0926 01F4      		brne .L125
+ 313:serial.c      ****           temp = (uint8_t)(crc & 0xFF);
+ 1640               	.LM190:
+ 1641 0928 83E7      		ldi r24,lo8(115)
+ 1642 092a 92E0      		ldi r25,lo8(2)
+ 1643 092c 00C0      		rjmp .L150
+ 1644               	.L125:
+ 314:serial.c      ****           crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&temp), 1, &xResult);
+ 1646               	.LM191:
+ 1647 092e 8091 0000 		lds r24,crc
+ 1648 0932 8983      		std Y+1,r24
+ 315:serial.c      **** 
+ 1650               	.LM192:
+ 1651 0934 41E0      		ldi r20,lo8(1)
+ 1652 0936 50E0      		ldi r21,0
+ 1653 0938 BE01      		movw r22,r28
+ 1654 093a 6F5F      		subi r22,-1
+ 1655 093c 7F4F      		sbci r23,-1
+ 1656 093e 8091 0000 		lds r24,xCharsForTx
+ 1657 0942 9091 0000 		lds r25,xCharsForTx+1
+ 1658 0946 0E94 0000 		call xQueueCRSend
+ 1659 094a 8093 0000 		sts xResult.2189,r24
+ 1660 094e 8C3F      		cpi r24,lo8(-4)
+ 1661 0950 01F4      		brne .L126
+ 315:serial.c      **** 
+ 1663               	.LM193:
+ 1664 0952 86E7      		ldi r24,lo8(118)
+ 1665 0954 92E0      		ldi r25,lo8(2)
+ 1666 0956 00C0      		rjmp .L150
+ 1667               	.L42:
+ 315:serial.c      **** 
+ 1669               	.LM194:
+ 1670 0958 40E0      		ldi r20,0
+ 1671 095a 50E0      		ldi r21,0
+ 1672 095c BE01      		movw r22,r28
+ 1673 095e 6F5F      		subi r22,-1
+ 1674 0960 7F4F      		sbci r23,-1
+ 1675 0962 8091 0000 		lds r24,xCharsForTx
+ 1676 0966 9091 0000 		lds r25,xCharsForTx+1
+ 1677 096a 0E94 0000 		call xQueueCRSend
+ 1678 096e 8093 0000 		sts xResult.2189,r24
+ 1679               	.L126:
+ 315:serial.c      **** 
+ 1681               	.LM195:
+ 1682 0972 8091 0000 		lds r24,xResult.2189
+ 1683 0976 8B3F      		cpi r24,lo8(-5)
+ 1684 0978 01F4      		brne .L127
+ 315:serial.c      **** 
+ 1686               	.LM196:
+ 1687 097a 87E7      		ldi r24,lo8(119)
+ 1688 097c 92E0      		ldi r25,lo8(2)
+ 1689 097e 00C0      		rjmp .L150
+ 1690               	.L45:
+ 315:serial.c      **** 
+ 1692               	.LM197:
+ 1693 0980 81E0      		ldi r24,lo8(1)
+ 1694 0982 8093 0000 		sts xResult.2189,r24
+ 1695               	.L127:
+ 317:serial.c      ****           {
+ 1697               	.LM198:
+ 1698 0986 8091 0000 		lds r24,xResult.2189
+ 1699 098a 8130      		cpi r24,lo8(1)
+ 1700 098c 01F4      		brne .L128
+ 319:serial.c      ****           }
+ 1702               	.LM199:
+ 1703 098e 8BB1      		in r24,0xb
+ 1704 0990 8C60      		ori r24,lo8(12)
+ 1705 0992 8BB9      		out 0xb,r24
+ 1706               	.L128:
+ 1707               	.LBB11:
+ 321:serial.c      ****         
+ 1709               	.LM200:
+ 1710 0994 8091 C100 		lds r24,193
+ 1711 0998 8062      		ori r24,lo8(32)
+ 1712 099a 8093 C100 		sts 193,r24
+ 1713               	.LBE11:
+ 323:serial.c      ****           {
+ 1715               	.LM201:
+ 1716 099e 8091 0000 		lds r24,kodRozkazu
+ 1717 09a2 8138      		cpi r24,lo8(-127)
+ 1718 09a4 01F0      		breq .+2
+ 1719 09a6 00C0      		rjmp .L130
+ 325:serial.c      ****             Led2On();
+ 1721               	.LM202:
+ 1722 09a8 0E94 0000 		call Led1On
+ 326:serial.c      ****             crDELAY(xHandle, 10);
+ 1724               	.LM203:
+ 1725 09ac 0E94 0000 		call Led2On
+ 327:serial.c      ****             Led1Off();
+ 1727               	.LM204:
+ 1728 09b0 60E0      		ldi r22,0
+ 1729 09b2 70E0      		ldi r23,0
+ 1730 09b4 8AE0      		ldi r24,lo8(10)
+ 1731 09b6 90E0      		ldi r25,0
+ 1732 09b8 0E94 0000 		call vCoRoutineAddToDelayedList
+ 1733 09bc 8EE8      		ldi r24,lo8(-114)
+ 1734 09be 92E0      		ldi r25,lo8(2)
+ 1735 09c0 00C0      		rjmp .L150
+ 1736               	.L110:
+ 1737               	.LBE22:
+ 333:serial.c      ****         {
+ 1739               	.LM205:
+ 1740 09c2 8230      		cpi r24,lo8(2)
+ 1741 09c4 01F4      		brne .L131
+ 335:serial.c      ****         }
+ 1743               	.LM206:
+ 1744 09c6 40E0      		ldi r20,0
+ 1745 09c8 50E0      		ldi r21,0
+ 1746 09ca 60E0      		ldi r22,lo8(wiadomosc)
+ 1747 09cc 70E0      		ldi r23,hi8(wiadomosc)
+ 1748 09ce 8091 0000 		lds r24,xRoleta
+ 1749 09d2 9091 0000 		lds r25,xRoleta+1
+ 1750 09d6 0E94 0000 		call xQueueCRSend
+ 1751 09da 8093 0000 		sts xResult.2189,r24
+ 1752 09de 8C3F      		cpi r24,lo8(-4)
+ 1753 09e0 01F4      		brne .L132
+ 335:serial.c      ****         }
+ 1755               	.LM207:
+ 1756 09e2 8EE9      		ldi r24,lo8(-98)
+ 1757 09e4 92E0      		ldi r25,lo8(2)
+ 1758 09e6 00C0      		rjmp .L150
+ 1759               	.L33:
+ 335:serial.c      ****         }
+ 1761               	.LM208:
+ 1762 09e8 40E0      		ldi r20,0
+ 1763 09ea 50E0      		ldi r21,0
+ 1764 09ec 60E0      		ldi r22,lo8(wiadomosc)
+ 1765 09ee 70E0      		ldi r23,hi8(wiadomosc)
+ 1766 09f0 8091 0000 		lds r24,xRoleta
+ 1767 09f4 9091 0000 		lds r25,xRoleta+1
+ 1768 09f8 0E94 0000 		call xQueueCRSend
+ 1769 09fc 8093 0000 		sts xResult.2189,r24
+ 1770               	.L132:
+ 335:serial.c      ****         }
+ 1772               	.LM209:
+ 1773 0a00 8091 0000 		lds r24,xResult.2189
+ 1774 0a04 8B3F      		cpi r24,lo8(-5)
+ 1775 0a06 01F0      		breq .+2
+ 1776 0a08 00C0      		rjmp .L130
+ 335:serial.c      ****         }
+ 1778               	.LM210:
+ 1779 0a0a 8FE9      		ldi r24,lo8(-97)
+ 1780 0a0c 92E0      		ldi r25,lo8(2)
+ 1781 0a0e 00C0      		rjmp .L150
+ 1782               	.L131:
+ 337:serial.c      ****         {
+ 1784               	.LM211:
+ 1785 0a10 8330      		cpi r24,lo8(3)
+ 1786 0a12 01F4      		brne .L134
+ 339:serial.c      ****         }
+ 1788               	.LM212:
+ 1789 0a14 40E0      		ldi r20,0
+ 1790 0a16 50E0      		ldi r21,0
+ 1791 0a18 60E0      		ldi r22,lo8(wiadomosc)
+ 1792 0a1a 70E0      		ldi r23,hi8(wiadomosc)
+ 1793 0a1c 8091 0000 		lds r24,xRoleta+2
+ 1794 0a20 9091 0000 		lds r25,xRoleta+2+1
+ 1795 0a24 0E94 0000 		call xQueueCRSend
+ 1796 0a28 8093 0000 		sts xResult.2189,r24
+ 1797 0a2c 8C3F      		cpi r24,lo8(-4)
+ 1798 0a2e 01F4      		brne .L135
+ 339:serial.c      ****         }
+ 1800               	.LM213:
+ 1801 0a30 86EA      		ldi r24,lo8(-90)
+ 1802 0a32 92E0      		ldi r25,lo8(2)
+ 1803 0a34 00C0      		rjmp .L150
+ 1804               	.L49:
+ 339:serial.c      ****         }
+ 1806               	.LM214:
+ 1807 0a36 40E0      		ldi r20,0
+ 1808 0a38 50E0      		ldi r21,0
+ 1809 0a3a 60E0      		ldi r22,lo8(wiadomosc)
+ 1810 0a3c 70E0      		ldi r23,hi8(wiadomosc)
+ 1811 0a3e 8091 0000 		lds r24,xRoleta+2
+ 1812 0a42 9091 0000 		lds r25,xRoleta+2+1
+ 1813 0a46 0E94 0000 		call xQueueCRSend
+ 1814 0a4a 8093 0000 		sts xResult.2189,r24
+ 1815               	.L135:
+ 339:serial.c      ****         }
+ 1817               	.LM215:
+ 1818 0a4e 8091 0000 		lds r24,xResult.2189
+ 1819 0a52 8B3F      		cpi r24,lo8(-5)
+ 1820 0a54 01F0      		breq .+2
+ 1821 0a56 00C0      		rjmp .L130
+ 339:serial.c      ****         }
+ 1823               	.LM216:
+ 1824 0a58 87EA      		ldi r24,lo8(-89)
+ 1825 0a5a 92E0      		ldi r25,lo8(2)
+ 1826 0a5c 00C0      		rjmp .L150
+ 1827               	.L134:
+ 341:serial.c      ****         {
+ 1829               	.LM217:
+ 1830 0a5e 8430      		cpi r24,lo8(4)
+ 1831 0a60 01F0      		breq .+2
+ 1832 0a62 00C0      		rjmp .L130
+ 1833               	.LBB23:
+ 344:serial.c      ****           uint8_t temp;
+ 1835               	.LM218:
+ 1836 0a64 1092 0000 		sts crc+1,__zero_reg__
+ 1837 0a68 1092 0000 		sts crc,__zero_reg__
+ 348:serial.c      ****           {
+ 1839               	.LM219:
+ 1840 0a6c 1982      		std Y+1,__zero_reg__
+ 1841 0a6e 00C0      		rjmp .L136
+ 1842               	.L137:
+ 350:serial.c      ****             crc = _crc_xmodem_update(crc, bHelloResp[temp]);
+ 1844               	.LM220:
+ 1845 0a70 8091 0000 		lds r24,xResult.2189
+ 1846 0a74 8B3F      		cpi r24,lo8(-5)
+ 1847 0a76 01F4      		brne .L139
+ 350:serial.c      ****             crc = _crc_xmodem_update(crc, bHelloResp[temp]);
+ 1849               	.LM221:
+ 1850 0a78 8DEB      		ldi r24,lo8(-67)
+ 1851 0a7a 92E0      		ldi r25,lo8(2)
+ 1852 0a7c 00C0      		rjmp .L150
+ 1853               	.L47:
+ 350:serial.c      ****             crc = _crc_xmodem_update(crc, bHelloResp[temp]);
+ 1855               	.LM222:
+ 1856 0a7e 81E0      		ldi r24,lo8(1)
+ 1857 0a80 8093 0000 		sts xResult.2189,r24
+ 1858               	.L139:
+ 351:serial.c      ****           }
+ 1860               	.LM223:
+ 1861 0a84 E981      		ldd r30,Y+1
+ 1862 0a86 F0E0      		ldi r31,0
+ 1863 0a88 E050      		subi r30,lo8(-(bHelloResp))
+ 1864 0a8a F040      		sbci r31,hi8(-(bHelloResp))
+ 1865 0a8c 6081      		ld r22,Z
+ 1866 0a8e 8091 0000 		lds r24,crc
+ 1867 0a92 9091 0000 		lds r25,crc+1
+ 1868 0a96 0E94 0000 		call _crc_xmodem_update
+ 1869 0a9a 9093 0000 		sts crc+1,r25
+ 1870 0a9e 8093 0000 		sts crc,r24
+ 348:serial.c      ****           {
+ 1872               	.LM224:
+ 1873 0aa2 8981      		ldd r24,Y+1
+ 1874 0aa4 8F5F      		subi r24,lo8(-(1))
+ 1875 0aa6 8983      		std Y+1,r24
+ 1876               	.L136:
+ 348:serial.c      ****           {
+ 1878               	.LM225:
+ 1879 0aa8 6981      		ldd r22,Y+1
+ 1880 0aaa 8091 0000 		lds r24,xCharsForTx
+ 1881 0aae 9091 0000 		lds r25,xCharsForTx+1
+ 1882 0ab2 6B30      		cpi r22,lo8(11)
+ 1883 0ab4 00F4      		brsh .L153
+ 350:serial.c      ****             crc = _crc_xmodem_update(crc, bHelloResp[temp]);
+ 1885               	.LM226:
+ 1886 0ab6 70E0      		ldi r23,0
+ 1887 0ab8 6050      		subi r22,lo8(-(bHelloResp))
+ 1888 0aba 7040      		sbci r23,hi8(-(bHelloResp))
+ 1889 0abc 41E0      		ldi r20,lo8(1)
+ 1890 0abe 50E0      		ldi r21,0
+ 1891 0ac0 0E94 0000 		call xQueueCRSend
+ 1892 0ac4 8093 0000 		sts xResult.2189,r24
+ 1893 0ac8 8C3F      		cpi r24,lo8(-4)
+ 1894 0aca 01F4      		brne .L137
+ 350:serial.c      ****             crc = _crc_xmodem_update(crc, bHelloResp[temp]);
+ 1896               	.LM227:
+ 1897 0acc 8CEB      		ldi r24,lo8(-68)
+ 1898 0ace 92E0      		ldi r25,lo8(2)
+ 1899 0ad0 00C0      		rjmp .L150
+ 1900               	.L153:
+ 354:serial.c      ****           crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&temp), 1, &xResult);
+ 1902               	.LM228:
+ 1903 0ad2 2091 0000 		lds r18,crc+1
+ 1904 0ad6 2983      		std Y+1,r18
+ 355:serial.c      ****           temp = (uint8_t)(crc & 0xFF);
+ 1906               	.LM229:
+ 1907 0ad8 41E0      		ldi r20,lo8(1)
+ 1908 0ada 50E0      		ldi r21,0
+ 1909 0adc BE01      		movw r22,r28
+ 1910 0ade 6F5F      		subi r22,-1
+ 1911 0ae0 7F4F      		sbci r23,-1
+ 1912 0ae2 0E94 0000 		call xQueueCRSend
+ 1913 0ae6 8093 0000 		sts xResult.2189,r24
+ 1914 0aea 8C3F      		cpi r24,lo8(-4)
+ 1915 0aec 01F4      		brne .L141
+ 355:serial.c      ****           temp = (uint8_t)(crc & 0xFF);
+ 1917               	.LM230:
+ 1918 0aee 86EC      		ldi r24,lo8(-58)
+ 1919 0af0 92E0      		ldi r25,lo8(2)
+ 1920 0af2 00C0      		rjmp .L150
+ 1921               	.L56:
+ 355:serial.c      ****           temp = (uint8_t)(crc & 0xFF);
+ 1923               	.LM231:
+ 1924 0af4 40E0      		ldi r20,0
+ 1925 0af6 50E0      		ldi r21,0
+ 1926 0af8 BE01      		movw r22,r28
+ 1927 0afa 6F5F      		subi r22,-1
+ 1928 0afc 7F4F      		sbci r23,-1
+ 1929 0afe 8091 0000 		lds r24,xCharsForTx
+ 1930 0b02 9091 0000 		lds r25,xCharsForTx+1
+ 1931 0b06 0E94 0000 		call xQueueCRSend
+ 1932 0b0a 8093 0000 		sts xResult.2189,r24
+ 1933               	.L141:
+ 355:serial.c      ****           temp = (uint8_t)(crc & 0xFF);
+ 1935               	.LM232:
+ 1936 0b0e 8091 0000 		lds r24,xResult.2189
+ 1937 0b12 8B3F      		cpi r24,lo8(-5)
+ 1938 0b14 01F4      		brne .L142
+ 355:serial.c      ****           temp = (uint8_t)(crc & 0xFF);
+ 1940               	.LM233:
+ 1941 0b16 87EC      		ldi r24,lo8(-57)
+ 1942 0b18 92E0      		ldi r25,lo8(2)
+ 1943 0b1a 00C0      		rjmp .L150
+ 1944               	.L142:
+ 356:serial.c      ****           crQUEUE_SEND(xHandle, xCharsForTx, (void *)(&temp), 1, &xResult);
+ 1946               	.LM234:
+ 1947 0b1c 8091 0000 		lds r24,crc
+ 1948 0b20 8983      		std Y+1,r24
+ 357:serial.c      **** 
+ 1950               	.LM235:
+ 1951 0b22 41E0      		ldi r20,lo8(1)
+ 1952 0b24 50E0      		ldi r21,0
+ 1953 0b26 BE01      		movw r22,r28
+ 1954 0b28 6F5F      		subi r22,-1
+ 1955 0b2a 7F4F      		sbci r23,-1
+ 1956 0b2c 8091 0000 		lds r24,xCharsForTx
+ 1957 0b30 9091 0000 		lds r25,xCharsForTx+1
+ 1958 0b34 0E94 0000 		call xQueueCRSend
+ 1959 0b38 8093 0000 		sts xResult.2189,r24
+ 1960 0b3c 8C3F      		cpi r24,lo8(-4)
+ 1961 0b3e 01F4      		brne .L143
+ 357:serial.c      **** 
+ 1963               	.LM236:
+ 1964 0b40 8AEC      		ldi r24,lo8(-54)
+ 1965 0b42 92E0      		ldi r25,lo8(2)
+ 1966 0b44 00C0      		rjmp .L150
+ 1967               	.L54:
+ 357:serial.c      **** 
+ 1969               	.LM237:
+ 1970 0b46 40E0      		ldi r20,0
+ 1971 0b48 50E0      		ldi r21,0
+ 1972 0b4a BE01      		movw r22,r28
+ 1973 0b4c 6F5F      		subi r22,-1
+ 1974 0b4e 7F4F      		sbci r23,-1
+ 1975 0b50 8091 0000 		lds r24,xCharsForTx
+ 1976 0b54 9091 0000 		lds r25,xCharsForTx+1
+ 1977 0b58 0E94 0000 		call xQueueCRSend
+ 1978 0b5c 8093 0000 		sts xResult.2189,r24
+ 1979               	.L143:
+ 357:serial.c      **** 
+ 1981               	.LM238:
+ 1982 0b60 8091 0000 		lds r24,xResult.2189
+ 1983 0b64 8B3F      		cpi r24,lo8(-5)
+ 1984 0b66 01F4      		brne .L144
+ 357:serial.c      **** 
+ 1986               	.LM239:
+ 1987 0b68 8BEC      		ldi r24,lo8(-53)
+ 1988 0b6a 92E0      		ldi r25,lo8(2)
+ 1989 0b6c 00C0      		rjmp .L150
+ 1990               	.L58:
+ 357:serial.c      **** 
+ 1992               	.LM240:
+ 1993 0b6e 81E0      		ldi r24,lo8(1)
+ 1994 0b70 8093 0000 		sts xResult.2189,r24
+ 1995               	.L144:
+ 359:serial.c      ****           {
+ 1997               	.LM241:
+ 1998 0b74 8091 0000 		lds r24,xResult.2189
+ 1999 0b78 8130      		cpi r24,lo8(1)
+ 2000 0b7a 01F4      		brne .L145
+ 361:serial.c      ****           }
+ 2002               	.LM242:
+ 2003 0b7c 8BB1      		in r24,0xb
+ 2004 0b7e 8C60      		ori r24,lo8(12)
+ 2005 0b80 8BB9      		out 0xb,r24
+ 2006               	.L145:
+ 2007               	.LBB18:
+ 363:serial.c      ****         }
+ 2009               	.LM243:
+ 2010 0b82 8091 C100 		lds r24,193
+ 2011 0b86 8062      		ori r24,lo8(32)
+ 2012 0b88 8093 C100 		sts 193,r24
+ 2013               	.LBE18:
+ 2014 0b8c 00C0      		rjmp .L130
+ 2015               	.L96:
+ 2016               	.LBE23:
+ 371:serial.c      ****         {
+ 2018               	.LM244:
+ 2019 0b8e 8091 0000 		lds r24,kodRozkazu
+ 2020 0b92 8138      		cpi r24,lo8(-127)
+ 2021 0b94 01F4      		brne .L146
+ 373:serial.c      ****           Led1On();
+ 2023               	.LM245:
+ 2024 0b96 8091 C100 		lds r24,193
+ 2025 0b9a 8F7E      		andi r24,lo8(-17)
+ 2026 0b9c 8093 C100 		sts 193,r24
+ 374:serial.c      ****           Led2On();
+ 2028               	.LM246:
+ 2029 0ba0 0E94 0000 		call Led1On
+ 375:serial.c      ****           //TODO disable RX buffer
+ 2031               	.LM247:
+ 2032 0ba4 0E94 0000 		call Led2On
+ 377:serial.c      ****           ENABLE_RX();
+ 2034               	.LM248:
+ 2035 0ba8 60E0      		ldi r22,0
+ 2036 0baa 70E0      		ldi r23,0
+ 2037 0bac 88EE      		ldi r24,lo8(-24)
+ 2038 0bae 93E0      		ldi r25,lo8(3)
+ 2039 0bb0 0E94 0000 		call vCoRoutineAddToDelayedList
+ 2040 0bb4 82EF      		ldi r24,lo8(-14)
+ 2041 0bb6 92E0      		ldi r25,lo8(2)
+ 2042               	.L150:
+ 2043 0bb8 F801      		movw r30,r16
+ 2044 0bba 918F      		std Z+25,r25
+ 2045 0bbc 808F      		std Z+24,r24
+ 2046 0bbe 00C0      		rjmp .L2
+ 2047               	.L146:
+ 379:serial.c      ****         }
+ 380:serial.c      ****         Led1Off();
+ 2049               	.LM249:
+ 2050 0bc0 0E94 0000 		call Led1Off
+ 2051 0bc4 00C0      		rjmp .L12
+ 2052               	.L2:
+ 2053               	/* epilogue start */
+ 2054               	.LBE36:
+ 381:serial.c      ****         stan = s_sync;
+ 382:serial.c      ****       }
+ 383:serial.c      ****     }
+ 384:serial.c      ****   }
+ 385:serial.c      ****   crEND();
+ 386:serial.c      **** }
+ 2056               	.LM250:
+ 2057 0bc6 0F90      		pop __tmp_reg__
+ 2058 0bc8 DF91      		pop r29
+ 2059 0bca CF91      		pop r28
+ 2060 0bcc 1F91      		pop r17
+ 2061 0bce 0F91      		pop r16
+ 2062 0bd0 FF90      		pop r15
+ 2063 0bd2 0895      		ret
+ 2210               	.Lscope2:
+ 2212               		.stabd	78,0,0
+ 2215               	.global	xSerialPortInitMinimal
+ 2217               	xSerialPortInitMinimal:
+ 2218               		.stabd	46,0,0
+ 387:serial.c      **** 
+ 388:serial.c      **** void xSerialPortInitMinimal(unsigned portBASE_TYPE uxQueueLength )
+ 389:serial.c      **** {
+ 2220               	.LM251:
+ 2221               	.LFBB3:
+ 2222 0bd4 CF93      		push r28
+ 2223               	/* prologue: function */
+ 2224               	/* frame size = 0 */
+ 2225               	/* stack size = 1 */
+ 2226               	.L__stack_usage = 1
+ 2227 0bd6 C82F      		mov r28,r24
+ 390:serial.c      ****   portENTER_CRITICAL();
+ 2229               	.LM252:
+ 2230               	/* #APP */
+ 2231               	 ;  390 "serial.c" 1
+ 2232 0bd8 0FB6      		in		__tmp_reg__, __SREG__
+ 2233               	 ;  0 "" 2
+ 2234               	 ;  390 "serial.c" 1
+ 2235 0bda F894      		cli
+ 2236               	 ;  0 "" 2
+ 2237               	 ;  390 "serial.c" 1
+ 2238 0bdc 0F92      		push	__tmp_reg__
+ 2239               	 ;  0 "" 2
+ 391:serial.c      ****   {
+ 392:serial.c      ****     /* Create the queues used by the com test task. */
+ 393:serial.c      ****     xRxedChars = xQueueCreate( uxQueueLength, ( unsigned portBASE_TYPE ) sizeof( signed portCHAR ) 
+ 2241               	.LM253:
+ 2242               	/* #NOAPP */
+ 2243 0bde 61E0      		ldi r22,lo8(1)
+ 2244 0be0 0E94 0000 		call xQueueCreate
+ 2245 0be4 9093 0000 		sts xRxedChars+1,r25
+ 2246 0be8 8093 0000 		sts xRxedChars,r24
+ 394:serial.c      ****     xCharsForTx = xQueueCreate( uxQueueLength, ( unsigned portBASE_TYPE ) sizeof( signed portCHAR )
+ 2248               	.LM254:
+ 2249 0bec 61E0      		ldi r22,lo8(1)
+ 2250 0bee 8C2F      		mov r24,r28
+ 2251 0bf0 0E94 0000 		call xQueueCreate
+ 2252 0bf4 9093 0000 		sts xCharsForTx+1,r25
+ 2253 0bf8 8093 0000 		sts xCharsForTx,r24
+ 395:serial.c      **** 
+ 396:serial.c      ****     UBRR0L = 3;
+ 2255               	.LM255:
+ 2256 0bfc 83E0      		ldi r24,lo8(3)
+ 2257 0bfe 8093 C400 		sts 196,r24
+ 397:serial.c      ****     UBRR0H = 0;
+ 2259               	.LM256:
+ 2260 0c02 1092 C500 		sts 197,__zero_reg__
+ 398:serial.c      **** 
+ 399:serial.c      ****     /* Enable the Rx interrupt.  The Tx interrupt will get enabled later. Also enable the Rx and Tx
+ 400:serial.c      ****     UCSR0B = ((1<<RXCIE0)|(1<<TXCIE0)|(1<<TXEN0)|(1<<RXEN0));
+ 2262               	.LM257:
+ 2263 0c06 88ED      		ldi r24,lo8(-40)
+ 2264 0c08 8093 C100 		sts 193,r24
+ 401:serial.c      **** 
+ 402:serial.c      ****     /* Set the data bits to 8. */
+ 403:serial.c      ****     UCSR0C = ( serUCSRC_SELECT | serEIGHT_DATA_BITS );
+ 2266               	.LM258:
+ 2267 0c0c 86E8      		ldi r24,lo8(-122)
+ 2268 0c0e 8093 C200 		sts 194,r24
+ 404:serial.c      ****     
+ 405:serial.c      ****     vSemaphoreCreateBinary( xSemaphore );
+ 2270               	.LM259:
+ 2271 0c12 60E0      		ldi r22,0
+ 2272 0c14 81E0      		ldi r24,lo8(1)
+ 2273 0c16 0E94 0000 		call xQueueCreate
+ 2274 0c1a 9093 0000 		sts xSemaphore+1,r25
+ 2275 0c1e 8093 0000 		sts xSemaphore,r24
+ 2276 0c22 0097      		sbiw r24,0
+ 2277 0c24 01F0      		breq .L155
+ 2279               	.LM260:
+ 2280 0c26 20E0      		ldi r18,0
+ 2281 0c28 40E0      		ldi r20,0
+ 2282 0c2a 50E0      		ldi r21,0
+ 2283 0c2c 60E0      		ldi r22,0
+ 2284 0c2e 70E0      		ldi r23,0
+ 2285 0c30 0E94 0000 		call xQueueGenericSend
+ 2286               	.L155:
+ 406:serial.c      ****   }
+ 407:serial.c      ****   portEXIT_CRITICAL();
+ 2288               	.LM261:
+ 2289               	/* #APP */
+ 2290               	 ;  407 "serial.c" 1
+ 2291 0c34 0F90      		pop		__tmp_reg__
+ 2292               	 ;  0 "" 2
+ 2293               	 ;  407 "serial.c" 1
+ 2294 0c36 0FBE      		out		__SREG__, __tmp_reg__
+ 2295               	 ;  0 "" 2
+ 2296               	/* epilogue start */
+ 408:serial.c      ****   return;
+ 409:serial.c      **** }
+ 2298               	.LM262:
+ 2299               	/* #NOAPP */
+ 2300 0c38 CF91      		pop r28
+ 2301 0c3a 0895      		ret
+ 2303               	.Lscope3:
+ 2305               		.stabd	78,0,0
+ 2307               	.global	__vector_18
+ 2309               	__vector_18:
+ 2310               		.stabd	46,0,0
+ 410:serial.c      **** 
+ 411:serial.c      **** /*-----------------------------------------------------------*/
+ 412:serial.c      **** ISR(USART_RX_vect)
+ 413:serial.c      **** {
+ 2312               	.LM263:
+ 2313               	.LFBB4:
+ 2314 0c3c 1F92      		push r1
+ 2315 0c3e 0F92      		push r0
+ 2316 0c40 0FB6      		in r0,__SREG__
+ 2317 0c42 0F92      		push r0
+ 2318 0c44 1124      		clr __zero_reg__
+ 2319 0c46 2F93      		push r18
+ 2320 0c48 3F93      		push r19
+ 2321 0c4a 4F93      		push r20
+ 2322 0c4c 5F93      		push r21
+ 2323 0c4e 6F93      		push r22
+ 2324 0c50 7F93      		push r23
+ 2325 0c52 8F93      		push r24
+ 2326 0c54 9F93      		push r25
+ 2327 0c56 AF93      		push r26
+ 2328 0c58 BF93      		push r27
+ 2329 0c5a EF93      		push r30
+ 2330 0c5c FF93      		push r31
+ 2331 0c5e CF93      		push r28
+ 2332 0c60 DF93      		push r29
+ 2333 0c62 1F92      		push __zero_reg__
+ 2334 0c64 CDB7      		in r28,__SP_L__
+ 2335 0c66 DEB7      		in r29,__SP_H__
+ 2336               	/* prologue: Signal */
+ 2337               	/* frame size = 1 */
+ 2338               	/* stack size = 18 */
+ 2339               	.L__stack_usage = 18
+ 414:serial.c      ****   signed portCHAR cChar;
+ 415:serial.c      ****   cChar = UDR0;
+ 2341               	.LM264:
+ 2342 0c68 8091 C600 		lds r24,198
+ 2343 0c6c 8983      		std Y+1,r24
+ 416:serial.c      **** //  Led2Toggle();
+ 417:serial.c      ****   crQUEUE_SEND_FROM_ISR( xRxedChars, &cChar, pdFALSE );
+ 2345               	.LM265:
+ 2346 0c6e 40E0      		ldi r20,0
+ 2347 0c70 BE01      		movw r22,r28
+ 2348 0c72 6F5F      		subi r22,-1
+ 2349 0c74 7F4F      		sbci r23,-1
+ 2350 0c76 8091 0000 		lds r24,xRxedChars
+ 2351 0c7a 9091 0000 		lds r25,xRxedChars+1
+ 2352 0c7e 0E94 0000 		call xQueueCRSendFromISR
+ 2353               	/* epilogue start */
+ 418:serial.c      **** }
+ 2355               	.LM266:
+ 2356 0c82 0F90      		pop __tmp_reg__
+ 2357 0c84 DF91      		pop r29
+ 2358 0c86 CF91      		pop r28
+ 2359 0c88 FF91      		pop r31
+ 2360 0c8a EF91      		pop r30
+ 2361 0c8c BF91      		pop r27
+ 2362 0c8e AF91      		pop r26
+ 2363 0c90 9F91      		pop r25
+ 2364 0c92 8F91      		pop r24
+ 2365 0c94 7F91      		pop r23
+ 2366 0c96 6F91      		pop r22
+ 2367 0c98 5F91      		pop r21
+ 2368 0c9a 4F91      		pop r20
+ 2369 0c9c 3F91      		pop r19
+ 2370 0c9e 2F91      		pop r18
+ 2371 0ca0 0F90      		pop r0
+ 2372 0ca2 0FBE      		out __SREG__,r0
+ 2373 0ca4 0F90      		pop r0
+ 2374 0ca6 1F90      		pop r1
+ 2375 0ca8 1895      		reti
+ 2380               	.Lscope4:
+ 2382               		.stabd	78,0,0
+ 2384               	.global	__vector_19
+ 2386               	__vector_19:
+ 2387               		.stabd	46,0,0
+ 419:serial.c      **** /*-----------------------------------------------------------*/
+ 420:serial.c      **** 
+ 421:serial.c      **** ISR(USART_UDRE_vect)
+ 422:serial.c      **** {
+ 2389               	.LM267:
+ 2390               	.LFBB5:
+ 2391 0caa 1F92      		push r1
+ 2392 0cac 0F92      		push r0
+ 2393 0cae 0FB6      		in r0,__SREG__
+ 2394 0cb0 0F92      		push r0
+ 2395 0cb2 1124      		clr __zero_reg__
+ 2396 0cb4 2F93      		push r18
+ 2397 0cb6 3F93      		push r19
+ 2398 0cb8 4F93      		push r20
+ 2399 0cba 5F93      		push r21
+ 2400 0cbc 6F93      		push r22
+ 2401 0cbe 7F93      		push r23
+ 2402 0cc0 8F93      		push r24
+ 2403 0cc2 9F93      		push r25
+ 2404 0cc4 AF93      		push r26
+ 2405 0cc6 BF93      		push r27
+ 2406 0cc8 EF93      		push r30
+ 2407 0cca FF93      		push r31
+ 2408 0ccc CF93      		push r28
+ 2409 0cce DF93      		push r29
+ 2410 0cd0 00D0      		rcall .
+ 2411 0cd2 CDB7      		in r28,__SP_L__
+ 2412 0cd4 DEB7      		in r29,__SP_H__
+ 2413               	/* prologue: Signal */
+ 2414               	/* frame size = 2 */
+ 2415               	/* stack size = 19 */
+ 2416               	.L__stack_usage = 19
+ 423:serial.c      ****   signed portCHAR cChar, cTaskWoken;
+ 424:serial.c      **** 
+ 425:serial.c      ****   if( xQueueReceiveFromISR( xCharsForTx, &cChar, &cTaskWoken ) == pdTRUE )
+ 2418               	.LM268:
+ 2419 0cd6 AE01      		movw r20,r28
+ 2420 0cd8 4F5F      		subi r20,-1
+ 2421 0cda 5F4F      		sbci r21,-1
+ 2422 0cdc BE01      		movw r22,r28
+ 2423 0cde 6E5F      		subi r22,-2
+ 2424 0ce0 7F4F      		sbci r23,-1
+ 2425 0ce2 8091 0000 		lds r24,xCharsForTx
+ 2426 0ce6 9091 0000 		lds r25,xCharsForTx+1
+ 2427 0cea 0E94 0000 		call xQueueReceiveFromISR
+ 2428 0cee 8130      		cpi r24,lo8(1)
+ 2429 0cf0 01F4      		brne .L161
+ 426:serial.c      ****   {
+ 427:serial.c      ****     /* Send the next character queued for Tx. */
+ 428:serial.c      ****     UDR0 = cChar;
+ 2431               	.LM269:
+ 2432 0cf2 8A81      		ldd r24,Y+2
+ 2433 0cf4 8093 C600 		sts 198,r24
+ 2434 0cf8 00C0      		rjmp .L160
+ 2435               	.L161:
+ 2436               	.LBB37:
+ 429:serial.c      ****   }
+ 430:serial.c      ****   else
+ 431:serial.c      ****   {
+ 432:serial.c      ****     /* Queue empty, nothing to send. */
+ 433:serial.c      ****     vInterruptOff();
+ 2438               	.LM270:
+ 2439 0cfa 8091 C100 		lds r24,193
+ 2440 0cfe 8F7D      		andi r24,lo8(-33)
+ 2441 0d00 8093 C100 		sts 193,r24
+ 2442               	.L160:
+ 2443               	/* epilogue start */
+ 2444               	.LBE37:
+ 434:serial.c      ****   }
+ 435:serial.c      **** }
+ 2446               	.LM271:
+ 2447 0d04 0F90      		pop __tmp_reg__
+ 2448 0d06 0F90      		pop __tmp_reg__
+ 2449 0d08 DF91      		pop r29
+ 2450 0d0a CF91      		pop r28
+ 2451 0d0c FF91      		pop r31
+ 2452 0d0e EF91      		pop r30
+ 2453 0d10 BF91      		pop r27
+ 2454 0d12 AF91      		pop r26
+ 2455 0d14 9F91      		pop r25
+ 2456 0d16 8F91      		pop r24
+ 2457 0d18 7F91      		pop r23
+ 2458 0d1a 6F91      		pop r22
+ 2459 0d1c 5F91      		pop r21
+ 2460 0d1e 4F91      		pop r20
+ 2461 0d20 3F91      		pop r19
+ 2462 0d22 2F91      		pop r18
+ 2463 0d24 0F90      		pop r0
+ 2464 0d26 0FBE      		out __SREG__,r0
+ 2465 0d28 0F90      		pop r0
+ 2466 0d2a 1F90      		pop r1
+ 2467 0d2c 1895      		reti
+ 2473               	.Lscope5:
+ 2475               		.stabd	78,0,0
+ 2477               	.global	__vector_20
+ 2479               	__vector_20:
+ 2480               		.stabd	46,0,0
+ 436:serial.c      **** 
+ 437:serial.c      **** ISR(USART_TX_vect)
+ 438:serial.c      **** {
+ 2482               	.LM272:
+ 2483               	.LFBB6:
+ 2484 0d2e 1F92      		push r1
+ 2485 0d30 0F92      		push r0
+ 2486 0d32 0FB6      		in r0,__SREG__
+ 2487 0d34 0F92      		push r0
+ 2488 0d36 1124      		clr __zero_reg__
+ 2489 0d38 8F93      		push r24
+ 2490               	/* prologue: Signal */
+ 2491               	/* frame size = 0 */
+ 2492               	/* stack size = 4 */
+ 2493               	.L__stack_usage = 4
+ 439:serial.c      ****   if (!vIsInterruptOn())
+ 2495               	.LM273:
+ 2496 0d3a 8091 C100 		lds r24,193
+ 2497 0d3e 85FD      		sbrc r24,5
+ 2498 0d40 00C0      		rjmp .L163
+ 440:serial.c      ****   {
+ 441:serial.c      ****       TxStop();
+ 2500               	.LM274:
+ 2501 0d42 8BB1      		in r24,0xb
+ 2502 0d44 837F      		andi r24,lo8(-13)
+ 2503 0d46 8BB9      		out 0xb,r24
+ 442:serial.c      ****       xHigherPriorityTaskWoken = pdFALSE;
+ 2505               	.LM275:
+ 2506 0d48 1092 0000 		sts xHigherPriorityTaskWoken,__zero_reg__
+ 2507               	.L163:
+ 2508               	/* epilogue start */
+ 443:serial.c      **** //      xSemaphoreGiveFromISR( xSemaphore, &xHigherPriorityTaskWoken);
+ 444:serial.c      ****   }
+ 445:serial.c      **** }
+ 2510               	.LM276:
+ 2511 0d4c 8F91      		pop r24
+ 2512 0d4e 0F90      		pop r0
+ 2513 0d50 0FBE      		out __SREG__,r0
+ 2514 0d52 0F90      		pop r0
+ 2515 0d54 1F90      		pop r1
+ 2516 0d56 1895      		reti
+ 2518               	.Lscope6:
+ 2520               		.stabd	78,0,0
+ 2521               		.local	rezultat.2192
+ 2522               		.comm	rezultat.2192,1,1
+ 2523               		.local	lOdebrDanych.2191
+ 2524               		.comm	lOdebrDanych.2191,1,1
+ 2525               		.local	dobryAdres.2190
+ 2526               		.comm	dobryAdres.2190,1,1
+ 2527               		.local	xResult.2189
+ 2528               		.comm	xResult.2189,1,1
+ 2529               		.local	znak.2188
+ 2530               		.comm	znak.2188,1,1
+ 2531               		.local	stan.2187
+ 2532               		.comm	stan.2187,1,1
+ 2533               		.local	crc
+ 2534               		.comm	crc,2,1
+ 2535               		.local	crcHi
+ 2536               		.comm	crcHi,1,1
+ 2537               		.local	crcLo
+ 2538               		.comm	crcLo,1,1
+ 2539               		.local	xHigherPriorityTaskWoken
+ 2540               		.comm	xHigherPriorityTaskWoken,1,1
+ 2541               		.local	xSemaphore
+ 2542               		.comm	xSemaphore,2,1
+ 2543               		.local	wiadomosc
+ 2544               		.comm	wiadomosc,1,1
+ 2545               		.local	bDane
+ 2546               		.comm	bDane,14,1
+ 2547               		.local	dlDanych
+ 2548               		.comm	dlDanych,1,1
+ 2549               		.local	kodRozkazu
+ 2550               		.comm	kodRozkazu,1,1
+ 2551               		.local	xCharsForTx
+ 2552               		.comm	xCharsForTx,2,1
+ 2553               		.local	xRxedChars
+ 2554               		.comm	xRxedChars,2,1
+ 2567               	.Letext0:
+ 2568               		.ident	"GCC: (GNU) 4.9.2"
+ 2569               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 serial.c
+     /tmp/ccB1vBNQ.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccB1vBNQ.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccB1vBNQ.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccB1vBNQ.s:5      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccB1vBNQ.s:6      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccB1vBNQ.s:171    .text:0000000000000000 _crc_xmodem_update
+     /tmp/ccB1vBNQ.s:224    .text:0000000000000034 vProtocol
+     /tmp/ccB1vBNQ.s:2528   .bss:0000000000000004 znak.2188
+     /tmp/ccB1vBNQ.s:2552   .bss:0000000000000020 xRxedChars
+     /tmp/ccB1vBNQ.s:2526   .bss:0000000000000003 xResult.2189
+     /tmp/ccB1vBNQ.s:2548   .bss:000000000000001d kodRozkazu
+     /tmp/ccB1vBNQ.s:2536   .bss:0000000000000009 crcLo
+     /tmp/ccB1vBNQ.s:2550   .bss:000000000000001e xCharsForTx
+     /tmp/ccB1vBNQ.s:2522   .bss:0000000000000001 lOdebrDanych.2191
+     /tmp/ccB1vBNQ.s:2530   .bss:0000000000000005 stan.2187
+     /tmp/ccB1vBNQ.s:2532   .bss:0000000000000006 crc
+     /tmp/ccB1vBNQ.s:2524   .bss:0000000000000002 dobryAdres.2190
+     /tmp/ccB1vBNQ.s:2546   .bss:000000000000001c dlDanych
+     /tmp/ccB1vBNQ.s:2544   .bss:000000000000000e bDane
+     /tmp/ccB1vBNQ.s:2534   .bss:0000000000000008 crcHi
+     /tmp/ccB1vBNQ.s:2542   .bss:000000000000000d wiadomosc
+                             .bss:0000000000000000 rezultat.2192
+     /tmp/ccB1vBNQ.s:2217   .text:0000000000000bd4 xSerialPortInitMinimal
+     /tmp/ccB1vBNQ.s:2540   .bss:000000000000000b xSemaphore
+     /tmp/ccB1vBNQ.s:2309   .text:0000000000000c3c __vector_18
+     /tmp/ccB1vBNQ.s:2386   .text:0000000000000caa __vector_19
+     /tmp/ccB1vBNQ.s:2479   .text:0000000000000d2e __vector_20
+     /tmp/ccB1vBNQ.s:2538   .bss:000000000000000a xHigherPriorityTaskWoken
+
+UNDEFINED SYMBOLS
+xQueueCRReceive
+xQueueCRSend
+Led1Off
+Led2Off
+bHelloResp
+adres
+Led1On
+Led2On
+vCoRoutineAddToDelayedList
+xRoleta
+xQueueCreate
+xQueueGenericSend
+xQueueCRSendFromISR
+xQueueReceiveFromISR
+__do_clear_bss

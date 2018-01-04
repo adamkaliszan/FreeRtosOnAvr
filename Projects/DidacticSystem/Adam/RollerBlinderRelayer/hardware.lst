@@ -1,0 +1,525 @@
+   1               		.file	"hardware.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   9               		.text
+  10               	.Ltext0:
+ 168               	.global	hardwareInit
+ 170               	hardwareInit:
+ 171               		.stabd	46,0,0
+   1:hardware.c    **** #include "hardware.h"
+   2:hardware.c    **** 
+   3:hardware.c    **** 
+   4:hardware.c    **** void hardwareInit(void)
+   5:hardware.c    **** {
+ 173               	.LM0:
+ 174               	.LFBB1:
+ 175               	/* prologue: function */
+ 176               	/* frame size = 0 */
+ 177               	/* stack size = 0 */
+ 178               	.L__stack_usage = 0
+   6:hardware.c    ****   DDRB  = 0x07; //0 - P3  , 1 - P2  , 2 - P1
+ 180               	.LM1:
+ 181 0000 87E0      		ldi r24,lo8(7)
+ 182 0002 84B9      		out 0x4,r24
+   7:hardware.c    ****   PORTB = 0x38; //3 - Adr3, 4 - Adr4, 5 - Adr5
+ 184               	.LM2:
+ 185 0004 88E3      		ldi r24,lo8(56)
+ 186 0006 85B9      		out 0x5,r24
+   8:hardware.c    ****   DDRC  = 0x00; //0 - Adr0, 1 - Adr1, 2 - KlRolety1Up, 3 - klRolety1Down
+ 188               	.LM3:
+ 189 0008 17B8      		out 0x7,__zero_reg__
+   9:hardware.c    ****   PORTC = 0x3F; //4 - KlRolety2Up, 5 - KlRolety2Down
+ 191               	.LM4:
+ 192 000a 8FE3      		ldi r24,lo8(63)
+ 193 000c 88B9      		out 0x8,r24
+  10:hardware.c    ****   DDRD  = 0xEE; //0 - RXD, 1 - TXD, 2 - !RxEn, 3 - TxEn, 
+ 195               	.LM5:
+ 196 000e 8EEE      		ldi r24,lo8(-18)
+ 197 0010 8AB9      		out 0xa,r24
+  11:hardware.c    ****   PORTD = 0x00; //5 - Led1, 6 - Led2, 7 - P4)
+ 199               	.LM6:
+ 200 0012 1BB8      		out 0xb,__zero_reg__
+  12:hardware.c    ****   /*Ustalanie adresu
+  13:hardware.c    ****     bit 7, 6 = 0 dla sterowników rolet i światła
+  14:hardware.c    ****    */
+  15:hardware.c    ****   adres =  (PINB & 0x38) >> 1;
+ 202               	.LM7:
+ 203 0014 83B1      		in r24,0x3
+ 204 0016 8873      		andi r24,lo8(56)
+ 205 0018 90E0      		ldi r25,0
+ 206 001a 9595      		asr r25
+ 207 001c 8795      		ror r24
+ 208 001e 8093 0000 		sts adres,r24
+  16:hardware.c    ****   adres |= (PINC & 0x03);
+ 210               	.LM8:
+ 211 0022 96B1      		in r25,0x6
+ 212 0024 9370      		andi r25,lo8(3)
+ 213 0026 892B      		or r24,r25
+ 214 0028 8093 0000 		sts adres,r24
+ 215 002c 0895      		ret
+ 217               	.Lscope1:
+ 219               		.stabd	78,0,0
+ 221               	.global	roleta1wGore
+ 223               	roleta1wGore:
+ 224               		.stabd	46,0,0
+  17:hardware.c    **** }
+  18:hardware.c    **** 
+  19:hardware.c    **** void roletawGore(uint8_t nrRolety)
+  20:hardware.c    **** {
+  21:hardware.c    ****   if (nrRolety == 0)
+  22:hardware.c    ****     roleta1wGore();
+  23:hardware.c    ****   else
+  24:hardware.c    ****     roleta2wGore();
+  25:hardware.c    **** }
+  26:hardware.c    **** 
+  27:hardware.c    **** void roletawDol(uint8_t nrRolety)
+  28:hardware.c    **** {
+  29:hardware.c    ****   if (nrRolety == 0)
+  30:hardware.c    ****     roleta1wDol();
+  31:hardware.c    ****   else
+  32:hardware.c    ****     roleta2wDol();
+  33:hardware.c    **** }
+  34:hardware.c    **** 
+  35:hardware.c    **** void roletaStop(uint8_t nrRolety)
+  36:hardware.c    **** {
+  37:hardware.c    ****   if (nrRolety == 0)
+  38:hardware.c    ****     roleta1Stop();
+  39:hardware.c    ****   else
+  40:hardware.c    ****     roleta2Stop();
+  41:hardware.c    **** }
+  42:hardware.c    **** 
+  43:hardware.c    **** inline void roleta1wGore(void)
+  44:hardware.c    **** {
+ 226               	.LM9:
+ 227               	.LFBB2:
+ 228               	/* prologue: function */
+ 229               	/* frame size = 0 */
+ 230               	/* stack size = 0 */
+ 231               	.L__stack_usage = 0
+  45:hardware.c    ****   PORTB &= ~0x02;
+ 233               	.LM10:
+ 234 002e 2998      		cbi 0x5,1
+  46:hardware.c    ****   PORTB |=  0x04;
+ 236               	.LM11:
+ 237 0030 2A9A      		sbi 0x5,2
+ 238 0032 0895      		ret
+ 240               	.Lscope2:
+ 242               		.stabd	78,0,0
+ 244               	.global	roleta1wDol
+ 246               	roleta1wDol:
+ 247               		.stabd	46,0,0
+  47:hardware.c    **** }
+  48:hardware.c    **** 
+  49:hardware.c    **** inline void roleta1wDol(void)
+  50:hardware.c    **** {
+ 249               	.LM12:
+ 250               	.LFBB3:
+ 251               	/* prologue: function */
+ 252               	/* frame size = 0 */
+ 253               	/* stack size = 0 */
+ 254               	.L__stack_usage = 0
+  51:hardware.c    ****   PORTB &= ~0x04;
+ 256               	.LM13:
+ 257 0034 2A98      		cbi 0x5,2
+  52:hardware.c    ****   PORTB |=  0x02;	
+ 259               	.LM14:
+ 260 0036 299A      		sbi 0x5,1
+ 261 0038 0895      		ret
+ 263               	.Lscope3:
+ 265               		.stabd	78,0,0
+ 267               	.global	roleta1Stop
+ 269               	roleta1Stop:
+ 270               		.stabd	46,0,0
+  53:hardware.c    **** }
+  54:hardware.c    **** 
+  55:hardware.c    **** inline void roleta1Stop(void)
+  56:hardware.c    **** {
+ 272               	.LM15:
+ 273               	.LFBB4:
+ 274               	/* prologue: function */
+ 275               	/* frame size = 0 */
+ 276               	/* stack size = 0 */
+ 277               	.L__stack_usage = 0
+  57:hardware.c    ****   PORTB &= ~0x06;
+ 279               	.LM16:
+ 280 003a 85B1      		in r24,0x5
+ 281 003c 897F      		andi r24,lo8(-7)
+ 282 003e 85B9      		out 0x5,r24
+ 283 0040 0895      		ret
+ 285               	.Lscope4:
+ 287               		.stabd	78,0,0
+ 289               	.global	roleta2wGore
+ 291               	roleta2wGore:
+ 292               		.stabd	46,0,0
+  58:hardware.c    **** }
+  59:hardware.c    **** 
+  60:hardware.c    **** inline void roleta2wGore(void)
+  61:hardware.c    **** {
+ 294               	.LM17:
+ 295               	.LFBB5:
+ 296               	/* prologue: function */
+ 297               	/* frame size = 0 */
+ 298               	/* stack size = 0 */
+ 299               	.L__stack_usage = 0
+  62:hardware.c    ****   PORTD &= ~0x80;
+ 301               	.LM18:
+ 302 0042 5F98      		cbi 0xb,7
+  63:hardware.c    ****   PORTB |=  0x01;
+ 304               	.LM19:
+ 305 0044 289A      		sbi 0x5,0
+ 306 0046 0895      		ret
+ 308               	.Lscope5:
+ 310               		.stabd	78,0,0
+ 313               	.global	roletawGore
+ 315               	roletawGore:
+ 316               		.stabd	46,0,0
+  20:hardware.c    ****   if (nrRolety == 0)
+ 318               	.LM20:
+ 319               	.LFBB6:
+ 320               	/* prologue: function */
+ 321               	/* frame size = 0 */
+ 322               	/* stack size = 0 */
+ 323               	.L__stack_usage = 0
+  21:hardware.c    ****     roleta1wGore();
+ 325               	.LM21:
+ 326 0048 8111      		cpse r24,__zero_reg__
+ 327 004a 00C0      		rjmp .L7
+  22:hardware.c    ****   else
+ 329               	.LM22:
+ 330 004c 0C94 0000 		jmp roleta1wGore
+ 331               	.L7:
+  24:hardware.c    **** }
+ 333               	.LM23:
+ 334 0050 0C94 0000 		jmp roleta2wGore
+ 336               	.Lscope6:
+ 338               		.stabd	78,0,0
+ 340               	.global	roleta2wDol
+ 342               	roleta2wDol:
+ 343               		.stabd	46,0,0
+  64:hardware.c    **** }
+  65:hardware.c    **** 
+  66:hardware.c    **** inline void roleta2wDol(void)
+  67:hardware.c    **** {
+ 345               	.LM24:
+ 346               	.LFBB7:
+ 347               	/* prologue: function */
+ 348               	/* frame size = 0 */
+ 349               	/* stack size = 0 */
+ 350               	.L__stack_usage = 0
+  68:hardware.c    ****   PORTB &= ~0x01;
+ 352               	.LM25:
+ 353 0054 2898      		cbi 0x5,0
+  69:hardware.c    ****   PORTD |=  0x80;
+ 355               	.LM26:
+ 356 0056 5F9A      		sbi 0xb,7
+ 357 0058 0895      		ret
+ 359               	.Lscope7:
+ 361               		.stabd	78,0,0
+ 364               	.global	roletawDol
+ 366               	roletawDol:
+ 367               		.stabd	46,0,0
+  28:hardware.c    ****   if (nrRolety == 0)
+ 369               	.LM27:
+ 370               	.LFBB8:
+ 371               	/* prologue: function */
+ 372               	/* frame size = 0 */
+ 373               	/* stack size = 0 */
+ 374               	.L__stack_usage = 0
+  29:hardware.c    ****     roleta1wDol();
+ 376               	.LM28:
+ 377 005a 8111      		cpse r24,__zero_reg__
+ 378 005c 00C0      		rjmp .L11
+  30:hardware.c    ****   else
+ 380               	.LM29:
+ 381 005e 0C94 0000 		jmp roleta1wDol
+ 382               	.L11:
+  32:hardware.c    **** }
+ 384               	.LM30:
+ 385 0062 0C94 0000 		jmp roleta2wDol
+ 387               	.Lscope8:
+ 389               		.stabd	78,0,0
+ 391               	.global	roleta2Stop
+ 393               	roleta2Stop:
+ 394               		.stabd	46,0,0
+  70:hardware.c    **** }
+  71:hardware.c    **** 
+  72:hardware.c    **** inline void roleta2Stop(void)
+  73:hardware.c    **** {
+ 396               	.LM31:
+ 397               	.LFBB9:
+ 398               	/* prologue: function */
+ 399               	/* frame size = 0 */
+ 400               	/* stack size = 0 */
+ 401               	.L__stack_usage = 0
+  74:hardware.c    ****   PORTB &= ~0x01;
+ 403               	.LM32:
+ 404 0066 2898      		cbi 0x5,0
+  75:hardware.c    ****   PORTD &= ~0x80;
+ 406               	.LM33:
+ 407 0068 5F98      		cbi 0xb,7
+ 408 006a 0895      		ret
+ 410               	.Lscope9:
+ 412               		.stabd	78,0,0
+ 415               	.global	roletaStop
+ 417               	roletaStop:
+ 418               		.stabd	46,0,0
+  36:hardware.c    ****   if (nrRolety == 0)
+ 420               	.LM34:
+ 421               	.LFBB10:
+ 422               	/* prologue: function */
+ 423               	/* frame size = 0 */
+ 424               	/* stack size = 0 */
+ 425               	.L__stack_usage = 0
+  37:hardware.c    ****     roleta1Stop();
+ 427               	.LM35:
+ 428 006c 8111      		cpse r24,__zero_reg__
+ 429 006e 00C0      		rjmp .L14
+  38:hardware.c    ****   else
+ 431               	.LM36:
+ 432 0070 0C94 0000 		jmp roleta1Stop
+ 433               	.L14:
+  40:hardware.c    **** }
+ 435               	.LM37:
+ 436 0074 0C94 0000 		jmp roleta2Stop
+ 438               	.Lscope10:
+ 440               		.stabd	78,0,0
+ 442               	.global	Led1On
+ 444               	Led1On:
+ 445               		.stabd	46,0,0
+  76:hardware.c    **** }
+  77:hardware.c    **** 
+  78:hardware.c    **** inline void Led1On(void)
+  79:hardware.c    **** {
+ 447               	.LM38:
+ 448               	.LFBB11:
+ 449               	/* prologue: function */
+ 450               	/* frame size = 0 */
+ 451               	/* stack size = 0 */
+ 452               	.L__stack_usage = 0
+  80:hardware.c    ****   PORTD |= 0x20;
+ 454               	.LM39:
+ 455 0078 5D9A      		sbi 0xb,5
+ 456 007a 0895      		ret
+ 458               	.Lscope11:
+ 460               		.stabd	78,0,0
+ 462               	.global	Led1Toggle
+ 464               	Led1Toggle:
+ 465               		.stabd	46,0,0
+  81:hardware.c    **** }
+  82:hardware.c    **** 
+  83:hardware.c    **** inline void Led1Toggle(void)
+  84:hardware.c    **** {
+ 467               	.LM40:
+ 468               	.LFBB12:
+ 469               	/* prologue: function */
+ 470               	/* frame size = 0 */
+ 471               	/* stack size = 0 */
+ 472               	.L__stack_usage = 0
+  85:hardware.c    ****   PORTD ^= 0x20;
+ 474               	.LM41:
+ 475 007c 9BB1      		in r25,0xb
+ 476 007e 80E2      		ldi r24,lo8(32)
+ 477 0080 8927      		eor r24,r25
+ 478 0082 8BB9      		out 0xb,r24
+ 479 0084 0895      		ret
+ 481               	.Lscope12:
+ 483               		.stabd	78,0,0
+ 485               	.global	Led1Off
+ 487               	Led1Off:
+ 488               		.stabd	46,0,0
+  86:hardware.c    **** }
+  87:hardware.c    **** 
+  88:hardware.c    **** inline void Led1Off(void)
+  89:hardware.c    **** {
+ 490               	.LM42:
+ 491               	.LFBB13:
+ 492               	/* prologue: function */
+ 493               	/* frame size = 0 */
+ 494               	/* stack size = 0 */
+ 495               	.L__stack_usage = 0
+  90:hardware.c    ****   PORTD &= ~0x20;
+ 497               	.LM43:
+ 498 0086 5D98      		cbi 0xb,5
+ 499 0088 0895      		ret
+ 501               	.Lscope13:
+ 503               		.stabd	78,0,0
+ 505               	.global	Led2On
+ 507               	Led2On:
+ 508               		.stabd	46,0,0
+  91:hardware.c    **** }
+  92:hardware.c    **** 
+  93:hardware.c    **** inline void Led2On(void)
+  94:hardware.c    **** {
+ 510               	.LM44:
+ 511               	.LFBB14:
+ 512               	/* prologue: function */
+ 513               	/* frame size = 0 */
+ 514               	/* stack size = 0 */
+ 515               	.L__stack_usage = 0
+  95:hardware.c    ****   PORTD |= 0x40;	
+ 517               	.LM45:
+ 518 008a 5E9A      		sbi 0xb,6
+ 519 008c 0895      		ret
+ 521               	.Lscope14:
+ 523               		.stabd	78,0,0
+ 525               	.global	Led2Toggle
+ 527               	Led2Toggle:
+ 528               		.stabd	46,0,0
+  96:hardware.c    **** }
+  97:hardware.c    **** 
+  98:hardware.c    **** inline void Led2Toggle(void)
+  99:hardware.c    **** {
+ 530               	.LM46:
+ 531               	.LFBB15:
+ 532               	/* prologue: function */
+ 533               	/* frame size = 0 */
+ 534               	/* stack size = 0 */
+ 535               	.L__stack_usage = 0
+ 100:hardware.c    ****   PORTD ^= 0x40;
+ 537               	.LM47:
+ 538 008e 9BB1      		in r25,0xb
+ 539 0090 80E4      		ldi r24,lo8(64)
+ 540 0092 8927      		eor r24,r25
+ 541 0094 8BB9      		out 0xb,r24
+ 542 0096 0895      		ret
+ 544               	.Lscope15:
+ 546               		.stabd	78,0,0
+ 548               	.global	Led2Off
+ 550               	Led2Off:
+ 551               		.stabd	46,0,0
+ 101:hardware.c    **** }
+ 102:hardware.c    **** 
+ 103:hardware.c    **** inline void Led2Off(void)
+ 104:hardware.c    **** {
+ 553               	.LM48:
+ 554               	.LFBB16:
+ 555               	/* prologue: function */
+ 556               	/* frame size = 0 */
+ 557               	/* stack size = 0 */
+ 558               	.L__stack_usage = 0
+ 105:hardware.c    ****   PORTD &= ~0x40;	
+ 560               	.LM49:
+ 561 0098 5E98      		cbi 0xb,6
+ 562 009a 0895      		ret
+ 564               	.Lscope16:
+ 566               		.stabd	78,0,0
+ 568               	.global	czytKlawiszRol1wGore
+ 570               	czytKlawiszRol1wGore:
+ 571               		.stabd	46,0,0
+ 106:hardware.c    **** }
+ 107:hardware.c    **** 
+ 108:hardware.c    **** inline char czytKlawiszRol1wGore(void)
+ 109:hardware.c    **** {
+ 573               	.LM50:
+ 574               	.LFBB17:
+ 575               	/* prologue: function */
+ 576               	/* frame size = 0 */
+ 577               	/* stack size = 0 */
+ 578               	.L__stack_usage = 0
+ 110:hardware.c    ****   return PINC & 0x04;
+ 580               	.LM51:
+ 581 009c 86B1      		in r24,0x6
+ 111:hardware.c    **** }
+ 583               	.LM52:
+ 584 009e 8470      		andi r24,lo8(4)
+ 585 00a0 0895      		ret
+ 587               	.Lscope17:
+ 589               		.stabd	78,0,0
+ 591               	.global	czytKlawiszRol1wDol
+ 593               	czytKlawiszRol1wDol:
+ 594               		.stabd	46,0,0
+ 112:hardware.c    **** 
+ 113:hardware.c    **** inline char czytKlawiszRol1wDol(void)
+ 114:hardware.c    **** {
+ 596               	.LM53:
+ 597               	.LFBB18:
+ 598               	/* prologue: function */
+ 599               	/* frame size = 0 */
+ 600               	/* stack size = 0 */
+ 601               	.L__stack_usage = 0
+ 115:hardware.c    ****   return PINC & 0x08;
+ 603               	.LM54:
+ 604 00a2 86B1      		in r24,0x6
+ 116:hardware.c    **** }
+ 606               	.LM55:
+ 607 00a4 8870      		andi r24,lo8(8)
+ 608 00a6 0895      		ret
+ 610               	.Lscope18:
+ 612               		.stabd	78,0,0
+ 614               	.global	czytKlawiszRol2wGore
+ 616               	czytKlawiszRol2wGore:
+ 617               		.stabd	46,0,0
+ 117:hardware.c    **** 
+ 118:hardware.c    **** inline char czytKlawiszRol2wGore(void)
+ 119:hardware.c    **** {
+ 619               	.LM56:
+ 620               	.LFBB19:
+ 621               	/* prologue: function */
+ 622               	/* frame size = 0 */
+ 623               	/* stack size = 0 */
+ 624               	.L__stack_usage = 0
+ 120:hardware.c    ****   return PINC & 0x10;
+ 626               	.LM57:
+ 627 00a8 86B1      		in r24,0x6
+ 121:hardware.c    **** }
+ 629               	.LM58:
+ 630 00aa 8071      		andi r24,lo8(16)
+ 631 00ac 0895      		ret
+ 633               	.Lscope19:
+ 635               		.stabd	78,0,0
+ 637               	.global	czytKlawiszRol2wDol
+ 639               	czytKlawiszRol2wDol:
+ 640               		.stabd	46,0,0
+ 122:hardware.c    **** 
+ 123:hardware.c    **** inline char czytKlawiszRol2wDol(void)
+ 124:hardware.c    **** {
+ 642               	.LM59:
+ 643               	.LFBB20:
+ 644               	/* prologue: function */
+ 645               	/* frame size = 0 */
+ 646               	/* stack size = 0 */
+ 647               	.L__stack_usage = 0
+ 125:hardware.c    ****   return PINC & 0x20;
+ 649               	.LM60:
+ 650 00ae 86B1      		in r24,0x6
+ 126:hardware.c    **** }
+ 652               	.LM61:
+ 653 00b0 8072      		andi r24,lo8(32)
+ 654 00b2 0895      		ret
+ 656               	.Lscope20:
+ 658               		.stabd	78,0,0
+ 660               	.Letext0:
+ 661               		.ident	"GCC: (GNU) 4.9.2"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 hardware.c
+     /tmp/ccgxkPb0.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccgxkPb0.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccgxkPb0.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccgxkPb0.s:5      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccgxkPb0.s:6      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccgxkPb0.s:170    .text:0000000000000000 hardwareInit
+     /tmp/ccgxkPb0.s:223    .text:000000000000002e roleta1wGore
+     /tmp/ccgxkPb0.s:246    .text:0000000000000034 roleta1wDol
+     /tmp/ccgxkPb0.s:269    .text:000000000000003a roleta1Stop
+     /tmp/ccgxkPb0.s:291    .text:0000000000000042 roleta2wGore
+     /tmp/ccgxkPb0.s:315    .text:0000000000000048 roletawGore
+     /tmp/ccgxkPb0.s:342    .text:0000000000000054 roleta2wDol
+     /tmp/ccgxkPb0.s:366    .text:000000000000005a roletawDol
+     /tmp/ccgxkPb0.s:393    .text:0000000000000066 roleta2Stop
+     /tmp/ccgxkPb0.s:417    .text:000000000000006c roletaStop
+     /tmp/ccgxkPb0.s:444    .text:0000000000000078 Led1On
+     /tmp/ccgxkPb0.s:464    .text:000000000000007c Led1Toggle
+     /tmp/ccgxkPb0.s:487    .text:0000000000000086 Led1Off
+     /tmp/ccgxkPb0.s:507    .text:000000000000008a Led2On
+     /tmp/ccgxkPb0.s:527    .text:000000000000008e Led2Toggle
+     /tmp/ccgxkPb0.s:550    .text:0000000000000098 Led2Off
+     /tmp/ccgxkPb0.s:570    .text:000000000000009c czytKlawiszRol1wGore
+     /tmp/ccgxkPb0.s:593    .text:00000000000000a2 czytKlawiszRol1wDol
+     /tmp/ccgxkPb0.s:616    .text:00000000000000a8 czytKlawiszRol2wGore
+     /tmp/ccgxkPb0.s:639    .text:00000000000000ae czytKlawiszRol2wDol
+
+UNDEFINED SYMBOLS
+adres

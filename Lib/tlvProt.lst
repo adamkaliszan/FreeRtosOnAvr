@@ -1,0 +1,1253 @@
+   1               		.file	"tlvProt.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__RAMPY__ = 0x3a
+   7               	__RAMPX__ = 0x39
+   8               	__RAMPD__ = 0x38
+   9               	__CCP__ = 0x34
+  10               	__tmp_reg__ = 0
+  11               	__zero_reg__ = 1
+  14               		.text
+  15               	.Ltext0:
+ 502               	_crc16_update.constprop.0:
+ 503               		.stabd	46,0,0
+ 505               	.Ltext1:
+   1:/usr/lib/avr/include/util/crc16.h **** /* Copyright (c) 2002, 2003, 2004  Marek Michalkiewicz
+   2:/usr/lib/avr/include/util/crc16.h ****    Copyright (c) 2005, 2007 Joerg Wunsch
+   3:/usr/lib/avr/include/util/crc16.h ****    Copyright (c) 2013 Dave Hylands
+   4:/usr/lib/avr/include/util/crc16.h ****    Copyright (c) 2013 Frederic Nadeau
+   5:/usr/lib/avr/include/util/crc16.h ****    All rights reserved.
+   6:/usr/lib/avr/include/util/crc16.h **** 
+   7:/usr/lib/avr/include/util/crc16.h ****    Redistribution and use in source and binary forms, with or without
+   8:/usr/lib/avr/include/util/crc16.h ****    modification, are permitted provided that the following conditions are met:
+   9:/usr/lib/avr/include/util/crc16.h **** 
+  10:/usr/lib/avr/include/util/crc16.h ****    * Redistributions of source code must retain the above copyright
+  11:/usr/lib/avr/include/util/crc16.h ****      notice, this list of conditions and the following disclaimer.
+  12:/usr/lib/avr/include/util/crc16.h **** 
+  13:/usr/lib/avr/include/util/crc16.h ****    * Redistributions in binary form must reproduce the above copyright
+  14:/usr/lib/avr/include/util/crc16.h ****      notice, this list of conditions and the following disclaimer in
+  15:/usr/lib/avr/include/util/crc16.h ****      the documentation and/or other materials provided with the
+  16:/usr/lib/avr/include/util/crc16.h ****      distribution.
+  17:/usr/lib/avr/include/util/crc16.h **** 
+  18:/usr/lib/avr/include/util/crc16.h ****    * Neither the name of the copyright holders nor the names of
+  19:/usr/lib/avr/include/util/crc16.h ****      contributors may be used to endorse or promote products derived
+  20:/usr/lib/avr/include/util/crc16.h ****      from this software without specific prior written permission.
+  21:/usr/lib/avr/include/util/crc16.h **** 
+  22:/usr/lib/avr/include/util/crc16.h ****   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  23:/usr/lib/avr/include/util/crc16.h ****   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  24:/usr/lib/avr/include/util/crc16.h ****   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  25:/usr/lib/avr/include/util/crc16.h ****   ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+  26:/usr/lib/avr/include/util/crc16.h ****   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  27:/usr/lib/avr/include/util/crc16.h ****   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  28:/usr/lib/avr/include/util/crc16.h ****   SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  29:/usr/lib/avr/include/util/crc16.h ****   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  30:/usr/lib/avr/include/util/crc16.h ****   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  31:/usr/lib/avr/include/util/crc16.h ****   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  32:/usr/lib/avr/include/util/crc16.h ****   POSSIBILITY OF SUCH DAMAGE. */
+  33:/usr/lib/avr/include/util/crc16.h **** 
+  34:/usr/lib/avr/include/util/crc16.h **** /* $Id$ */
+  35:/usr/lib/avr/include/util/crc16.h **** 
+  36:/usr/lib/avr/include/util/crc16.h **** #ifndef _UTIL_CRC16_H_
+  37:/usr/lib/avr/include/util/crc16.h **** #define _UTIL_CRC16_H_
+  38:/usr/lib/avr/include/util/crc16.h **** 
+  39:/usr/lib/avr/include/util/crc16.h **** #include <stdint.h>
+  40:/usr/lib/avr/include/util/crc16.h **** 
+  41:/usr/lib/avr/include/util/crc16.h **** /** \file */
+  42:/usr/lib/avr/include/util/crc16.h **** /** \defgroup util_crc <util/crc16.h>: CRC Computations
+  43:/usr/lib/avr/include/util/crc16.h ****     \code#include <util/crc16.h>\endcode
+  44:/usr/lib/avr/include/util/crc16.h **** 
+  45:/usr/lib/avr/include/util/crc16.h ****     This header file provides a optimized inline functions for calculating
+  46:/usr/lib/avr/include/util/crc16.h ****     cyclic redundancy checks (CRC) using common polynomials.
+  47:/usr/lib/avr/include/util/crc16.h **** 
+  48:/usr/lib/avr/include/util/crc16.h ****     \par References:
+  49:/usr/lib/avr/include/util/crc16.h **** 
+  50:/usr/lib/avr/include/util/crc16.h ****     \par
+  51:/usr/lib/avr/include/util/crc16.h **** 
+  52:/usr/lib/avr/include/util/crc16.h ****     See the Dallas Semiconductor app note 27 for 8051 assembler example and
+  53:/usr/lib/avr/include/util/crc16.h ****     general CRC optimization suggestions. The table on the last page of the
+  54:/usr/lib/avr/include/util/crc16.h ****     app note is the key to understanding these implementations.
+  55:/usr/lib/avr/include/util/crc16.h **** 
+  56:/usr/lib/avr/include/util/crc16.h ****     \par
+  57:/usr/lib/avr/include/util/crc16.h **** 
+  58:/usr/lib/avr/include/util/crc16.h ****     Jack Crenshaw's "Implementing CRCs" article in the January 1992 isue of \e
+  59:/usr/lib/avr/include/util/crc16.h ****     Embedded \e Systems \e Programming. This may be difficult to find, but it
+  60:/usr/lib/avr/include/util/crc16.h ****     explains CRC's in very clear and concise terms. Well worth the effort to
+  61:/usr/lib/avr/include/util/crc16.h ****     obtain a copy.
+  62:/usr/lib/avr/include/util/crc16.h **** 
+  63:/usr/lib/avr/include/util/crc16.h ****     A typical application would look like:
+  64:/usr/lib/avr/include/util/crc16.h **** 
+  65:/usr/lib/avr/include/util/crc16.h ****     \code
+  66:/usr/lib/avr/include/util/crc16.h ****     // Dallas iButton test vector.
+  67:/usr/lib/avr/include/util/crc16.h ****     uint8_t serno[] = { 0x02, 0x1c, 0xb8, 0x01, 0, 0, 0, 0xa2 };
+  68:/usr/lib/avr/include/util/crc16.h **** 
+  69:/usr/lib/avr/include/util/crc16.h ****     int
+  70:/usr/lib/avr/include/util/crc16.h ****     checkcrc(void)
+  71:/usr/lib/avr/include/util/crc16.h ****     {
+  72:/usr/lib/avr/include/util/crc16.h **** 	uint8_t crc = 0, i;
+  73:/usr/lib/avr/include/util/crc16.h **** 
+  74:/usr/lib/avr/include/util/crc16.h **** 	for (i = 0; i < sizeof serno / sizeof serno[0]; i++)
+  75:/usr/lib/avr/include/util/crc16.h **** 	    crc = _crc_ibutton_update(crc, serno[i]);
+  76:/usr/lib/avr/include/util/crc16.h **** 
+  77:/usr/lib/avr/include/util/crc16.h **** 	return crc; // must be 0
+  78:/usr/lib/avr/include/util/crc16.h ****     }
+  79:/usr/lib/avr/include/util/crc16.h ****     \endcode
+  80:/usr/lib/avr/include/util/crc16.h **** */
+  81:/usr/lib/avr/include/util/crc16.h **** 
+  82:/usr/lib/avr/include/util/crc16.h **** /** \ingroup util_crc
+  83:/usr/lib/avr/include/util/crc16.h ****     Optimized CRC-16 calculation.
+  84:/usr/lib/avr/include/util/crc16.h **** 
+  85:/usr/lib/avr/include/util/crc16.h ****     Polynomial: x^16 + x^15 + x^2 + 1 (0xa001)<br>
+  86:/usr/lib/avr/include/util/crc16.h ****     Initial value: 0xffff
+  87:/usr/lib/avr/include/util/crc16.h **** 
+  88:/usr/lib/avr/include/util/crc16.h ****     This CRC is normally used in disk-drive controllers.
+  89:/usr/lib/avr/include/util/crc16.h **** 
+  90:/usr/lib/avr/include/util/crc16.h ****     The following is the equivalent functionality written in C.
+  91:/usr/lib/avr/include/util/crc16.h **** 
+  92:/usr/lib/avr/include/util/crc16.h ****     \code
+  93:/usr/lib/avr/include/util/crc16.h ****     uint16_t
+  94:/usr/lib/avr/include/util/crc16.h ****     crc16_update(uint16_t crc, uint8_t a)
+  95:/usr/lib/avr/include/util/crc16.h ****     {
+  96:/usr/lib/avr/include/util/crc16.h **** 	int i;
+  97:/usr/lib/avr/include/util/crc16.h **** 
+  98:/usr/lib/avr/include/util/crc16.h **** 	crc ^= a;
+  99:/usr/lib/avr/include/util/crc16.h **** 	for (i = 0; i < 8; ++i)
+ 100:/usr/lib/avr/include/util/crc16.h **** 	{
+ 101:/usr/lib/avr/include/util/crc16.h **** 	    if (crc & 1)
+ 102:/usr/lib/avr/include/util/crc16.h **** 		crc = (crc >> 1) ^ 0xA001;
+ 103:/usr/lib/avr/include/util/crc16.h **** 	    else
+ 104:/usr/lib/avr/include/util/crc16.h **** 		crc = (crc >> 1);
+ 105:/usr/lib/avr/include/util/crc16.h **** 	}
+ 106:/usr/lib/avr/include/util/crc16.h **** 
+ 107:/usr/lib/avr/include/util/crc16.h **** 	return crc;
+ 108:/usr/lib/avr/include/util/crc16.h ****     }
+ 109:/usr/lib/avr/include/util/crc16.h **** 
+ 110:/usr/lib/avr/include/util/crc16.h ****     \endcode */
+ 111:/usr/lib/avr/include/util/crc16.h **** 
+ 112:/usr/lib/avr/include/util/crc16.h **** static __inline__ uint16_t
+ 113:/usr/lib/avr/include/util/crc16.h **** _crc16_update(uint16_t __crc, uint8_t __data)
+ 507               	.LM0:
+ 508               	.LFBB1:
+ 509               	/* prologue: function */
+ 510               	/* frame size = 0 */
+ 511               	/* stack size = 0 */
+ 512               	.L__stack_usage = 0
+ 114:/usr/lib/avr/include/util/crc16.h **** {
+ 115:/usr/lib/avr/include/util/crc16.h **** 	uint8_t __tmp;
+ 116:/usr/lib/avr/include/util/crc16.h **** 	uint16_t __ret;
+ 117:/usr/lib/avr/include/util/crc16.h **** 
+ 118:/usr/lib/avr/include/util/crc16.h **** 	__asm__ __volatile__ (
+ 119:/usr/lib/avr/include/util/crc16.h **** 		"eor %A0,%2" "\n\t"
+ 120:/usr/lib/avr/include/util/crc16.h **** 		"mov %1,%A0" "\n\t"
+ 121:/usr/lib/avr/include/util/crc16.h **** 		"swap %1" "\n\t"
+ 122:/usr/lib/avr/include/util/crc16.h **** 		"eor %1,%A0" "\n\t"
+ 123:/usr/lib/avr/include/util/crc16.h **** 		"mov __tmp_reg__,%1" "\n\t"
+ 124:/usr/lib/avr/include/util/crc16.h **** 		"lsr %1" "\n\t"
+ 125:/usr/lib/avr/include/util/crc16.h **** 		"lsr %1" "\n\t"
+ 126:/usr/lib/avr/include/util/crc16.h **** 		"eor %1,__tmp_reg__" "\n\t"
+ 127:/usr/lib/avr/include/util/crc16.h **** 		"mov __tmp_reg__,%1" "\n\t"
+ 128:/usr/lib/avr/include/util/crc16.h **** 		"lsr %1" "\n\t"
+ 129:/usr/lib/avr/include/util/crc16.h **** 		"eor %1,__tmp_reg__" "\n\t"
+ 130:/usr/lib/avr/include/util/crc16.h **** 		"andi %1,0x07" "\n\t"
+ 131:/usr/lib/avr/include/util/crc16.h **** 		"mov __tmp_reg__,%A0" "\n\t"
+ 132:/usr/lib/avr/include/util/crc16.h **** 		"mov %A0,%B0" "\n\t"
+ 133:/usr/lib/avr/include/util/crc16.h **** 		"lsr %1" "\n\t"
+ 134:/usr/lib/avr/include/util/crc16.h **** 		"ror __tmp_reg__" "\n\t"
+ 135:/usr/lib/avr/include/util/crc16.h **** 		"ror %1" "\n\t"
+ 136:/usr/lib/avr/include/util/crc16.h **** 		"mov %B0,__tmp_reg__" "\n\t"
+ 137:/usr/lib/avr/include/util/crc16.h **** 		"eor %A0,%1" "\n\t"
+ 138:/usr/lib/avr/include/util/crc16.h **** 		"lsr __tmp_reg__" "\n\t"
+ 139:/usr/lib/avr/include/util/crc16.h **** 		"ror %1" "\n\t"
+ 140:/usr/lib/avr/include/util/crc16.h **** 		"eor %B0,__tmp_reg__" "\n\t"
+ 141:/usr/lib/avr/include/util/crc16.h **** 		"eor %A0,%1"
+ 142:/usr/lib/avr/include/util/crc16.h **** 		: "=r" (__ret), "=d" (__tmp)
+ 143:/usr/lib/avr/include/util/crc16.h **** 		: "r" (__data), "0" (__crc)
+ 144:/usr/lib/avr/include/util/crc16.h **** 		: "r0"
+ 145:/usr/lib/avr/include/util/crc16.h **** 	);
+ 146:/usr/lib/avr/include/util/crc16.h **** 	return __ret;
+ 147:/usr/lib/avr/include/util/crc16.h **** }
+ 514               	.LM1:
+ 515 0000 20E0      		ldi r18,0
+ 516 0002 30E0      		ldi r19,0
+ 517 0004 A901      		movw r20,r18
+ 518               	/* #APP */
+ 519               	 ;  118 "/usr/lib/avr/include/util/crc16.h" 1
+ 520 0006 4827      		eor r20,r24
+ 521 0008 242F      		mov r18,r20
+ 522 000a 2295      		swap r18
+ 523 000c 2427      		eor r18,r20
+ 524 000e 022E      		mov __tmp_reg__,r18
+ 525 0010 2695      		lsr r18
+ 526 0012 2695      		lsr r18
+ 527 0014 2025      		eor r18,__tmp_reg__
+ 528 0016 022E      		mov __tmp_reg__,r18
+ 529 0018 2695      		lsr r18
+ 530 001a 2025      		eor r18,__tmp_reg__
+ 531 001c 2770      		andi r18,0x07
+ 532 001e 042E      		mov __tmp_reg__,r20
+ 533 0020 452F      		mov r20,r21
+ 534 0022 2695      		lsr r18
+ 535 0024 0794      		ror __tmp_reg__
+ 536 0026 2795      		ror r18
+ 537 0028 502D      		mov r21,__tmp_reg__
+ 538 002a 4227      		eor r20,r18
+ 539 002c 0694      		lsr __tmp_reg__
+ 540 002e 2795      		ror r18
+ 541 0030 5025      		eor r21,__tmp_reg__
+ 542 0032 4227      		eor r20,r18
+ 543               	 ;  0 "" 2
+ 544               	/* #NOAPP */
+ 545 0034 CA01      		movw r24,r20
+ 546 0036 0895      		ret
+ 548               	.Lscope1:
+ 550               		.stabd	78,0,0
+ 556               	.global	tlvIinitializeInterpreter
+ 558               	tlvIinitializeInterpreter:
+ 559               		.stabd	46,0,0
+ 561               	.Ltext2:
+   1:../../../Lib/tlvProt.c **** #include "tlvProt.h"
+   2:../../../Lib/tlvProt.c **** 
+   3:../../../Lib/tlvProt.c **** void tlvIinitializeInterpreter(tlvInterpreter_t *tlvInt, FILE *ioStr, FILE *errStr, const tlvComman
+   4:../../../Lib/tlvProt.c **** {
+ 563               	.LM2:
+ 564               	.LFBB2:
+ 565 0038 EF92      		push r14
+ 566 003a FF92      		push r15
+ 567 003c 0F93      		push r16
+ 568 003e 1F93      		push r17
+ 569 0040 CF93      		push r28
+ 570 0042 DF93      		push r29
+ 571 0044 00D0      		rcall .
+ 572 0046 CDB7      		in r28,__SP_L__
+ 573 0048 DEB7      		in r29,__SP_H__
+ 574               	/* prologue: function */
+ 575               	/* frame size = 3 */
+ 576               	/* stack size = 9 */
+ 577               	.L__stack_usage = 9
+ 578 004a 8C01      		movw r16,r24
+ 579 004c 7901      		movw r14,r18
+   5:../../../Lib/tlvProt.c ****   tlvCommand_t tmpCmd;
+   6:../../../Lib/tlvProt.c ****   memset(tlvInt, 0, sizeof(struct tlvInterpreter));
+ 581               	.LM3:
+ 582 004e 88E2      		ldi r24,lo8(40)
+ 583 0050 F801      		movw r30,r16
+ 584               		0:
+ 585 0052 1192      		st Z+,__zero_reg__
+ 586 0054 8A95      		dec r24
+ 587 0056 01F4      		brne 0b
+   7:../../../Lib/tlvProt.c **** 
+   8:../../../Lib/tlvProt.c ****   tlvInt->ioStr  = ioStr;
+ 589               	.LM4:
+ 590 0058 F801      		movw r30,r16
+ 591 005a 64A3      		std Z+36,r22
+ 592 005c 75A3      		std Z+37,r23
+   9:../../../Lib/tlvProt.c ****   tlvInt->errStr = errStr;
+ 594               	.LM5:
+ 595 005e 46A3      		std Z+38,r20
+ 596 0060 57A3      		std Z+39,r21
+  10:../../../Lib/tlvProt.c ****   tlvInt->commands = commands;
+ 598               	.LM6:
+ 599 0062 21A3      		std Z+33,r18
+ 600 0064 32A3      		std Z+34,r19
+  11:../../../Lib/tlvProt.c **** 
+  12:../../../Lib/tlvProt.c ****   tlvInt->noOfCmds = -1;
+ 602               	.LM7:
+ 603 0066 8FEF      		ldi r24,lo8(-1)
+ 604 0068 83A3      		std Z+35,r24
+ 605               	.L3:
+  13:../../../Lib/tlvProt.c ****   do
+  14:../../../Lib/tlvProt.c ****   {
+  15:../../../Lib/tlvProt.c ****     memcpy_P(&tmpCmd, commands, sizeof(tlvCommand_t));
+ 607               	.LM8:
+ 608 006a 43E0      		ldi r20,lo8(3)
+ 609 006c 50E0      		ldi r21,0
+ 610 006e B701      		movw r22,r14
+ 611 0070 CE01      		movw r24,r28
+ 612 0072 0196      		adiw r24,1
+ 613 0074 0E94 0000 		call memcpy_P
+  16:../../../Lib/tlvProt.c ****     tlvInt->noOfCmds++;
+ 615               	.LM9:
+ 616 0078 F801      		movw r30,r16
+ 617 007a 83A1      		ldd r24,Z+35
+ 618 007c 8F5F      		subi r24,lo8(-(1))
+ 619 007e 83A3      		std Z+35,r24
+  17:../../../Lib/tlvProt.c ****     commands++;
+ 621               	.LM10:
+ 622 0080 F3E0      		ldi r31,3
+ 623 0082 EF0E      		add r14,r31
+ 624 0084 F11C      		adc r15,__zero_reg__
+  18:../../../Lib/tlvProt.c ****   }
+  19:../../../Lib/tlvProt.c ****   while(tmpCmd.type != 0);
+ 626               	.LM11:
+ 627 0086 8981      		ldd r24,Y+1
+ 628 0088 8111      		cpse r24,__zero_reg__
+ 629 008a 00C0      		rjmp .L3
+ 630               	/* epilogue start */
+  20:../../../Lib/tlvProt.c **** }
+ 632               	.LM12:
+ 633 008c 2396      		adiw r28,3
+ 634 008e CDBF      		out __SP_L__,r28
+ 635 0090 DEBF      		out __SP_H__,r29
+ 636 0092 DF91      		pop r29
+ 637 0094 CF91      		pop r28
+ 638 0096 1F91      		pop r17
+ 639 0098 0F91      		pop r16
+ 640 009a FF90      		pop r15
+ 641 009c EF90      		pop r14
+ 642 009e 0895      		ret
+ 647               	.Lscope2:
+ 649               		.stabd	78,0,0
+ 652               	.global	tlvCalculateCrc
+ 654               	tlvCalculateCrc:
+ 655               		.stabd	46,0,0
+  21:../../../Lib/tlvProt.c **** 
+  22:../../../Lib/tlvProt.c **** void tlvCalculateCrc(tlvMsg_t *message)
+  23:../../../Lib/tlvProt.c **** {
+ 657               	.LM13:
+ 658               	.LFBB3:
+ 659 00a0 1F93      		push r17
+ 660 00a2 CF93      		push r28
+ 661 00a4 DF93      		push r29
+ 662               	/* prologue: function */
+ 663               	/* frame size = 0 */
+ 664               	/* stack size = 3 */
+ 665               	.L__stack_usage = 3
+ 666 00a6 EC01      		movw r28,r24
+  24:../../../Lib/tlvProt.c ****   uint16_t crc;
+  25:../../../Lib/tlvProt.c ****   crc = _crc16_update(0, message->address);
+ 668               	.LM14:
+ 669 00a8 8981      		ldd r24,Y+1
+ 670 00aa 0E94 0000 		call _crc16_update.constprop.0
+  26:../../../Lib/tlvProt.c ****   crc = _crc16_update(0, message->type);
+ 672               	.LM15:
+ 673 00ae 8A81      		ldd r24,Y+2
+ 674 00b0 0E94 0000 		call _crc16_update.constprop.0
+  27:../../../Lib/tlvProt.c ****   crc = _crc16_update(0, message->dtaLen);
+ 676               	.LM16:
+ 677 00b4 8B81      		ldd r24,Y+3
+ 678 00b6 0E94 0000 		call _crc16_update.constprop.0
+  28:../../../Lib/tlvProt.c **** 
+  29:../../../Lib/tlvProt.c ****   uint8_t i;
+  30:../../../Lib/tlvProt.c ****   for (i=0; i<message->dtaLen; i++)
+ 680               	.LM17:
+ 681 00ba 10E0      		ldi r17,0
+ 682               	.L7:
+ 684               	.LM18:
+ 685 00bc 9B81      		ldd r25,Y+3
+ 686 00be 1917      		cp r17,r25
+ 687 00c0 00F4      		brsh .L9
+  31:../../../Lib/tlvProt.c ****     crc = _crc16_update(0, message->data[i]);
+ 689               	.LM19:
+ 690 00c2 FE01      		movw r30,r28
+ 691 00c4 E10F      		add r30,r17
+ 692 00c6 F11D      		adc r31,__zero_reg__
+ 693 00c8 8681      		ldd r24,Z+6
+ 694 00ca 0E94 0000 		call _crc16_update.constprop.0
+  30:../../../Lib/tlvProt.c ****     crc = _crc16_update(0, message->data[i]);
+ 696               	.LM20:
+ 697 00ce 1F5F      		subi r17,lo8(-(1))
+ 698 00d0 00C0      		rjmp .L7
+ 699               	.L9:
+  32:../../../Lib/tlvProt.c **** 
+  33:../../../Lib/tlvProt.c ****   message->crcLo = (uint8_t) crc;
+ 701               	.LM21:
+ 702 00d2 8C83      		std Y+4,r24
+  34:../../../Lib/tlvProt.c ****   message->crcHi = (uint8_t) crc>>8;
+ 704               	.LM22:
+ 705 00d4 1D82      		std Y+5,__zero_reg__
+ 706               	/* epilogue start */
+  35:../../../Lib/tlvProt.c **** }
+ 708               	.LM23:
+ 709 00d6 DF91      		pop r29
+ 710 00d8 CF91      		pop r28
+ 711 00da 1F91      		pop r17
+ 712 00dc 0895      		ret
+ 717               	.Lscope3:
+ 719               		.stabd	78,0,0
+ 723               	.global	tlvCalculateCrcSepDta
+ 725               	tlvCalculateCrcSepDta:
+ 726               		.stabd	46,0,0
+  36:../../../Lib/tlvProt.c **** 
+  37:../../../Lib/tlvProt.c **** void tlvCalculateCrcSepDta(tlvMsg_t *message, const uint8_t dta[])
+  38:../../../Lib/tlvProt.c **** {
+ 728               	.LM24:
+ 729               	.LFBB4:
+ 730 00de EF92      		push r14
+ 731 00e0 FF92      		push r15
+ 732 00e2 1F93      		push r17
+ 733 00e4 CF93      		push r28
+ 734 00e6 DF93      		push r29
+ 735               	/* prologue: function */
+ 736               	/* frame size = 0 */
+ 737               	/* stack size = 5 */
+ 738               	.L__stack_usage = 5
+ 739 00e8 EC01      		movw r28,r24
+ 740 00ea 7B01      		movw r14,r22
+  39:../../../Lib/tlvProt.c ****   uint16_t crc;
+  40:../../../Lib/tlvProt.c ****   crc = _crc16_update(0, message->address);
+ 742               	.LM25:
+ 743 00ec 8981      		ldd r24,Y+1
+ 744 00ee 0E94 0000 		call _crc16_update.constprop.0
+  41:../../../Lib/tlvProt.c ****   crc = _crc16_update(0, message->type);
+ 746               	.LM26:
+ 747 00f2 8A81      		ldd r24,Y+2
+ 748 00f4 0E94 0000 		call _crc16_update.constprop.0
+  42:../../../Lib/tlvProt.c ****   crc = _crc16_update(0, message->dtaLen);
+ 750               	.LM27:
+ 751 00f8 8B81      		ldd r24,Y+3
+ 752 00fa 0E94 0000 		call _crc16_update.constprop.0
+  43:../../../Lib/tlvProt.c **** 
+  44:../../../Lib/tlvProt.c ****   uint8_t i;
+  45:../../../Lib/tlvProt.c ****   for (i=0; i<message->dtaLen; i++)
+ 754               	.LM28:
+ 755 00fe 10E0      		ldi r17,0
+ 756               	.L11:
+ 758               	.LM29:
+ 759 0100 9B81      		ldd r25,Y+3
+ 760 0102 1917      		cp r17,r25
+ 761 0104 00F4      		brsh .L13
+  46:../../../Lib/tlvProt.c ****     crc = _crc16_update(0, dta[i]);
+ 763               	.LM30:
+ 764 0106 F701      		movw r30,r14
+ 765 0108 E10F      		add r30,r17
+ 766 010a F11D      		adc r31,__zero_reg__
+ 767 010c 8081      		ld r24,Z
+ 768 010e 0E94 0000 		call _crc16_update.constprop.0
+  45:../../../Lib/tlvProt.c ****     crc = _crc16_update(0, dta[i]);
+ 770               	.LM31:
+ 771 0112 1F5F      		subi r17,lo8(-(1))
+ 772 0114 00C0      		rjmp .L11
+ 773               	.L13:
+  47:../../../Lib/tlvProt.c **** 
+  48:../../../Lib/tlvProt.c ****   message->crcLo = (uint8_t) crc;
+ 775               	.LM32:
+ 776 0116 8C83      		std Y+4,r24
+  49:../../../Lib/tlvProt.c ****   message->crcHi = (uint8_t) crc>>8;
+ 778               	.LM33:
+ 779 0118 1D82      		std Y+5,__zero_reg__
+ 780               	/* epilogue start */
+  50:../../../Lib/tlvProt.c **** }
+ 782               	.LM34:
+ 783 011a DF91      		pop r29
+ 784 011c CF91      		pop r28
+ 785 011e 1F91      		pop r17
+ 786 0120 FF90      		pop r15
+ 787 0122 EF90      		pop r14
+ 788 0124 0895      		ret
+ 793               	.Lscope4:
+ 795               		.stabd	78,0,0
+ 798               	.global	tlvCheckCrc
+ 800               	tlvCheckCrc:
+ 801               		.stabd	46,0,0
+  51:../../../Lib/tlvProt.c **** 
+  52:../../../Lib/tlvProt.c **** uint8_t tlvCheckCrc(tlvMsg_t *message)
+  53:../../../Lib/tlvProt.c **** {
+ 803               	.LM35:
+ 804               	.LFBB5:
+ 805 0126 1F93      		push r17
+ 806 0128 CF93      		push r28
+ 807 012a DF93      		push r29
+ 808               	/* prologue: function */
+ 809               	/* frame size = 0 */
+ 810               	/* stack size = 3 */
+ 811               	.L__stack_usage = 3
+ 812 012c EC01      		movw r28,r24
+  54:../../../Lib/tlvProt.c ****   uint16_t crc;
+  55:../../../Lib/tlvProt.c ****   crc = _crc16_update(0, message->address);
+ 814               	.LM36:
+ 815 012e 8981      		ldd r24,Y+1
+ 816 0130 0E94 0000 		call _crc16_update.constprop.0
+  56:../../../Lib/tlvProt.c ****   crc = _crc16_update(0, message->type);
+ 818               	.LM37:
+ 819 0134 8A81      		ldd r24,Y+2
+ 820 0136 0E94 0000 		call _crc16_update.constprop.0
+  57:../../../Lib/tlvProt.c ****   crc = _crc16_update(0, message->dtaLen);
+ 822               	.LM38:
+ 823 013a 8B81      		ldd r24,Y+3
+ 824 013c 0E94 0000 		call _crc16_update.constprop.0
+  58:../../../Lib/tlvProt.c **** 
+  59:../../../Lib/tlvProt.c ****   uint8_t i;
+  60:../../../Lib/tlvProt.c ****   for (i=0; i<message->dtaLen; i++)
+ 826               	.LM39:
+ 827 0140 10E0      		ldi r17,0
+ 828               	.L15:
+ 830               	.LM40:
+ 831 0142 9B81      		ldd r25,Y+3
+ 832 0144 1917      		cp r17,r25
+ 833 0146 00F4      		brsh .L23
+  61:../../../Lib/tlvProt.c ****     crc = _crc16_update(0, message->data[i]);
+ 835               	.LM41:
+ 836 0148 FE01      		movw r30,r28
+ 837 014a E10F      		add r30,r17
+ 838 014c F11D      		adc r31,__zero_reg__
+ 839 014e 8681      		ldd r24,Z+6
+ 840 0150 0E94 0000 		call _crc16_update.constprop.0
+  60:../../../Lib/tlvProt.c ****     crc = _crc16_update(0, message->data[i]);
+ 842               	.LM42:
+ 843 0154 1F5F      		subi r17,lo8(-(1))
+ 844 0156 00C0      		rjmp .L15
+ 845               	.L23:
+  62:../../../Lib/tlvProt.c **** 
+  63:../../../Lib/tlvProt.c ****   uint8_t crcLo = (uint8_t) crc;
+  64:../../../Lib/tlvProt.c ****   uint8_t crcHi = (uint8_t) crc>>8;
+  65:../../../Lib/tlvProt.c **** 
+  66:../../../Lib/tlvProt.c ****   if (message->crcLo != crcLo)
+ 847               	.LM43:
+ 848 0158 9C81      		ldd r25,Y+4
+ 849 015a 9813      		cpse r25,r24
+ 850 015c 00C0      		rjmp .L19
+  67:../../../Lib/tlvProt.c ****     return 0;
+  68:../../../Lib/tlvProt.c **** 
+  69:../../../Lib/tlvProt.c ****   if (message->crcHi != crcHi)
+ 852               	.LM44:
+ 853 015e 81E0      		ldi r24,lo8(1)
+ 854 0160 9D81      		ldd r25,Y+5
+ 855 0162 9111      		cpse r25,__zero_reg__
+ 856               	.L19:
+  67:../../../Lib/tlvProt.c ****     return 0;
+ 858               	.LM45:
+ 859 0164 80E0      		ldi r24,0
+ 860               	.L17:
+ 861               	/* epilogue start */
+  70:../../../Lib/tlvProt.c ****     return 0;
+  71:../../../Lib/tlvProt.c **** 
+  72:../../../Lib/tlvProt.c ****   return 1;
+  73:../../../Lib/tlvProt.c **** }
+ 863               	.LM46:
+ 864 0166 DF91      		pop r29
+ 865 0168 CF91      		pop r28
+ 866 016a 1F91      		pop r17
+ 867 016c 0895      		ret
+ 872               	.Lscope5:
+ 874               		.stabd	78,0,0
+ 878               	.global	tlvProcessDta
+ 880               	tlvProcessDta:
+ 881               		.stabd	46,0,0
+  74:../../../Lib/tlvProt.c **** 
+  75:../../../Lib/tlvProt.c **** void tlvProcessDta(tlvInterpreter_t *tlvInt, uint8_t dta)
+  76:../../../Lib/tlvProt.c **** {
+ 883               	.LM47:
+ 884               	.LFBB6:
+ 885 016e CF92      		push r12
+ 886 0170 DF92      		push r13
+ 887 0172 FF92      		push r15
+ 888 0174 0F93      		push r16
+ 889 0176 1F93      		push r17
+ 890 0178 CF93      		push r28
+ 891 017a DF93      		push r29
+ 892 017c 00D0      		rcall .
+ 893 017e 1F92      		push __zero_reg__
+ 894 0180 CDB7      		in r28,__SP_L__
+ 895 0182 DEB7      		in r29,__SP_H__
+ 896               	/* prologue: function */
+ 897               	/* frame size = 4 */
+ 898               	/* stack size = 11 */
+ 899               	.L__stack_usage = 11
+ 900 0184 8C01      		movw r16,r24
+  77:../../../Lib/tlvProt.c ****   uint8_t i, j;
+  78:../../../Lib/tlvProt.c ****   struct tlvMsg *myRecMsg = (struct tlvMsg *)tlvInt->buffer;
+  79:../../../Lib/tlvProt.c **** 
+  80:../../../Lib/tlvProt.c ****   if (tlvInt->bufIdx >= TLV_BUF_LEN)
+ 902               	.LM48:
+ 903 0186 FC01      		movw r30,r24
+ 904 0188 80A1      		ldd r24,Z+32
+ 905 018a 8032      		cpi r24,lo8(32)
+ 906 018c 00F0      		brlo .L25
+  81:../../../Lib/tlvProt.c ****   {
+  82:../../../Lib/tlvProt.c ****     fprintf_P(tlvInt->errStr, PSTR("# TLV buffer overflow"));
+ 908               	.LM49:
+ 909 018e 80E0      		ldi r24,lo8(__c.4233)
+ 910 0190 90E0      		ldi r25,hi8(__c.4233)
+ 911 0192 9F93      		push r25
+ 912 0194 8F93      		push r24
+ 913 0196 87A1      		ldd r24,Z+39
+ 914 0198 8F93      		push r24
+ 915 019a 86A1      		ldd r24,Z+38
+ 916 019c 8F93      		push r24
+ 917 019e 6C83      		std Y+4,r22
+ 918 01a0 0E94 0000 		call fprintf_P
+  83:../../../Lib/tlvProt.c ****     tlvInt->bufIdx = 0;
+ 920               	.LM50:
+ 921 01a4 F801      		movw r30,r16
+ 922 01a6 10A2      		std Z+32,__zero_reg__
+ 923 01a8 0F90      		pop __tmp_reg__
+ 924 01aa 0F90      		pop __tmp_reg__
+ 925 01ac 0F90      		pop __tmp_reg__
+ 926 01ae 0F90      		pop __tmp_reg__
+ 927 01b0 6C81      		ldd r22,Y+4
+ 928               	.L25:
+  84:../../../Lib/tlvProt.c ****   }
+  85:../../../Lib/tlvProt.c **** 
+  86:../../../Lib/tlvProt.c ****   if (tlvInt->bufIdx == 0 && dta != TLV_SYNC)
+ 930               	.LM51:
+ 931 01b2 F801      		movw r30,r16
+ 932 01b4 80A1      		ldd r24,Z+32
+ 933 01b6 8111      		cpse r24,__zero_reg__
+ 934 01b8 00C0      		rjmp .L26
+ 936               	.LM52:
+ 937 01ba 6535      		cpi r22,lo8(85)
+ 938 01bc 01F0      		breq .+2
+ 939 01be 00C0      		rjmp .L24
+ 940               	.L26:
+  87:../../../Lib/tlvProt.c ****     return;
+  88:../../../Lib/tlvProt.c **** 
+  89:../../../Lib/tlvProt.c ****   tlvInt->buffer[tlvInt->bufIdx] = dta;
+ 942               	.LM53:
+ 943 01c0 F801      		movw r30,r16
+ 944 01c2 E80F      		add r30,r24
+ 945 01c4 F11D      		adc r31,__zero_reg__
+ 946 01c6 6083      		st Z,r22
+  90:../../../Lib/tlvProt.c ****   tlvInt->bufIdx++;
+ 948               	.LM54:
+ 949 01c8 8F5F      		subi r24,lo8(-(1))
+ 950 01ca F801      		movw r30,r16
+ 951 01cc 80A3      		std Z+32,r24
+  91:../../../Lib/tlvProt.c **** 
+  92:../../../Lib/tlvProt.c ****   if (tlvInt->bufIdx < sizeof(struct tlvMsg))
+ 953               	.LM55:
+ 954 01ce 8630      		cpi r24,lo8(6)
+ 955 01d0 00F4      		brsh .+2
+ 956 01d2 00C0      		rjmp .L24
+  93:../../../Lib/tlvProt.c ****     return;
+  94:../../../Lib/tlvProt.c **** 
+  95:../../../Lib/tlvProt.c ****   if (tlvInt->bufIdx < myRecMsg->dtaLen + sizeof(struct tlvMsg))
+ 958               	.LM56:
+ 959 01d4 90E0      		ldi r25,0
+ 960 01d6 2381      		ldd r18,Z+3
+ 961 01d8 30E0      		ldi r19,0
+ 962 01da 2A5F      		subi r18,-6
+ 963 01dc 3F4F      		sbci r19,-1
+ 964 01de 8217      		cp r24,r18
+ 965 01e0 9307      		cpc r25,r19
+ 966 01e2 00F4      		brsh .+2
+ 967 01e4 00C0      		rjmp .L24
+  96:../../../Lib/tlvProt.c ****     return;
+  97:../../../Lib/tlvProt.c **** 
+  98:../../../Lib/tlvProt.c ****   if (tlvCheckCrc(myRecMsg) == 0)
+ 969               	.LM57:
+ 970 01e6 C801      		movw r24,r16
+ 971 01e8 0E94 0000 		call tlvCheckCrc
+ 972 01ec 8111      		cpse r24,__zero_reg__
+ 973 01ee 00C0      		rjmp .L42
+  99:../../../Lib/tlvProt.c ****   {
+ 100:../../../Lib/tlvProt.c ****     fprintf_P(tlvInt->errStr, PSTR("# CRC mismatch: buffer idx %d\r\n"), tlvInt->bufIdx);
+ 975               	.LM58:
+ 976 01f0 F801      		movw r30,r16
+ 977 01f2 80A1      		ldd r24,Z+32
+ 978 01f4 1F92      		push __zero_reg__
+ 979 01f6 8F93      		push r24
+ 980 01f8 80E0      		ldi r24,lo8(__c.4235)
+ 981 01fa 90E0      		ldi r25,hi8(__c.4235)
+ 982 01fc 9F93      		push r25
+ 983 01fe 8F93      		push r24
+ 984 0200 87A1      		ldd r24,Z+39
+ 985 0202 8F93      		push r24
+ 986 0204 86A1      		ldd r24,Z+38
+ 987 0206 8F93      		push r24
+ 988 0208 0E94 0000 		call fprintf_P
+ 101:../../../Lib/tlvProt.c ****     fprintf_P(tlvInt->errStr, PSTR("\taddress  : %x\r\n"), myRecMsg->address);
+ 990               	.LM59:
+ 991 020c F801      		movw r30,r16
+ 992 020e 8181      		ldd r24,Z+1
+ 993 0210 1F92      		push __zero_reg__
+ 994 0212 8F93      		push r24
+ 995 0214 80E0      		ldi r24,lo8(__c.4237)
+ 996 0216 90E0      		ldi r25,hi8(__c.4237)
+ 997 0218 9F93      		push r25
+ 998 021a 8F93      		push r24
+ 999 021c 87A1      		ldd r24,Z+39
+ 1000 021e 8F93      		push r24
+ 1001 0220 86A1      		ldd r24,Z+38
+ 1002 0222 8F93      		push r24
+ 1003 0224 0E94 0000 		call fprintf_P
+ 102:../../../Lib/tlvProt.c ****     fprintf_P(tlvInt->errStr, PSTR("\tmsg type : %x\r\n"), myRecMsg->type);
+ 1005               	.LM60:
+ 1006 0228 F801      		movw r30,r16
+ 1007 022a 8281      		ldd r24,Z+2
+ 1008 022c 1F92      		push __zero_reg__
+ 1009 022e 8F93      		push r24
+ 1010 0230 80E0      		ldi r24,lo8(__c.4239)
+ 1011 0232 90E0      		ldi r25,hi8(__c.4239)
+ 1012 0234 9F93      		push r25
+ 1013 0236 8F93      		push r24
+ 1014 0238 87A1      		ldd r24,Z+39
+ 1015 023a 8F93      		push r24
+ 1016 023c 86A1      		ldd r24,Z+38
+ 1017 023e 8F93      		push r24
+ 1018 0240 0E94 0000 		call fprintf_P
+ 103:../../../Lib/tlvProt.c ****     fprintf_P(tlvInt->errStr, PSTR("\tcrc lo   : %x\r\n"), myRecMsg->crcLo);
+ 1020               	.LM61:
+ 1021 0244 F801      		movw r30,r16
+ 1022 0246 8481      		ldd r24,Z+4
+ 1023 0248 1F92      		push __zero_reg__
+ 1024 024a 8F93      		push r24
+ 1025 024c 80E0      		ldi r24,lo8(__c.4241)
+ 1026 024e 90E0      		ldi r25,hi8(__c.4241)
+ 1027 0250 9F93      		push r25
+ 1028 0252 8F93      		push r24
+ 1029 0254 87A1      		ldd r24,Z+39
+ 1030 0256 8F93      		push r24
+ 1031 0258 86A1      		ldd r24,Z+38
+ 1032 025a 8F93      		push r24
+ 1033 025c 0E94 0000 		call fprintf_P
+ 104:../../../Lib/tlvProt.c ****     fprintf_P(tlvInt->errStr, PSTR("\tcrc hi   : %x\r\n"), myRecMsg->crcHi);
+ 1035               	.LM62:
+ 1036 0260 F801      		movw r30,r16
+ 1037 0262 8581      		ldd r24,Z+5
+ 1038 0264 1F92      		push __zero_reg__
+ 1039 0266 8F93      		push r24
+ 1040 0268 80E0      		ldi r24,lo8(__c.4243)
+ 1041 026a 90E0      		ldi r25,hi8(__c.4243)
+ 1042 026c 9F93      		push r25
+ 1043 026e 8F93      		push r24
+ 1044 0270 87A1      		ldd r24,Z+39
+ 1045 0272 8F93      		push r24
+ 1046 0274 86A1      		ldd r24,Z+38
+ 1047 0276 8F93      		push r24
+ 1048 0278 0E94 0000 		call fprintf_P
+ 105:../../../Lib/tlvProt.c ****     fprintf_P(tlvInt->errStr, PSTR("\tdta len  : %x\r\n"), myRecMsg->dtaLen);
+ 1050               	.LM63:
+ 1051 027c F801      		movw r30,r16
+ 1052 027e 8381      		ldd r24,Z+3
+ 1053 0280 1F92      		push __zero_reg__
+ 1054 0282 8F93      		push r24
+ 1055 0284 80E0      		ldi r24,lo8(__c.4245)
+ 1056 0286 90E0      		ldi r25,hi8(__c.4245)
+ 1057 0288 9F93      		push r25
+ 1058 028a 8F93      		push r24
+ 1059 028c 87A1      		ldd r24,Z+39
+ 1060 028e 8F93      		push r24
+ 1061 0290 86A1      		ldd r24,Z+38
+ 1062 0292 8F93      		push r24
+ 1063 0294 0E94 0000 		call fprintf_P
+ 106:../../../Lib/tlvProt.c **** 
+ 107:../../../Lib/tlvProt.c ****     fprintf_P(tlvInt->errStr, PSTR("\tdata:"));
+ 1065               	.LM64:
+ 1066 0298 CDBF      		out __SP_L__,r28
+ 1067 029a DEBF      		out __SP_H__,r29
+ 1068 029c 80E0      		ldi r24,lo8(__c.4247)
+ 1069 029e 90E0      		ldi r25,hi8(__c.4247)
+ 1070 02a0 9F93      		push r25
+ 1071 02a2 8F93      		push r24
+ 1072 02a4 F801      		movw r30,r16
+ 1073 02a6 87A1      		ldd r24,Z+39
+ 1074 02a8 8F93      		push r24
+ 1075 02aa 86A1      		ldd r24,Z+38
+ 1076 02ac 8F93      		push r24
+ 1077 02ae 0E94 0000 		call fprintf_P
+ 108:../../../Lib/tlvProt.c ****     for(i=sizeof(struct tlvMsg); i<tlvInt->bufIdx; i++)
+ 1079               	.LM65:
+ 1080 02b2 0F90      		pop __tmp_reg__
+ 1081 02b4 0F90      		pop __tmp_reg__
+ 1082 02b6 0F90      		pop __tmp_reg__
+ 1083 02b8 0F90      		pop __tmp_reg__
+ 1084 02ba 86E0      		ldi r24,lo8(6)
+ 1085 02bc F82E      		mov r15,r24
+ 109:../../../Lib/tlvProt.c ****       fprintf_P(tlvInt->errStr, PSTR(" %2x"), tlvInt->buffer[i]);
+ 1087               	.LM66:
+ 1088 02be 90E0      		ldi r25,lo8(__c.4249)
+ 1089 02c0 C92E      		mov r12,r25
+ 1090 02c2 90E0      		ldi r25,hi8(__c.4249)
+ 1091 02c4 D92E      		mov r13,r25
+ 1092               	.L29:
+ 108:../../../Lib/tlvProt.c ****     for(i=sizeof(struct tlvMsg); i<tlvInt->bufIdx; i++)
+ 1094               	.LM67:
+ 1095 02c6 F801      		movw r30,r16
+ 1096 02c8 20A1      		ldd r18,Z+32
+ 1097 02ca 97A1      		ldd r25,Z+39
+ 1098 02cc 86A1      		ldd r24,Z+38
+ 1099 02ce F216      		cp r15,r18
+ 1100 02d0 00F4      		brsh .L46
+ 1102               	.LM68:
+ 1103 02d2 F801      		movw r30,r16
+ 1104 02d4 EF0D      		add r30,r15
+ 1105 02d6 F11D      		adc r31,__zero_reg__
+ 1106 02d8 2081      		ld r18,Z
+ 1107 02da 1F92      		push __zero_reg__
+ 1108 02dc 2F93      		push r18
+ 1109 02de DF92      		push r13
+ 1110 02e0 CF92      		push r12
+ 1111 02e2 9F93      		push r25
+ 1112 02e4 8F93      		push r24
+ 1113 02e6 0E94 0000 		call fprintf_P
+ 108:../../../Lib/tlvProt.c ****     for(i=sizeof(struct tlvMsg); i<tlvInt->bufIdx; i++)
+ 1115               	.LM69:
+ 1116 02ea F394      		inc r15
+ 1117 02ec 0F90      		pop __tmp_reg__
+ 1118 02ee 0F90      		pop __tmp_reg__
+ 1119 02f0 0F90      		pop __tmp_reg__
+ 1120 02f2 0F90      		pop __tmp_reg__
+ 1121 02f4 0F90      		pop __tmp_reg__
+ 1122 02f6 0F90      		pop __tmp_reg__
+ 1123 02f8 00C0      		rjmp .L29
+ 1124               	.L46:
+ 110:../../../Lib/tlvProt.c ****     fprintf_P(tlvInt->errStr, PSTR("\r\n"));
+ 1126               	.LM70:
+ 1127 02fa 20E0      		ldi r18,lo8(__c.4254)
+ 1128 02fc 30E0      		ldi r19,hi8(__c.4254)
+ 1129 02fe 3F93      		push r19
+ 1130 0300 2F93      		push r18
+ 1131 0302 9F93      		push r25
+ 1132 0304 8F93      		push r24
+ 1133 0306 0E94 0000 		call fprintf_P
+ 111:../../../Lib/tlvProt.c **** 
+ 112:../../../Lib/tlvProt.c ****     for (i=1; i<tlvInt->bufIdx; i++)
+ 1135               	.LM71:
+ 1136 030a F801      		movw r30,r16
+ 1137 030c 80A1      		ldd r24,Z+32
+ 1138 030e 0F90      		pop __tmp_reg__
+ 1139 0310 0F90      		pop __tmp_reg__
+ 1140 0312 0F90      		pop __tmp_reg__
+ 1141 0314 0F90      		pop __tmp_reg__
+ 1142 0316 21E0      		ldi r18,lo8(1)
+ 1143 0318 30E0      		ldi r19,0
+ 1144               	.L31:
+ 1145 031a F22E      		mov r15,r18
+ 1147               	.LM72:
+ 1148 031c 2817      		cp r18,r24
+ 1149 031e 00F0      		brlo .+2
+ 1150 0320 00C0      		rjmp .L45
+ 1151 0322 A901      		movw r20,r18
+ 1152 0324 4F5F      		subi r20,-1
+ 1153 0326 5F4F      		sbci r21,-1
+ 1154 0328 D801      		movw r26,r16
+ 1155 032a A20F      		add r26,r18
+ 1156 032c B31F      		adc r27,r19
+ 113:../../../Lib/tlvProt.c ****     {
+ 114:../../../Lib/tlvProt.c ****       if (tlvInt->buffer[i] == TLV_SYNC)
+ 1158               	.LM73:
+ 1159 032e 9C91      		ld r25,X
+ 1160 0330 9535      		cpi r25,lo8(85)
+ 1161 0332 01F4      		brne .L43
+ 1162 0334 90E0      		ldi r25,0
+ 115:../../../Lib/tlvProt.c ****       {
+ 116:../../../Lib/tlvProt.c ****         for (j=0; i+j < tlvInt->bufIdx; j++)
+ 1164               	.LM74:
+ 1165 0336 A82F      		mov r26,r24
+ 1166 0338 B0E0      		ldi r27,0
+ 1167               	.L32:
+ 1169               	.LM75:
+ 1170 033a 692F      		mov r22,r25
+ 1171 033c 70E0      		ldi r23,0
+ 1172 033e A901      		movw r20,r18
+ 1173 0340 460F      		add r20,r22
+ 1174 0342 571F      		adc r21,r23
+ 1175 0344 4A17      		cp r20,r26
+ 1176 0346 5B07      		cpc r21,r27
+ 1177 0348 04F4      		brge .L47
+ 117:../../../Lib/tlvProt.c ****           tlvInt->buffer[j] = tlvInt->buffer[i+j];
+ 1179               	.LM76:
+ 1180 034a 400F      		add r20,r16
+ 1181 034c 511F      		adc r21,r17
+ 1182 034e FA01      		movw r30,r20
+ 1183 0350 4081      		ld r20,Z
+ 1184 0352 600F      		add r22,r16
+ 1185 0354 711F      		adc r23,r17
+ 1186 0356 FB01      		movw r30,r22
+ 1187 0358 4083      		st Z,r20
+ 116:../../../Lib/tlvProt.c ****           tlvInt->buffer[j] = tlvInt->buffer[i+j];
+ 1189               	.LM77:
+ 1190 035a 9F5F      		subi r25,lo8(-(1))
+ 1191 035c 00C0      		rjmp .L32
+ 1192               	.L47:
+ 118:../../../Lib/tlvProt.c **** 
+ 119:../../../Lib/tlvProt.c ****         tlvInt->bufIdx -= i;
+ 1194               	.LM78:
+ 1195 035e 8F19      		sub r24,r15
+ 1196 0360 F801      		movw r30,r16
+ 1197 0362 80A3      		std Z+32,r24
+ 120:../../../Lib/tlvProt.c ****         return;
+ 1199               	.LM79:
+ 1200 0364 00C0      		rjmp .L24
+ 1201               	.L43:
+ 1202 0366 9A01      		movw r18,r20
+ 1203 0368 00C0      		rjmp .L31
+ 1204               	.L42:
+ 1205 036a F12C      		mov r15,__zero_reg__
+ 1206               	.L28:
+ 121:../../../Lib/tlvProt.c ****       }
+ 122:../../../Lib/tlvProt.c ****     }
+ 123:../../../Lib/tlvProt.c ****     tlvInt->bufIdx = 0;
+ 124:../../../Lib/tlvProt.c ****     return;
+ 125:../../../Lib/tlvProt.c ****   }
+ 126:../../../Lib/tlvProt.c **** 
+ 127:../../../Lib/tlvProt.c ****   tlvCommand_t tmp;                                                     // We need to create this o
+ 128:../../../Lib/tlvProt.c ****   for (i=0; i<tlvInt->noOfCmds; i++)
+ 1208               	.LM80:
+ 1209 036c F801      		movw r30,r16
+ 1210 036e 83A1      		ldd r24,Z+35
+ 1211 0370 F816      		cp r15,r24
+ 1212 0372 00F4      		brsh .L37
+ 129:../../../Lib/tlvProt.c ****   {
+ 130:../../../Lib/tlvProt.c ****       memcpy_P(&tmp, &tlvInt->commands[i], sizeof(tlvCommand_t));
+ 1214               	.LM81:
+ 1215 0374 F801      		movw r30,r16
+ 1216 0376 61A1      		ldd r22,Z+33
+ 1217 0378 72A1      		ldd r23,Z+34
+ 1218 037a F3E0      		ldi r31,lo8(3)
+ 1219 037c FF9E      		mul r15,r31
+ 1220 037e 600D      		add r22,r0
+ 1221 0380 711D      		adc r23,r1
+ 1222 0382 1124      		clr __zero_reg__
+ 1223 0384 43E0      		ldi r20,lo8(3)
+ 1224 0386 50E0      		ldi r21,0
+ 1225 0388 CE01      		movw r24,r28
+ 1226 038a 0196      		adiw r24,1
+ 1227 038c 0E94 0000 		call memcpy_P
+ 131:../../../Lib/tlvProt.c ****       if (myRecMsg->type == tmp.type)
+ 1229               	.LM82:
+ 1230 0390 F801      		movw r30,r16
+ 1231 0392 9281      		ldd r25,Z+2
+ 1232 0394 8981      		ldd r24,Y+1
+ 1233 0396 9813      		cpse r25,r24
+ 1234 0398 00C0      		rjmp .L36
+ 132:../../../Lib/tlvProt.c ****       {
+ 133:../../../Lib/tlvProt.c ****         tmp.fun(tlvInt, myRecMsg);
+ 1236               	.LM83:
+ 1237 039a EA81      		ldd r30,Y+2
+ 1238 039c FB81      		ldd r31,Y+3
+ 1239 039e B801      		movw r22,r16
+ 1240 03a0 C801      		movw r24,r16
+ 1241 03a2 1995      		eicall
+ 134:../../../Lib/tlvProt.c ****         break;
+ 1243               	.LM84:
+ 1244 03a4 00C0      		rjmp .L37
+ 1245               	.L36:
+ 128:../../../Lib/tlvProt.c ****   {
+ 1247               	.LM85:
+ 1248 03a6 F394      		inc r15
+ 1249 03a8 00C0      		rjmp .L28
+ 1250               	.L37:
+ 135:../../../Lib/tlvProt.c ****       }
+ 136:../../../Lib/tlvProt.c ****   }
+ 137:../../../Lib/tlvProt.c ****   if (i == tlvInt->noOfCmds)
+ 1252               	.LM86:
+ 1253 03aa F801      		movw r30,r16
+ 1254 03ac 33A1      		ldd r19,Z+35
+ 1255 03ae 97A1      		ldd r25,Z+39
+ 1256 03b0 86A1      		ldd r24,Z+38
+ 1257 03b2 2281      		ldd r18,Z+2
+ 1258 03b4 F312      		cpse r15,r19
+ 1259 03b6 00C0      		rjmp .L39
+ 138:../../../Lib/tlvProt.c ****     fprintf_P(tlvInt->errStr, PSTR("! Unknown command: %d\r\n"), myRecMsg->type);
+ 1261               	.LM87:
+ 1262 03b8 1F92      		push __zero_reg__
+ 1263 03ba 2F93      		push r18
+ 1264 03bc 20E0      		ldi r18,lo8(__c.4266)
+ 1265 03be 30E0      		ldi r19,hi8(__c.4266)
+ 1266 03c0 00C0      		rjmp .L44
+ 1267               	.L39:
+ 139:../../../Lib/tlvProt.c ****   else
+ 140:../../../Lib/tlvProt.c ****     fprintf_P(tlvInt->errStr, PSTR("TLV command %x was executed\r\n"), myRecMsg->type);
+ 1269               	.LM88:
+ 1270 03c2 1F92      		push __zero_reg__
+ 1271 03c4 2F93      		push r18
+ 1272 03c6 20E0      		ldi r18,lo8(__c.4268)
+ 1273 03c8 30E0      		ldi r19,hi8(__c.4268)
+ 1274               	.L44:
+ 1275 03ca 3F93      		push r19
+ 1276 03cc 2F93      		push r18
+ 1277 03ce 9F93      		push r25
+ 1278 03d0 8F93      		push r24
+ 1279 03d2 0E94 0000 		call fprintf_P
+ 1280 03d6 0F90      		pop __tmp_reg__
+ 1281 03d8 0F90      		pop __tmp_reg__
+ 1282 03da 0F90      		pop __tmp_reg__
+ 1283 03dc 0F90      		pop __tmp_reg__
+ 1284 03de 0F90      		pop __tmp_reg__
+ 1285 03e0 0F90      		pop __tmp_reg__
+ 1286               	.L45:
+ 141:../../../Lib/tlvProt.c **** 
+ 142:../../../Lib/tlvProt.c ****   tlvInt->bufIdx = 0;
+ 1288               	.LM89:
+ 1289 03e2 F801      		movw r30,r16
+ 1290 03e4 10A2      		std Z+32,__zero_reg__
+ 1291               	.L24:
+ 1292               	/* epilogue start */
+ 143:../../../Lib/tlvProt.c **** }
+ 1294               	.LM90:
+ 1295 03e6 2496      		adiw r28,4
+ 1296 03e8 CDBF      		out __SP_L__,r28
+ 1297 03ea DEBF      		out __SP_H__,r29
+ 1298 03ec DF91      		pop r29
+ 1299 03ee CF91      		pop r28
+ 1300 03f0 1F91      		pop r17
+ 1301 03f2 0F91      		pop r16
+ 1302 03f4 FF90      		pop r15
+ 1303 03f6 DF90      		pop r13
+ 1304 03f8 CF90      		pop r12
+ 1305 03fa 0895      		ret
+ 1311               	.Lscope6:
+ 1313               		.stabd	78,0,0
+ 1317               	.global	sendTlvMsg
+ 1319               	sendTlvMsg:
+ 1320               		.stabd	46,0,0
+ 144:../../../Lib/tlvProt.c **** 
+ 145:../../../Lib/tlvProt.c **** void sendTlvMsg(tlvMsg_t *message, FILE *ostream)
+ 146:../../../Lib/tlvProt.c **** {
+ 1322               	.LM91:
+ 1323               	.LFBB7:
+ 1324 03fc CF92      		push r12
+ 1325 03fe DF92      		push r13
+ 1326 0400 EF92      		push r14
+ 1327 0402 FF92      		push r15
+ 1328 0404 0F93      		push r16
+ 1329 0406 1F93      		push r17
+ 1330 0408 CF93      		push r28
+ 1331 040a DF93      		push r29
+ 1332               	/* prologue: function */
+ 1333               	/* frame size = 0 */
+ 1334               	/* stack size = 8 */
+ 1335               	.L__stack_usage = 8
+ 1336 040c 8C01      		movw r16,r24
+ 1337 040e 6B01      		movw r12,r22
+ 147:../../../Lib/tlvProt.c ****   int i, len;
+ 148:../../../Lib/tlvProt.c ****   len = sizeof(struct tlvMsg) + message->dtaLen;
+ 1339               	.LM92:
+ 1340 0410 FC01      		movw r30,r24
+ 1341 0412 C381      		ldd r28,Z+3
+ 1342 0414 D0E0      		ldi r29,0
+ 1343 0416 2696      		adiw r28,6
+ 149:../../../Lib/tlvProt.c ****   uint8_t *ptr = (uint8_t *) message;
+ 1345               	.LM93:
+ 1346 0418 7C01      		movw r14,r24
+ 1347               	.L49:
+ 150:../../../Lib/tlvProt.c **** 
+ 151:../../../Lib/tlvProt.c ****   for (i=0; i<len; i++)
+ 152:../../../Lib/tlvProt.c ****   {
+ 153:../../../Lib/tlvProt.c ****     fputc(*ptr, ostream);
+ 1349               	.LM94:
+ 1350 041a F701      		movw r30,r14
+ 1351 041c 8191      		ld r24,Z+
+ 1352 041e 7F01      		movw r14,r30
+ 1353 0420 B601      		movw r22,r12
+ 1354 0422 90E0      		ldi r25,0
+ 1355 0424 0E94 0000 		call fputc
+ 1356 0428 C701      		movw r24,r14
+ 1357 042a 801B      		sub r24,r16
+ 1358 042c 910B      		sbc r25,r17
+ 151:../../../Lib/tlvProt.c ****   {
+ 1360               	.LM95:
+ 1361 042e 8C17      		cp r24,r28
+ 1362 0430 9D07      		cpc r25,r29
+ 1363 0432 04F0      		brlt .L49
+ 1364               	/* epilogue start */
+ 154:../../../Lib/tlvProt.c ****     ptr++;
+ 155:../../../Lib/tlvProt.c ****   }
+ 156:../../../Lib/tlvProt.c **** }
+ 1366               	.LM96:
+ 1367 0434 DF91      		pop r29
+ 1368 0436 CF91      		pop r28
+ 1369 0438 1F91      		pop r17
+ 1370 043a 0F91      		pop r16
+ 1371 043c FF90      		pop r15
+ 1372 043e EF90      		pop r14
+ 1373 0440 DF90      		pop r13
+ 1374 0442 CF90      		pop r12
+ 1375 0444 0895      		ret
+ 1380               	.Lscope7:
+ 1382               		.stabd	78,0,0
+ 1387               	.global	sendTlvMsgDta
+ 1389               	sendTlvMsgDta:
+ 1390               		.stabd	46,0,0
+ 157:../../../Lib/tlvProt.c **** 
+ 158:../../../Lib/tlvProt.c **** void sendTlvMsgDta(tlvMsg_t *message, const uint8_t const *msgDta, FILE *ostream)
+ 159:../../../Lib/tlvProt.c **** {
+ 1392               	.LM97:
+ 1393               	.LFBB8:
+ 1394 0446 AF92      		push r10
+ 1395 0448 BF92      		push r11
+ 1396 044a CF92      		push r12
+ 1397 044c DF92      		push r13
+ 1398 044e EF92      		push r14
+ 1399 0450 FF92      		push r15
+ 1400 0452 0F93      		push r16
+ 1401 0454 1F93      		push r17
+ 1402 0456 CF93      		push r28
+ 1403 0458 DF93      		push r29
+ 1404               	/* prologue: function */
+ 1405               	/* frame size = 0 */
+ 1406               	/* stack size = 10 */
+ 1407               	.L__stack_usage = 10
+ 1408 045a EC01      		movw r28,r24
+ 1409 045c 7B01      		movw r14,r22
+ 1410 045e 6A01      		movw r12,r20
+ 1411 0460 5C01      		movw r10,r24
+ 1412 0462 86E0      		ldi r24,6
+ 1413 0464 A80E      		add r10,r24
+ 1414 0466 B11C      		adc r11,__zero_reg__
+ 160:../../../Lib/tlvProt.c ****   int i, len;
+ 161:../../../Lib/tlvProt.c ****   len = sizeof(struct tlvMsg);
+ 162:../../../Lib/tlvProt.c ****   uint8_t const *ptr = (uint8_t *) message;
+ 1416               	.LM98:
+ 1417 0468 8E01      		movw r16,r28
+ 1418               	.L52:
+ 163:../../../Lib/tlvProt.c **** 
+ 164:../../../Lib/tlvProt.c ****   for (i=0; i<len; i++)
+ 165:../../../Lib/tlvProt.c ****   {
+ 166:../../../Lib/tlvProt.c ****     fputc(*ptr, ostream);
+ 1420               	.LM99:
+ 1421 046a F801      		movw r30,r16
+ 1422 046c 8191      		ld r24,Z+
+ 1423 046e 8F01      		movw r16,r30
+ 1424 0470 B601      		movw r22,r12
+ 1425 0472 90E0      		ldi r25,0
+ 1426 0474 0E94 0000 		call fputc
+ 164:../../../Lib/tlvProt.c ****   {
+ 1428               	.LM100:
+ 1429 0478 0A15      		cp r16,r10
+ 1430 047a 1B05      		cpc r17,r11
+ 1431 047c 01F4      		brne .L52
+ 167:../../../Lib/tlvProt.c ****     ptr++;
+ 168:../../../Lib/tlvProt.c ****   }
+ 169:../../../Lib/tlvProt.c **** 
+ 170:../../../Lib/tlvProt.c ****   ptr = msgDta;
+ 171:../../../Lib/tlvProt.c ****   len = message->dtaLen;
+ 1433               	.LM101:
+ 1434 047e CB81      		ldd r28,Y+3
+ 1435 0480 D0E0      		ldi r29,0
+ 170:../../../Lib/tlvProt.c ****   len = message->dtaLen;
+ 1437               	.LM102:
+ 1438 0482 8701      		movw r16,r14
+ 1439               	.L53:
+ 1440 0484 C801      		movw r24,r16
+ 1441 0486 8E19      		sub r24,r14
+ 1442 0488 9F09      		sbc r25,r15
+ 172:../../../Lib/tlvProt.c ****   for (i=0; i<len; i++)
+ 1444               	.LM103:
+ 1445 048a 8C17      		cp r24,r28
+ 1446 048c 9D07      		cpc r25,r29
+ 1447 048e 04F4      		brge .L56
+ 173:../../../Lib/tlvProt.c ****   {
+ 174:../../../Lib/tlvProt.c ****     fputc(*ptr, ostream);
+ 1449               	.LM104:
+ 1450 0490 F801      		movw r30,r16
+ 1451 0492 8191      		ld r24,Z+
+ 1452 0494 8F01      		movw r16,r30
+ 1453 0496 B601      		movw r22,r12
+ 1454 0498 90E0      		ldi r25,0
+ 1455 049a 0E94 0000 		call fputc
+ 1456 049e 00C0      		rjmp .L53
+ 1457               	.L56:
+ 1458               	/* epilogue start */
+ 175:../../../Lib/tlvProt.c ****     ptr++;
+ 176:../../../Lib/tlvProt.c ****   }
+ 177:../../../Lib/tlvProt.c **** }
+ 1460               	.LM105:
+ 1461 04a0 DF91      		pop r29
+ 1462 04a2 CF91      		pop r28
+ 1463 04a4 1F91      		pop r17
+ 1464 04a6 0F91      		pop r16
+ 1465 04a8 FF90      		pop r15
+ 1466 04aa EF90      		pop r14
+ 1467 04ac DF90      		pop r13
+ 1468 04ae CF90      		pop r12
+ 1469 04b0 BF90      		pop r11
+ 1470 04b2 AF90      		pop r10
+ 1471 04b4 0895      		ret
+ 1476               	.Lscope8:
+ 1478               		.stabd	78,0,0
+ 1479               		.section	.progmem.data,"a",@progbits
+ 1482               	__c.4268:
+ 1483 0000 544C 5620 		.string	"TLV command %x was executed\r\n"
+ 1483      636F 6D6D 
+ 1483      616E 6420 
+ 1483      2578 2077 
+ 1483      6173 2065 
+ 1486               	__c.4266:
+ 1487 001e 2120 556E 		.string	"! Unknown command: %d\r\n"
+ 1487      6B6E 6F77 
+ 1487      6E20 636F 
+ 1487      6D6D 616E 
+ 1487      643A 2025 
+ 1490               	__c.4254:
+ 1491 0036 0D0A 00   		.string	"\r\n"
+ 1494               	__c.4249:
+ 1495 0039 2025 3278 		.string	" %2x"
+ 1495      00
+ 1498               	__c.4247:
+ 1499 003e 0964 6174 		.string	"\tdata:"
+ 1499      613A 00
+ 1502               	__c.4245:
+ 1503 0045 0964 7461 		.string	"\tdta len  : %x\r\n"
+ 1503      206C 656E 
+ 1503      2020 3A20 
+ 1503      2578 0D0A 
+ 1503      00
+ 1506               	__c.4243:
+ 1507 0056 0963 7263 		.string	"\tcrc hi   : %x\r\n"
+ 1507      2068 6920 
+ 1507      2020 3A20 
+ 1507      2578 0D0A 
+ 1507      00
+ 1510               	__c.4241:
+ 1511 0067 0963 7263 		.string	"\tcrc lo   : %x\r\n"
+ 1511      206C 6F20 
+ 1511      2020 3A20 
+ 1511      2578 0D0A 
+ 1511      00
+ 1514               	__c.4239:
+ 1515 0078 096D 7367 		.string	"\tmsg type : %x\r\n"
+ 1515      2074 7970 
+ 1515      6520 3A20 
+ 1515      2578 0D0A 
+ 1515      00
+ 1518               	__c.4237:
+ 1519 0089 0961 6464 		.string	"\taddress  : %x\r\n"
+ 1519      7265 7373 
+ 1519      2020 3A20 
+ 1519      2578 0D0A 
+ 1519      00
+ 1522               	__c.4235:
+ 1523 009a 2320 4352 		.string	"# CRC mismatch: buffer idx %d\r\n"
+ 1523      4320 6D69 
+ 1523      736D 6174 
+ 1523      6368 3A20 
+ 1523      6275 6666 
+ 1526               	__c.4233:
+ 1527 00ba 2320 544C 		.string	"# TLV buffer overflow"
+ 1527      5620 6275 
+ 1527      6666 6572 
+ 1527      206F 7665 
+ 1527      7266 6C6F 
+ 1528               		.text
+ 1530               	.Letext0:
+ 1531               		.ident	"GCC: (GNU) 4.9.2"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 tlvProt.c
+     /tmp/ccfnIM3T.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccfnIM3T.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccfnIM3T.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccfnIM3T.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccfnIM3T.s:6      *ABS*:000000000000003a __RAMPY__
+     /tmp/ccfnIM3T.s:7      *ABS*:0000000000000039 __RAMPX__
+     /tmp/ccfnIM3T.s:8      *ABS*:0000000000000038 __RAMPD__
+     /tmp/ccfnIM3T.s:9      *ABS*:0000000000000034 __CCP__
+     /tmp/ccfnIM3T.s:10     *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccfnIM3T.s:11     *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccfnIM3T.s:502    .text:0000000000000000 _crc16_update.constprop.0
+     /tmp/ccfnIM3T.s:558    .text:0000000000000038 tlvIinitializeInterpreter
+     /tmp/ccfnIM3T.s:654    .text:00000000000000a0 tlvCalculateCrc
+     /tmp/ccfnIM3T.s:725    .text:00000000000000de tlvCalculateCrcSepDta
+     /tmp/ccfnIM3T.s:800    .text:0000000000000126 tlvCheckCrc
+     /tmp/ccfnIM3T.s:880    .text:000000000000016e tlvProcessDta
+     /tmp/ccfnIM3T.s:1526   .progmem.data:00000000000000ba __c.4233
+     /tmp/ccfnIM3T.s:1522   .progmem.data:000000000000009a __c.4235
+     /tmp/ccfnIM3T.s:1518   .progmem.data:0000000000000089 __c.4237
+     /tmp/ccfnIM3T.s:1514   .progmem.data:0000000000000078 __c.4239
+     /tmp/ccfnIM3T.s:1510   .progmem.data:0000000000000067 __c.4241
+     /tmp/ccfnIM3T.s:1506   .progmem.data:0000000000000056 __c.4243
+     /tmp/ccfnIM3T.s:1502   .progmem.data:0000000000000045 __c.4245
+     /tmp/ccfnIM3T.s:1498   .progmem.data:000000000000003e __c.4247
+     /tmp/ccfnIM3T.s:1494   .progmem.data:0000000000000039 __c.4249
+     /tmp/ccfnIM3T.s:1490   .progmem.data:0000000000000036 __c.4254
+     /tmp/ccfnIM3T.s:1486   .progmem.data:000000000000001e __c.4266
+     /tmp/ccfnIM3T.s:1482   .progmem.data:0000000000000000 __c.4268
+     /tmp/ccfnIM3T.s:1319   .text:00000000000003fc sendTlvMsg
+     /tmp/ccfnIM3T.s:1389   .text:0000000000000446 sendTlvMsgDta
+
+UNDEFINED SYMBOLS
+memcpy_P
+fprintf_P
+fputc

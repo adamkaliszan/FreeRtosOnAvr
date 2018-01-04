@@ -1,0 +1,6 @@
+RESOLVE: SOURCE=/usr/lib/avr/lib BUILD=
+/usr/lib/avr/include
+/usr/lib/avr/include/avr
+/home/adam/akme/FreeRtos/freeRtos/Lib/include
+/home/adam/akme/FreeRtos/freeRtos/Lib/net/include
+/home/adam/akme/FreeRtos/freeRtos/Source/include

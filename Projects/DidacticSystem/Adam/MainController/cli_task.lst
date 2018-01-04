@@ -1,0 +1,153 @@
+   1               		.file	"cli_task.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  10               		.text
+  11               	.Ltext0:
+ 147               	.global	vTaskVTYusb
+ 149               	vTaskVTYusb:
+ 150               		.stabd	46,0,0
+   1:cli_task.c    **** #include "cli_task.h"
+   2:cli_task.c    **** 
+   3:cli_task.c    **** void vTaskVTYusb(void *cliStatePtr)
+   4:cli_task.c    **** {
+ 152               	.LM0:
+ 153               	.LFBB1:
+ 154 0000 CF93      		push r28
+ 155 0002 DF93      		push r29
+ 156 0004 1F92      		push __zero_reg__
+ 157 0006 CDB7      		in r28,__SP_L__
+ 158 0008 DEB7      		in r29,__SP_H__
+ 159               	/* prologue: function */
+ 160               	/* frame size = 1 */
+ 161               	/* stack size = 3 */
+ 162               	.L__stack_usage = 3
+ 163 000a 8C01      		movw r16,r24
+   5:cli_task.c    ****   cmdState_t *state = (cmdState_t *)(cliStatePtr);
+   6:cli_task.c    ****   fprintf_P(state->myStdInOut, PSTR("Restart\r\n"));
+ 165               	.LM1:
+ 166 000c 80E0      		ldi r24,lo8(__c.2010)
+ 167 000e 90E0      		ldi r25,hi8(__c.2010)
+ 168 0010 9F93      		push r25
+ 169 0012 8F93      		push r24
+ 170 0014 F801      		movw r30,r16
+ 171 0016 838D      		ldd r24,Z+27
+ 172 0018 8F93      		push r24
+ 173 001a 828D      		ldd r24,Z+26
+ 174 001c 8F93      		push r24
+ 175 001e 0E94 0000 		call fprintf_P
+   7:cli_task.c    ****   cmdlineInputFunc('\r', state);
+ 177               	.LM2:
+ 178 0022 B801      		movw r22,r16
+ 179 0024 8DE0      		ldi r24,lo8(13)
+ 180 0026 0E94 0000 		call cmdlineInputFunc
+ 181 002a 0F90      		pop __tmp_reg__
+ 182 002c 0F90      		pop __tmp_reg__
+ 183 002e 0F90      		pop __tmp_reg__
+ 184 0030 0F90      		pop __tmp_reg__
+ 185               	.L2:
+   8:cli_task.c    ****   
+   9:cli_task.c    ****   char znak;
+  10:cli_task.c    ****   for( ;; )
+  11:cli_task.c    ****   {
+  12:cli_task.c    ****     if( xQueueReceive(xVtyRec, &znak, portMAX_DELAY))
+ 187               	.LM3:
+ 188 0032 20E0      		ldi r18,0
+ 189 0034 4FEF      		ldi r20,lo8(-1)
+ 190 0036 5FEF      		ldi r21,lo8(-1)
+ 191 0038 BE01      		movw r22,r28
+ 192 003a 6F5F      		subi r22,-1
+ 193 003c 7F4F      		sbci r23,-1
+ 194 003e 8091 0000 		lds r24,xVtyRec
+ 195 0042 9091 0000 		lds r25,xVtyRec+1
+ 196 0046 0E94 0000 		call xQueueGenericReceive
+ 197 004a 8823      		tst r24
+ 198 004c 01F0      		breq .L2
+  13:cli_task.c    ****     {
+  14:cli_task.c    ****       cmdlineInputFunc((char)znak, state);
+ 200               	.LM4:
+ 201 004e B801      		movw r22,r16
+ 202 0050 8981      		ldd r24,Y+1
+ 203 0052 0E94 0000 		call cmdlineInputFunc
+  15:cli_task.c    ****       cmdlineMainLoop(state);
+ 205               	.LM5:
+ 206 0056 C801      		movw r24,r16
+ 207 0058 0E94 0000 		call cmdlineMainLoop
+ 208 005c 00C0      		rjmp .L2
+ 213               	.Lscope1:
+ 215               		.stabd	78,0,0
+ 218               	.global	vTaskVTYsocket
+ 220               	vTaskVTYsocket:
+ 221               		.stabd	46,0,0
+  16:cli_task.c    ****     }  
+  17:cli_task.c    ****   }
+  18:cli_task.c    **** }
+  19:cli_task.c    **** 
+  20:cli_task.c    **** void vTaskVTYsocket(void *cliStatePtr)
+  21:cli_task.c    **** {
+ 223               	.LM6:
+ 224               	.LFBB2:
+ 225               	/* prologue: function */
+ 226               	/* frame size = 0 */
+ 227               	/* stack size = 0 */
+ 228               	.L__stack_usage = 0
+ 229 005e EC01      		movw r28,r24
+ 230               	.L8:
+  22:cli_task.c    ****   cmdState_t *state = (cmdState_t *)(cliStatePtr);
+  23:cli_task.c    ****   
+  24:cli_task.c    ****   char znak;
+  25:cli_task.c    ****   for( ;; )
+  26:cli_task.c    ****   {
+  27:cli_task.c    ****     znak = 0;
+  28:cli_task.c    ****     znak = fgetc(state->myStdInOut);
+ 232               	.LM7:
+ 233 0060 8A8D      		ldd r24,Y+26
+ 234 0062 9B8D      		ldd r25,Y+27
+ 235 0064 0E94 0000 		call fgetc
+  29:cli_task.c    ****     cmdlineInputFunc((char)znak, state);
+ 237               	.LM8:
+ 238 0068 BE01      		movw r22,r28
+ 239 006a 0E94 0000 		call cmdlineInputFunc
+  30:cli_task.c    ****     cmdlineMainLoop(state);
+ 241               	.LM9:
+ 242 006e CE01      		movw r24,r28
+ 243 0070 0E94 0000 		call cmdlineMainLoop
+  31:cli_task.c    ****   }
+ 245               	.LM10:
+ 246 0074 00C0      		rjmp .L8
+ 248               	.Lscope2:
+ 250               		.stabd	78,0,0
+ 251               		.section	.progmem.data,"a",@progbits
+ 254               	__c.2010:
+ 255 0000 5265 7374 		.string	"Restart\r\n"
+ 255      6172 740D 
+ 255      0A00 
+ 256               		.comm	wwwport,1,1
+ 258               		.text
+ 260               	.Letext0:
+ 261               		.ident	"GCC: (GNU) 4.9.2"
+ 262               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 cli_task.c
+     /tmp/ccs4022F.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccs4022F.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccs4022F.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccs4022F.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccs4022F.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccs4022F.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccs4022F.s:149    .text:0000000000000000 vTaskVTYusb
+     /tmp/ccs4022F.s:254    .progmem.data:0000000000000000 __c.2010
+     /tmp/ccs4022F.s:220    .text:000000000000005e vTaskVTYsocket
+                            *COM*:0000000000000001 wwwport
+
+UNDEFINED SYMBOLS
+fprintf_P
+cmdlineInputFunc
+xVtyRec
+xQueueGenericReceive
+cmdlineMainLoop
+fgetc
+__do_clear_bss

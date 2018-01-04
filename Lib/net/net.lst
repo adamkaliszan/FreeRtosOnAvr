@@ -1,0 +1,1056 @@
+   1               		.file	"net.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  10               		.text
+  11               	.Ltext0:
+ 125               	.global	ntohs
+ 127               	ntohs:
+ 128               		.stabd	46,0,0
+   1:../../../../Lib/net/net.c **** /**
+   2:../../../../Lib/net/net.c ****  * @file          net.c
+   3:../../../../Lib/net/net.c ****  * @author        Pascal Stang, Adam Kaliszan
+   4:../../../../Lib/net/net.c ****  * @brief         Network support library.
+   5:../../../../Lib/net/net.c ****  * @version       0.1
+   6:../../../../Lib/net/net.c ****  * Created        30.08.2004
+   7:../../../../Lib/net/net.c ****  * Revised        25.11.2010
+   8:../../../../Lib/net/net.c ****  * Editor Tabs    2
+   9:../../../../Lib/net/net.c ****  */
+  10:../../../../Lib/net/net.c **** 
+  11:../../../../Lib/net/net.c **** #include "net.h"
+  12:../../../../Lib/net/net.c **** 
+  13:../../../../Lib/net/net.c **** 
+  14:../../../../Lib/net/net.c **** uint16_t ntohs(uint16_t val)
+  15:../../../../Lib/net/net.c **** {
+ 130               	.LM0:
+ 131               	.LFBB1:
+ 132               	/* prologue: function */
+ 133               	/* frame size = 0 */
+ 134               	/* stack size = 0 */
+ 135               	.L__stack_usage = 0
+  16:../../../../Lib/net/net.c ****   return (val<<8) | (val>>8);
+  17:../../../../Lib/net/net.c **** }
+ 137               	.LM1:
+ 138 0000 9827      		eor r25,r24
+ 139 0002 8927      		eor r24,r25
+ 140 0004 9827      		eor r25,r24
+ 141 0006 0895      		ret
+ 143               	.Lscope1:
+ 145               		.stabd	78,0,0
+ 148               	.global	htons
+ 150               	htons:
+ 151               		.stabd	46,0,0
+  18:../../../../Lib/net/net.c **** 
+  19:../../../../Lib/net/net.c **** uint16_t htons(uint16_t val)
+  20:../../../../Lib/net/net.c **** {
+ 153               	.LM2:
+ 154               	.LFBB2:
+ 155               	/* prologue: function */
+ 156               	/* frame size = 0 */
+ 157               	/* stack size = 0 */
+ 158               	.L__stack_usage = 0
+  21:../../../../Lib/net/net.c ****   return (val<<8) | (val>>8);
+  22:../../../../Lib/net/net.c **** }
+ 160               	.LM3:
+ 161 0008 9827      		eor r25,r24
+ 162 000a 8927      		eor r24,r25
+ 163 000c 9827      		eor r25,r24
+ 164 000e 0895      		ret
+ 166               	.Lscope2:
+ 168               		.stabd	78,0,0
+ 171               	.global	htonl
+ 173               	htonl:
+ 174               		.stabd	46,0,0
+  23:../../../../Lib/net/net.c **** 
+  24:../../../../Lib/net/net.c **** uint32_t htonl(uint32_t val)
+  25:../../../../Lib/net/net.c **** {
+ 176               	.LM4:
+ 177               	.LFBB3:
+ 178               	/* prologue: function */
+ 179               	/* frame size = 0 */
+ 180               	/* stack size = 0 */
+ 181               	.L__stack_usage = 0
+ 182 0010 0E94 0000 		call __bswapsi2
+  26:../../../../Lib/net/net.c ****   return (htons(val>>16) | (uint32_t)htons(val&0x0000FFFF)<<16);
+  27:../../../../Lib/net/net.c **** }
+ 184               	.LM5:
+ 185 0014 0895      		ret
+ 187               	.Lscope3:
+ 189               		.stabd	78,0,0
+ 192               	.global	ntohl
+ 194               	ntohl:
+ 195               		.stabd	46,0,0
+  28:../../../../Lib/net/net.c **** 
+  29:../../../../Lib/net/net.c **** uint32_t ntohl(uint32_t val)
+  30:../../../../Lib/net/net.c **** {
+ 197               	.LM6:
+ 198               	.LFBB4:
+ 199               	/* prologue: function */
+ 200               	/* frame size = 0 */
+ 201               	/* stack size = 0 */
+ 202               	.L__stack_usage = 0
+ 203 0016 0E94 0000 		call __bswapsi2
+  31:../../../../Lib/net/net.c ****   return (ntohs(val>>16) | (uint32_t)ntohs(val&0x0000FFFF)<<16);
+  32:../../../../Lib/net/net.c **** }
+ 205               	.LM7:
+ 206 001a 0895      		ret
+ 208               	.Lscope4:
+ 210               		.stabd	78,0,0
+ 214               	.global	netChecksum
+ 216               	netChecksum:
+ 217               		.stabd	46,0,0
+  33:../../../../Lib/net/net.c **** 
+  34:../../../../Lib/net/net.c **** 
+  35:../../../../Lib/net/net.c **** uint16_t netChecksum(uint8_t *data, uint16_t len)
+  36:../../../../Lib/net/net.c **** {
+ 219               	.LM8:
+ 220               	.LFBB5:
+ 221 001c CF93      		push r28
+ 222 001e DF93      		push r29
+ 223               	/* prologue: function */
+ 224               	/* frame size = 0 */
+ 225               	/* stack size = 2 */
+ 226               	.L__stack_usage = 2
+ 227 0020 DB01      		movw r26,r22
+ 229               	.LM9:
+ 230 0022 9B01      		movw r18,r22
+ 231 0024 FC01      		movw r30,r24
+  37:../../../../Lib/net/net.c ****   register uint32_t sum = 0;
+ 233               	.LM10:
+ 234 0026 40E0      		ldi r20,0
+ 235 0028 50E0      		ldi r21,0
+ 236 002a BA01      		movw r22,r20
+ 237               	.L7:
+  38:../../../../Lib/net/net.c **** 
+  39:../../../../Lib/net/net.c ****   for (;;)
+  40:../../../../Lib/net/net.c ****   {
+  41:../../../../Lib/net/net.c ****     if (len < 2)
+ 239               	.LM11:
+ 240 002c 2230      		cpi r18,2
+ 241 002e 3105      		cpc r19,__zero_reg__
+ 242 0030 00F0      		brlo .L6
+  42:../../../../Lib/net/net.c ****       break;
+  43:../../../../Lib/net/net.c **** //sum += *((uint16_t *)data)++;
+  44:../../../../Lib/net/net.c ****     sum += *((uint16_t *)data);
+ 244               	.LM12:
+ 245 0032 C191      		ld r28,Z+
+ 246 0034 D191      		ld r29,Z+
+ 247 0036 4C0F      		add r20,r28
+ 248 0038 5D1F      		adc r21,r29
+ 249 003a 611D      		adc r22,__zero_reg__
+ 250 003c 711D      		adc r23,__zero_reg__
+  45:../../../../Lib/net/net.c ****     data+=2;
+  46:../../../../Lib/net/net.c ****     len -= 2;
+ 252               	.LM13:
+ 253 003e 2250      		subi r18,2
+ 254 0040 3109      		sbc r19,__zero_reg__
+  47:../../../../Lib/net/net.c ****   }
+ 256               	.LM14:
+ 257 0042 00C0      		rjmp .L7
+ 258               	.L6:
+ 259 0044 9D01      		movw r18,r26
+ 260 0046 2E7F      		andi r18,254
+ 261 0048 FC01      		movw r30,r24
+ 262 004a E20F      		add r30,r18
+ 263 004c F31F      		adc r31,r19
+  48:../../../../Lib/net/net.c ****   if (len)
+ 265               	.LM15:
+ 266 004e A0FF      		sbrs r26,0
+ 267 0050 00C0      		rjmp .L9
+  49:../../../../Lib/net/net.c ****     sum += *(uint8_t *) data;
+ 269               	.LM16:
+ 270 0052 8081      		ld r24,Z
+ 271 0054 480F      		add r20,r24
+ 272 0056 511D      		adc r21,__zero_reg__
+ 273 0058 611D      		adc r22,__zero_reg__
+ 274 005a 711D      		adc r23,__zero_reg__
+ 275               	.L9:
+  50:../../../../Lib/net/net.c **** 
+  51:../../../../Lib/net/net.c ****   while ((len = (uint16_t) (sum >> 16)) != 0)
+ 277               	.LM17:
+ 278 005c CB01      		movw r24,r22
+ 279 005e AA27      		clr r26
+ 280 0060 BB27      		clr r27
+ 281 0062 0097      		sbiw r24,0
+ 282 0064 01F0      		breq .L15
+  52:../../../../Lib/net/net.c ****     sum = (uint16_t) sum + len;
+ 284               	.LM18:
+ 285 0066 480F      		add r20,r24
+ 286 0068 591F      		adc r21,r25
+ 287 006a 60E0      		ldi r22,0
+ 288 006c 70E0      		ldi r23,0
+ 289 006e 00C0      		rjmp .L9
+ 290               	.L15:
+  53:../../../../Lib/net/net.c **** 
+  54:../../../../Lib/net/net.c ****   return (uint16_t) sum ^ 0xFFFF;
+ 292               	.LM19:
+ 293 0070 CA01      		movw r24,r20
+ 294 0072 8095      		com r24
+ 295 0074 9095      		com r25
+ 296               	/* epilogue start */
+  55:../../../../Lib/net/net.c **** }
+ 298               	.LM20:
+ 299 0076 DF91      		pop r29
+ 300 0078 CF91      		pop r28
+ 301 007a 0895      		ret
+ 303               	.Lscope5:
+ 305               		.stabd	78,0,0
+ 308               	.global	netPrintEthAddr
+ 310               	netPrintEthAddr:
+ 311               		.stabd	46,0,0
+  56:../../../../Lib/net/net.c **** 
+  57:../../../../Lib/net/net.c **** void netPrintEthAddr(FILE *stream, struct netEthAddr* ethaddr)
+  58:../../../../Lib/net/net.c **** {
+ 313               	.LM21:
+ 314               	.LFBB6:
+ 315               	/* prologue: function */
+ 316               	/* frame size = 0 */
+ 317               	/* stack size = 0 */
+ 318               	.L__stack_usage = 0
+ 319 007c FB01      		movw r30,r22
+  59:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), ethaddr->addr[0], ethaddr->addr[1], etha
+ 321               	.LM22:
+ 322 007e 2581      		ldd r18,Z+5
+ 323 0080 1F92      		push __zero_reg__
+ 324 0082 2F93      		push r18
+ 325 0084 2481      		ldd r18,Z+4
+ 326 0086 1F92      		push __zero_reg__
+ 327 0088 2F93      		push r18
+ 328 008a 2381      		ldd r18,Z+3
+ 329 008c 1F92      		push __zero_reg__
+ 330 008e 2F93      		push r18
+ 331 0090 2281      		ldd r18,Z+2
+ 332 0092 1F92      		push __zero_reg__
+ 333 0094 2F93      		push r18
+ 334 0096 2181      		ldd r18,Z+1
+ 335 0098 1F92      		push __zero_reg__
+ 336 009a 2F93      		push r18
+ 337 009c 2081      		ld r18,Z
+ 338 009e 1F92      		push __zero_reg__
+ 339 00a0 2F93      		push r18
+ 340 00a2 20E0      		ldi r18,lo8(__c.1932)
+ 341 00a4 30E0      		ldi r19,hi8(__c.1932)
+ 342 00a6 3F93      		push r19
+ 343 00a8 2F93      		push r18
+ 344 00aa 9F93      		push r25
+ 345 00ac 8F93      		push r24
+ 346 00ae 0E94 0000 		call fprintf_P
+ 347 00b2 8DB7      		in r24,__SP_L__
+ 348 00b4 9EB7      		in r25,__SP_H__
+ 349 00b6 4096      		adiw r24,16
+ 350 00b8 0FB6      		in __tmp_reg__,__SREG__
+ 351 00ba F894      		cli
+ 352 00bc 9EBF      		out __SP_H__,r25
+ 353 00be 0FBE      		out __SREG__,__tmp_reg__
+ 354 00c0 8DBF      		out __SP_L__,r24
+ 355 00c2 0895      		ret
+ 357               	.Lscope6:
+ 359               		.stabd	78,0,0
+ 362               	.global	netPrintIPAddr
+ 364               	netPrintIPAddr:
+ 365               		.stabd	46,0,0
+  60:../../../../Lib/net/net.c **** }
+  61:../../../../Lib/net/net.c **** 
+  62:../../../../Lib/net/net.c **** void netPrintIPAddr(FILE *stream, uint32_t ipaddr)
+  63:../../../../Lib/net/net.c **** {
+ 367               	.LM23:
+ 368               	.LFBB7:
+ 369 00c4 CF93      		push r28
+ 370 00c6 DF93      		push r29
+ 371 00c8 00D0      		rcall .
+ 372 00ca 00D0      		rcall .
+ 373 00cc CDB7      		in r28,__SP_L__
+ 374 00ce DEB7      		in r29,__SP_H__
+ 375               	/* prologue: function */
+ 376               	/* frame size = 4 */
+ 377               	/* stack size = 6 */
+ 378               	.L__stack_usage = 6
+ 379 00d0 4983      		std Y+1,r20
+ 380 00d2 5A83      		std Y+2,r21
+ 381 00d4 6B83      		std Y+3,r22
+ 382 00d6 7C83      		std Y+4,r23
+  64:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR("%d.%d.%d.%d"), ((unsigned char*)&ipaddr)[0], ((unsigned char*)&ipaddr)[1]
+ 384               	.LM24:
+ 385 00d8 2C81      		ldd r18,Y+4
+ 386 00da 1F92      		push __zero_reg__
+ 387 00dc 2F93      		push r18
+ 388 00de 2B81      		ldd r18,Y+3
+ 389 00e0 1F92      		push __zero_reg__
+ 390 00e2 2F93      		push r18
+ 391 00e4 2A81      		ldd r18,Y+2
+ 392 00e6 1F92      		push __zero_reg__
+ 393 00e8 2F93      		push r18
+ 394 00ea 2981      		ldd r18,Y+1
+ 395 00ec 1F92      		push __zero_reg__
+ 396 00ee 2F93      		push r18
+ 397 00f0 20E0      		ldi r18,lo8(__c.1938)
+ 398 00f2 30E0      		ldi r19,hi8(__c.1938)
+ 399 00f4 3F93      		push r19
+ 400 00f6 2F93      		push r18
+ 401 00f8 9F93      		push r25
+ 402 00fa 8F93      		push r24
+ 403 00fc 0E94 0000 		call fprintf_P
+ 404 0100 0FB6      		in __tmp_reg__,__SREG__
+ 405 0102 F894      		cli
+ 406 0104 DEBF      		out __SP_H__,r29
+ 407 0106 0FBE      		out __SREG__,__tmp_reg__
+ 408 0108 CDBF      		out __SP_L__,r28
+ 409               	/* epilogue start */
+  65:../../../../Lib/net/net.c **** }
+ 411               	.LM25:
+ 412 010a 0F90      		pop __tmp_reg__
+ 413 010c 0F90      		pop __tmp_reg__
+ 414 010e 0F90      		pop __tmp_reg__
+ 415 0110 0F90      		pop __tmp_reg__
+ 416 0112 DF91      		pop r29
+ 417 0114 CF91      		pop r28
+ 418 0116 0895      		ret
+ 420               	.Lscope7:
+ 422               		.stabd	78,0,0
+ 425               	.global	netPrintEthHeader
+ 427               	netPrintEthHeader:
+ 428               		.stabd	46,0,0
+  66:../../../../Lib/net/net.c **** 
+  67:../../../../Lib/net/net.c **** void netPrintEthHeader(FILE *stream, struct netEthHeader* eth_hdr)
+  68:../../../../Lib/net/net.c **** {
+ 430               	.LM26:
+ 431               	.LFBB8:
+ 432 0118 0F93      		push r16
+ 433 011a 1F93      		push r17
+ 434 011c CF93      		push r28
+ 435 011e DF93      		push r29
+ 436               	/* prologue: function */
+ 437               	/* frame size = 0 */
+ 438               	/* stack size = 4 */
+ 439               	.L__stack_usage = 4
+ 440 0120 D82F      		mov r29,r24
+ 441 0122 C92F      		mov r28,r25
+ 442 0124 8B01      		movw r16,r22
+  69:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR("Eth Packet Type: 0x%x"), eth_hdr->type);
+ 444               	.LM27:
+ 445 0126 FB01      		movw r30,r22
+ 446 0128 8585      		ldd r24,Z+13
+ 447 012a 8F93      		push r24
+ 448 012c 8485      		ldd r24,Z+12
+ 449 012e 8F93      		push r24
+ 450 0130 80E0      		ldi r24,lo8(__c.1944)
+ 451 0132 90E0      		ldi r25,hi8(__c.1944)
+ 452 0134 9F93      		push r25
+ 453 0136 8F93      		push r24
+ 454 0138 CF93      		push r28
+ 455 013a DF93      		push r29
+ 456 013c 0E94 0000 		call fprintf_P
+  70:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR(" SRC:"));
+ 458               	.LM28:
+ 459 0140 80E0      		ldi r24,lo8(__c.1946)
+ 460 0142 90E0      		ldi r25,hi8(__c.1946)
+ 461 0144 9F93      		push r25
+ 462 0146 8F93      		push r24
+ 463 0148 CF93      		push r28
+ 464 014a DF93      		push r29
+ 465 014c 0E94 0000 		call fprintf_P
+  71:../../../../Lib/net/net.c ****   netPrintEthAddr(stream, &eth_hdr->src);
+ 467               	.LM29:
+ 468 0150 B801      		movw r22,r16
+ 469 0152 6A5F      		subi r22,-6
+ 470 0154 7F4F      		sbci r23,-1
+ 471 0156 8D2F      		mov r24,r29
+ 472 0158 9C2F      		mov r25,r28
+ 473 015a 0E94 0000 		call netPrintEthAddr
+  72:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR("->DST:"));
+ 475               	.LM30:
+ 476 015e 80E0      		ldi r24,lo8(__c.1948)
+ 477 0160 90E0      		ldi r25,hi8(__c.1948)
+ 478 0162 9F93      		push r25
+ 479 0164 8F93      		push r24
+ 480 0166 CF93      		push r28
+ 481 0168 DF93      		push r29
+ 482 016a 0E94 0000 		call fprintf_P
+  73:../../../../Lib/net/net.c ****   netPrintEthAddr(stream, &eth_hdr->dest);
+ 484               	.LM31:
+ 485 016e 8DB7      		in r24,__SP_L__
+ 486 0170 9EB7      		in r25,__SP_H__
+ 487 0172 0E96      		adiw r24,14
+ 488 0174 0FB6      		in __tmp_reg__,__SREG__
+ 489 0176 F894      		cli
+ 490 0178 9EBF      		out __SP_H__,r25
+ 491 017a 0FBE      		out __SREG__,__tmp_reg__
+ 492 017c 8DBF      		out __SP_L__,r24
+ 493 017e B801      		movw r22,r16
+ 494 0180 8D2F      		mov r24,r29
+ 495 0182 9C2F      		mov r25,r28
+ 496               	/* epilogue start */
+  74:../../../../Lib/net/net.c **** }
+ 498               	.LM32:
+ 499 0184 DF91      		pop r29
+ 500 0186 CF91      		pop r28
+ 501 0188 1F91      		pop r17
+ 502 018a 0F91      		pop r16
+  73:../../../../Lib/net/net.c ****   netPrintEthAddr(stream, &eth_hdr->dest);
+ 504               	.LM33:
+ 505 018c 0C94 0000 		jmp netPrintEthAddr
+ 507               	.Lscope8:
+ 509               		.stabd	78,0,0
+ 512               	.global	netPrintIpHeader
+ 514               	netPrintIpHeader:
+ 515               		.stabd	46,0,0
+  75:../../../../Lib/net/net.c **** 
+  76:../../../../Lib/net/net.c **** void netPrintIpHeader(FILE *stream, struct netIpHeader* ipheader)
+  77:../../../../Lib/net/net.c **** {
+ 517               	.LM34:
+ 518               	.LFBB9:
+ 519 0190 0F93      		push r16
+ 520 0192 1F93      		push r17
+ 521 0194 CF93      		push r28
+ 522 0196 DF93      		push r29
+ 523               	/* prologue: function */
+ 524               	/* frame size = 0 */
+ 525               	/* stack size = 4 */
+ 526               	.L__stack_usage = 4
+ 527 0198 EC01      		movw r28,r24
+ 528 019a 8B01      		movw r16,r22
+  78:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR("IP Header\r\n"));
+ 530               	.LM35:
+ 531 019c 80E0      		ldi r24,lo8(__c.1954)
+ 532 019e 90E0      		ldi r25,hi8(__c.1954)
+ 533 01a0 9F93      		push r25
+ 534 01a2 8F93      		push r24
+ 535 01a4 DF93      		push r29
+ 536 01a6 CF93      		push r28
+ 537 01a8 0E94 0000 		call fprintf_P
+  79:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR("Ver     : %d\r\n"), (ipheader->vhl)>>4);
+ 539               	.LM36:
+ 540 01ac F801      		movw r30,r16
+ 541 01ae 8081      		ld r24,Z
+ 542 01b0 8295      		swap r24
+ 543 01b2 8F70      		andi r24,lo8(15)
+ 544 01b4 1F92      		push __zero_reg__
+ 545 01b6 8F93      		push r24
+ 546 01b8 80E0      		ldi r24,lo8(__c.1956)
+ 547 01ba 90E0      		ldi r25,hi8(__c.1956)
+ 548 01bc 9F93      		push r25
+ 549 01be 8F93      		push r24
+ 550 01c0 DF93      		push r29
+ 551 01c2 CF93      		push r28
+ 552 01c4 0E94 0000 		call fprintf_P
+ 553               	.LBB40:
+ 554               	.LBB41:
+  21:../../../../Lib/net/net.c **** }
+ 556               	.LM37:
+ 557 01c8 F801      		movw r30,r16
+ 558 01ca 8281      		ldd r24,Z+2
+ 559 01cc 9381      		ldd r25,Z+3
+ 560 01ce 9827      		eor r25,r24
+ 561 01d0 8927      		eor r24,r25
+ 562 01d2 9827      		eor r25,r24
+ 563               	.LBE41:
+ 564               	.LBE40:
+  80:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR("Length  : %d\r\n"), htons(ipheader->len));
+ 566               	.LM38:
+ 567 01d4 9F93      		push r25
+ 568 01d6 8F93      		push r24
+ 569 01d8 80E0      		ldi r24,lo8(__c.1958)
+ 570 01da 90E0      		ldi r25,hi8(__c.1958)
+ 571 01dc 9F93      		push r25
+ 572 01de 8F93      		push r24
+ 573 01e0 DF93      		push r29
+ 574 01e2 CF93      		push r28
+ 575 01e4 0E94 0000 		call fprintf_P
+  81:../../../../Lib/net/net.c ****   if(ipheader->proto == IP_PROTO_ICMP)
+ 577               	.LM39:
+ 578 01e8 F801      		movw r30,r16
+ 579 01ea 8185      		ldd r24,Z+9
+ 580 01ec 2DB7      		in r18,__SP_L__
+ 581 01ee 3EB7      		in r19,__SP_H__
+ 582 01f0 205F      		subi r18,-16
+ 583 01f2 3F4F      		sbci r19,-1
+ 584 01f4 0FB6      		in __tmp_reg__,__SREG__
+ 585 01f6 F894      		cli
+ 586 01f8 3EBF      		out __SP_H__,r19
+ 587 01fa 0FBE      		out __SREG__,__tmp_reg__
+ 588 01fc 2DBF      		out __SP_L__,r18
+ 589 01fe 8130      		cpi r24,lo8(1)
+ 590 0200 01F4      		brne .L20
+  82:../../../../Lib/net/net.c ****     fprintf_P(stream, PSTR("Protocol: ICMP\r\n"));
+ 592               	.LM40:
+ 593 0202 80E0      		ldi r24,lo8(__c.1960)
+ 594 0204 90E0      		ldi r25,hi8(__c.1960)
+ 595 0206 00C0      		rjmp .L24
+ 596               	.L20:
+  83:../../../../Lib/net/net.c ****   else if(ipheader->proto == IP_PROTO_TCP)
+ 598               	.LM41:
+ 599 0208 8630      		cpi r24,lo8(6)
+ 600 020a 01F4      		brne .L22
+  84:../../../../Lib/net/net.c ****     fprintf_P(stream, PSTR("Protocol: TCP\r\n"));
+ 602               	.LM42:
+ 603 020c 80E0      		ldi r24,lo8(__c.1962)
+ 604 020e 90E0      		ldi r25,hi8(__c.1962)
+ 605               	.L24:
+ 606 0210 9F93      		push r25
+ 607 0212 8F93      		push r24
+ 608 0214 DF93      		push r29
+ 609 0216 CF93      		push r28
+ 610 0218 0E94 0000 		call fprintf_P
+ 611 021c 0F90      		pop __tmp_reg__
+ 612 021e 0F90      		pop __tmp_reg__
+ 613 0220 0F90      		pop __tmp_reg__
+ 614 0222 0F90      		pop __tmp_reg__
+ 615 0224 00C0      		rjmp .L21
+ 616               	.L22:
+  85:../../../../Lib/net/net.c ****   else if(ipheader->proto == IP_PROTO_UDP)
+ 618               	.LM43:
+ 619 0226 8131      		cpi r24,lo8(17)
+ 620 0228 01F4      		brne .L23
+  86:../../../../Lib/net/net.c ****     fprintf_P(stream, PSTR("Protocol: UDP\r\n"));
+ 622               	.LM44:
+ 623 022a 80E0      		ldi r24,lo8(__c.1964)
+ 624 022c 90E0      		ldi r25,hi8(__c.1964)
+ 625 022e 00C0      		rjmp .L24
+ 626               	.L23:
+  87:../../../../Lib/net/net.c ****   else
+  88:../../../../Lib/net/net.c ****     fprintf_P(stream, PSTR("Protocol: %d\r\n"), ipheader->proto);
+ 628               	.LM45:
+ 629 0230 1F92      		push __zero_reg__
+ 630 0232 8F93      		push r24
+ 631 0234 80E0      		ldi r24,lo8(__c.1966)
+ 632 0236 90E0      		ldi r25,hi8(__c.1966)
+ 633 0238 9F93      		push r25
+ 634 023a 8F93      		push r24
+ 635 023c DF93      		push r29
+ 636 023e CF93      		push r28
+ 637 0240 0E94 0000 		call fprintf_P
+ 638 0244 0F90      		pop __tmp_reg__
+ 639 0246 0F90      		pop __tmp_reg__
+ 640 0248 0F90      		pop __tmp_reg__
+ 641 024a 0F90      		pop __tmp_reg__
+ 642 024c 0F90      		pop __tmp_reg__
+ 643 024e 0F90      		pop __tmp_reg__
+ 644               	.L21:
+  89:../../../../Lib/net/net.c **** 
+  90:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR("SourceIP: ")); netPrintIPAddr(stream, htonl(ipheader->srcipaddr));   fpri
+ 646               	.LM46:
+ 647 0250 80E0      		ldi r24,lo8(__c.1968)
+ 648 0252 90E0      		ldi r25,hi8(__c.1968)
+ 649 0254 9F93      		push r25
+ 650 0256 8F93      		push r24
+ 651 0258 DF93      		push r29
+ 652 025a CF93      		push r28
+ 653 025c 0E94 0000 		call fprintf_P
+ 654 0260 F801      		movw r30,r16
+ 655 0262 6485      		ldd r22,Z+12
+ 656 0264 7585      		ldd r23,Z+13
+ 657 0266 8685      		ldd r24,Z+14
+ 658 0268 9785      		ldd r25,Z+15
+ 659 026a 0E94 0000 		call htonl
+ 660 026e AB01      		movw r20,r22
+ 661 0270 BC01      		movw r22,r24
+ 662 0272 CE01      		movw r24,r28
+ 663 0274 0E94 0000 		call netPrintIPAddr
+ 664 0278 80E0      		ldi r24,lo8(__c.1970)
+ 665 027a 90E0      		ldi r25,hi8(__c.1970)
+ 666 027c 9F93      		push r25
+ 667 027e 8F93      		push r24
+ 668 0280 DF93      		push r29
+ 669 0282 CF93      		push r28
+ 670 0284 0E94 0000 		call fprintf_P
+  91:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR("Dest  IP: ")); netPrintIPAddr(stream, htonl(ipheader->destipaddr));  fpri
+ 672               	.LM47:
+ 673 0288 80E0      		ldi r24,lo8(__c.1972)
+ 674 028a 90E0      		ldi r25,hi8(__c.1972)
+ 675 028c 9F93      		push r25
+ 676 028e 8F93      		push r24
+ 677 0290 DF93      		push r29
+ 678 0292 CF93      		push r28
+ 679 0294 0E94 0000 		call fprintf_P
+ 680 0298 F801      		movw r30,r16
+ 681 029a 6089      		ldd r22,Z+16
+ 682 029c 7189      		ldd r23,Z+17
+ 683 029e 8289      		ldd r24,Z+18
+ 684 02a0 9389      		ldd r25,Z+19
+ 685 02a2 0E94 0000 		call htonl
+ 686 02a6 AB01      		movw r20,r22
+ 687 02a8 BC01      		movw r22,r24
+ 688 02aa CE01      		movw r24,r28
+ 689 02ac 0E94 0000 		call netPrintIPAddr
+ 690 02b0 80E0      		ldi r24,lo8(__c.1974)
+ 691 02b2 90E0      		ldi r25,hi8(__c.1974)
+ 692 02b4 9F93      		push r25
+ 693 02b6 8F93      		push r24
+ 694 02b8 DF93      		push r29
+ 695 02ba CF93      		push r28
+ 696 02bc 0E94 0000 		call fprintf_P
+ 697 02c0 2DB7      		in r18,__SP_L__
+ 698 02c2 3EB7      		in r19,__SP_H__
+ 699 02c4 205F      		subi r18,-16
+ 700 02c6 3F4F      		sbci r19,-1
+ 701 02c8 0FB6      		in __tmp_reg__,__SREG__
+ 702 02ca F894      		cli
+ 703 02cc 3EBF      		out __SP_H__,r19
+ 704 02ce 0FBE      		out __SREG__,__tmp_reg__
+ 705 02d0 2DBF      		out __SP_L__,r18
+ 706               	/* epilogue start */
+  92:../../../../Lib/net/net.c **** }
+ 708               	.LM48:
+ 709 02d2 DF91      		pop r29
+ 710 02d4 CF91      		pop r28
+ 711 02d6 1F91      		pop r17
+ 712 02d8 0F91      		pop r16
+ 713 02da 0895      		ret
+ 715               	.Lscope9:
+ 717               		.stabd	78,0,0
+ 720               	.global	netPrintTcpHeader
+ 722               	netPrintTcpHeader:
+ 723               		.stabd	46,0,0
+  93:../../../../Lib/net/net.c **** 
+  94:../../../../Lib/net/net.c **** void netPrintTcpHeader(FILE *stream, struct netTcpHeader* tcpheader)
+  95:../../../../Lib/net/net.c **** {
+ 725               	.LM49:
+ 726               	.LFBB10:
+ 727 02dc 0F93      		push r16
+ 728 02de 1F93      		push r17
+ 729 02e0 CF93      		push r28
+ 730 02e2 DF93      		push r29
+ 731               	/* prologue: function */
+ 732               	/* frame size = 0 */
+ 733               	/* stack size = 4 */
+ 734               	.L__stack_usage = 4
+ 735 02e4 EC01      		movw r28,r24
+ 736 02e6 8B01      		movw r16,r22
+  96:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR("TCP Header\r\n"));
+ 738               	.LM50:
+ 739 02e8 80E0      		ldi r24,lo8(__c.1980)
+ 740 02ea 90E0      		ldi r25,hi8(__c.1980)
+ 741 02ec 9F93      		push r25
+ 742 02ee 8F93      		push r24
+ 743 02f0 DF93      		push r29
+ 744 02f2 CF93      		push r28
+ 745 02f4 0E94 0000 		call fprintf_P
+ 746               	.LBB42:
+ 747               	.LBB43:
+  21:../../../../Lib/net/net.c **** }
+ 749               	.LM51:
+ 750 02f8 F801      		movw r30,r16
+ 751 02fa 8081      		ld r24,Z
+ 752 02fc 9181      		ldd r25,Z+1
+ 753 02fe 9827      		eor r25,r24
+ 754 0300 8927      		eor r24,r25
+ 755 0302 9827      		eor r25,r24
+ 756               	.LBE43:
+ 757               	.LBE42:
+  97:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR("Src Port: %d\r\n"), htons(tcpheader->srcport));
+ 759               	.LM52:
+ 760 0304 9F93      		push r25
+ 761 0306 8F93      		push r24
+ 762 0308 80E0      		ldi r24,lo8(__c.1982)
+ 763 030a 90E0      		ldi r25,hi8(__c.1982)
+ 764 030c 9F93      		push r25
+ 765 030e 8F93      		push r24
+ 766 0310 DF93      		push r29
+ 767 0312 CF93      		push r28
+ 768 0314 0E94 0000 		call fprintf_P
+ 769               	.LBB44:
+ 770               	.LBB45:
+  21:../../../../Lib/net/net.c **** }
+ 772               	.LM53:
+ 773 0318 F801      		movw r30,r16
+ 774 031a 8281      		ldd r24,Z+2
+ 775 031c 9381      		ldd r25,Z+3
+ 776 031e 9827      		eor r25,r24
+ 777 0320 8927      		eor r24,r25
+ 778 0322 9827      		eor r25,r24
+ 779               	.LBE45:
+ 780               	.LBE44:
+  98:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR("Dst Port: %d\r\n"), htons(tcpheader->destport));
+ 782               	.LM54:
+ 783 0324 9F93      		push r25
+ 784 0326 8F93      		push r24
+ 785 0328 80E0      		ldi r24,lo8(__c.1984)
+ 786 032a 90E0      		ldi r25,hi8(__c.1984)
+ 787 032c 9F93      		push r25
+ 788 032e 8F93      		push r24
+ 789 0330 DF93      		push r29
+ 790 0332 CF93      		push r28
+ 791 0334 0E94 0000 		call fprintf_P
+  99:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR("Seq Num : 0x%x"), htonl(tcpheader->seqno));
+ 793               	.LM55:
+ 794 0338 F801      		movw r30,r16
+ 795 033a 6481      		ldd r22,Z+4
+ 796 033c 7581      		ldd r23,Z+5
+ 797 033e 8681      		ldd r24,Z+6
+ 798 0340 9781      		ldd r25,Z+7
+ 799 0342 0E94 0000 		call htonl
+ 800 0346 9F93      		push r25
+ 801 0348 8F93      		push r24
+ 802 034a 7F93      		push r23
+ 803 034c 6F93      		push r22
+ 804 034e 80E0      		ldi r24,lo8(__c.1986)
+ 805 0350 90E0      		ldi r25,hi8(__c.1986)
+ 806 0352 9F93      		push r25
+ 807 0354 8F93      		push r24
+ 808 0356 DF93      		push r29
+ 809 0358 CF93      		push r28
+ 810 035a 0E94 0000 		call fprintf_P
+ 100:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR("Ack Num : 0x%x\r\n"), htonl(tcpheader->ackno));
+ 812               	.LM56:
+ 813 035e F801      		movw r30,r16
+ 814 0360 6085      		ldd r22,Z+8
+ 815 0362 7185      		ldd r23,Z+9
+ 816 0364 8285      		ldd r24,Z+10
+ 817 0366 9385      		ldd r25,Z+11
+ 818 0368 0E94 0000 		call htonl
+ 819 036c 9F93      		push r25
+ 820 036e 8F93      		push r24
+ 821 0370 7F93      		push r23
+ 822 0372 6F93      		push r22
+ 823 0374 80E0      		ldi r24,lo8(__c.1988)
+ 824 0376 90E0      		ldi r25,hi8(__c.1988)
+ 825 0378 9F93      		push r25
+ 826 037a 8F93      		push r24
+ 827 037c DF93      		push r29
+ 828 037e CF93      		push r28
+ 829 0380 0E94 0000 		call fprintf_P
+ 101:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR("Flags   : "));
+ 831               	.LM57:
+ 832 0384 8DB7      		in r24,__SP_L__
+ 833 0386 9EB7      		in r25,__SP_H__
+ 834 0388 8096      		adiw r24,32
+ 835 038a 0FB6      		in __tmp_reg__,__SREG__
+ 836 038c F894      		cli
+ 837 038e 9EBF      		out __SP_H__,r25
+ 838 0390 0FBE      		out __SREG__,__tmp_reg__
+ 839 0392 8DBF      		out __SP_L__,r24
+ 840 0394 80E0      		ldi r24,lo8(__c.1990)
+ 841 0396 90E0      		ldi r25,hi8(__c.1990)
+ 842 0398 9F93      		push r25
+ 843 039a 8F93      		push r24
+ 844 039c DF93      		push r29
+ 845 039e CF93      		push r28
+ 846 03a0 0E94 0000 		call fprintf_P
+ 102:../../../../Lib/net/net.c ****   if(tcpheader->flags & TCP_FLAGS_FIN)
+ 848               	.LM58:
+ 849 03a4 F801      		movw r30,r16
+ 850 03a6 8585      		ldd r24,Z+13
+ 851 03a8 0F90      		pop __tmp_reg__
+ 852 03aa 0F90      		pop __tmp_reg__
+ 853 03ac 0F90      		pop __tmp_reg__
+ 854 03ae 0F90      		pop __tmp_reg__
+ 855 03b0 80FF      		sbrs r24,0
+ 856 03b2 00C0      		rjmp .L26
+ 103:../../../../Lib/net/net.c ****     fprintf_P(stream, PSTR("FIN "));
+ 858               	.LM59:
+ 859 03b4 80E0      		ldi r24,lo8(__c.1992)
+ 860 03b6 90E0      		ldi r25,hi8(__c.1992)
+ 861 03b8 9F93      		push r25
+ 862 03ba 8F93      		push r24
+ 863 03bc DF93      		push r29
+ 864 03be CF93      		push r28
+ 865 03c0 0E94 0000 		call fprintf_P
+ 866 03c4 0F90      		pop __tmp_reg__
+ 867 03c6 0F90      		pop __tmp_reg__
+ 868 03c8 0F90      		pop __tmp_reg__
+ 869 03ca 0F90      		pop __tmp_reg__
+ 870               	.L26:
+ 104:../../../../Lib/net/net.c ****   if(tcpheader->flags & TCP_FLAGS_SYN)
+ 872               	.LM60:
+ 873 03cc F801      		movw r30,r16
+ 874 03ce 8585      		ldd r24,Z+13
+ 875 03d0 81FF      		sbrs r24,1
+ 876 03d2 00C0      		rjmp .L27
+ 105:../../../../Lib/net/net.c ****     fprintf_P(stream, PSTR("SYN "));
+ 878               	.LM61:
+ 879 03d4 80E0      		ldi r24,lo8(__c.1994)
+ 880 03d6 90E0      		ldi r25,hi8(__c.1994)
+ 881 03d8 9F93      		push r25
+ 882 03da 8F93      		push r24
+ 883 03dc DF93      		push r29
+ 884 03de CF93      		push r28
+ 885 03e0 0E94 0000 		call fprintf_P
+ 886 03e4 0F90      		pop __tmp_reg__
+ 887 03e6 0F90      		pop __tmp_reg__
+ 888 03e8 0F90      		pop __tmp_reg__
+ 889 03ea 0F90      		pop __tmp_reg__
+ 890               	.L27:
+ 106:../../../../Lib/net/net.c ****   if(tcpheader->flags & TCP_FLAGS_RST)
+ 892               	.LM62:
+ 893 03ec F801      		movw r30,r16
+ 894 03ee 8585      		ldd r24,Z+13
+ 895 03f0 82FF      		sbrs r24,2
+ 896 03f2 00C0      		rjmp .L28
+ 107:../../../../Lib/net/net.c ****     fprintf_P(stream, PSTR("RST "));
+ 898               	.LM63:
+ 899 03f4 80E0      		ldi r24,lo8(__c.1996)
+ 900 03f6 90E0      		ldi r25,hi8(__c.1996)
+ 901 03f8 9F93      		push r25
+ 902 03fa 8F93      		push r24
+ 903 03fc DF93      		push r29
+ 904 03fe CF93      		push r28
+ 905 0400 0E94 0000 		call fprintf_P
+ 906 0404 0F90      		pop __tmp_reg__
+ 907 0406 0F90      		pop __tmp_reg__
+ 908 0408 0F90      		pop __tmp_reg__
+ 909 040a 0F90      		pop __tmp_reg__
+ 910               	.L28:
+ 108:../../../../Lib/net/net.c ****   if(tcpheader->flags & TCP_FLAGS_PSH)
+ 912               	.LM64:
+ 913 040c F801      		movw r30,r16
+ 914 040e 8585      		ldd r24,Z+13
+ 915 0410 83FF      		sbrs r24,3
+ 916 0412 00C0      		rjmp .L29
+ 109:../../../../Lib/net/net.c ****     fprintf_P(stream, PSTR("PSH "));
+ 918               	.LM65:
+ 919 0414 80E0      		ldi r24,lo8(__c.1998)
+ 920 0416 90E0      		ldi r25,hi8(__c.1998)
+ 921 0418 9F93      		push r25
+ 922 041a 8F93      		push r24
+ 923 041c DF93      		push r29
+ 924 041e CF93      		push r28
+ 925 0420 0E94 0000 		call fprintf_P
+ 926 0424 0F90      		pop __tmp_reg__
+ 927 0426 0F90      		pop __tmp_reg__
+ 928 0428 0F90      		pop __tmp_reg__
+ 929 042a 0F90      		pop __tmp_reg__
+ 930               	.L29:
+ 110:../../../../Lib/net/net.c ****   if(tcpheader->flags & TCP_FLAGS_ACK)
+ 932               	.LM66:
+ 933 042c F801      		movw r30,r16
+ 934 042e 8585      		ldd r24,Z+13
+ 935 0430 84FF      		sbrs r24,4
+ 936 0432 00C0      		rjmp .L30
+ 111:../../../../Lib/net/net.c ****     fprintf_P(stream, PSTR("ACK "));
+ 938               	.LM67:
+ 939 0434 80E0      		ldi r24,lo8(__c.2000)
+ 940 0436 90E0      		ldi r25,hi8(__c.2000)
+ 941 0438 9F93      		push r25
+ 942 043a 8F93      		push r24
+ 943 043c DF93      		push r29
+ 944 043e CF93      		push r28
+ 945 0440 0E94 0000 		call fprintf_P
+ 946 0444 0F90      		pop __tmp_reg__
+ 947 0446 0F90      		pop __tmp_reg__
+ 948 0448 0F90      		pop __tmp_reg__
+ 949 044a 0F90      		pop __tmp_reg__
+ 950               	.L30:
+ 112:../../../../Lib/net/net.c ****   if(tcpheader->flags & TCP_FLAGS_URG)
+ 952               	.LM68:
+ 953 044c F801      		movw r30,r16
+ 954 044e 8585      		ldd r24,Z+13
+ 955 0450 85FF      		sbrs r24,5
+ 956 0452 00C0      		rjmp .L31
+ 113:../../../../Lib/net/net.c ****     fprintf_P(stream, PSTR("URG "));
+ 958               	.LM69:
+ 959 0454 80E0      		ldi r24,lo8(__c.2002)
+ 960 0456 90E0      		ldi r25,hi8(__c.2002)
+ 961 0458 9F93      		push r25
+ 962 045a 8F93      		push r24
+ 963 045c DF93      		push r29
+ 964 045e CF93      		push r28
+ 965 0460 0E94 0000 		call fprintf_P
+ 966 0464 0F90      		pop __tmp_reg__
+ 967 0466 0F90      		pop __tmp_reg__
+ 968 0468 0F90      		pop __tmp_reg__
+ 969 046a 0F90      		pop __tmp_reg__
+ 970               	.L31:
+ 114:../../../../Lib/net/net.c ****   fprintf_P(stream, PSTR("\r\n"));
+ 972               	.LM70:
+ 973 046c 80E0      		ldi r24,lo8(__c.2004)
+ 974 046e 90E0      		ldi r25,hi8(__c.2004)
+ 975 0470 9F93      		push r25
+ 976 0472 8F93      		push r24
+ 977 0474 DF93      		push r29
+ 978 0476 CF93      		push r28
+ 979 0478 0E94 0000 		call fprintf_P
+ 980 047c 0F90      		pop __tmp_reg__
+ 981 047e 0F90      		pop __tmp_reg__
+ 982 0480 0F90      		pop __tmp_reg__
+ 983 0482 0F90      		pop __tmp_reg__
+ 984               	/* epilogue start */
+ 115:../../../../Lib/net/net.c **** }
+ 986               	.LM71:
+ 987 0484 DF91      		pop r29
+ 988 0486 CF91      		pop r28
+ 989 0488 1F91      		pop r17
+ 990 048a 0F91      		pop r16
+ 991 048c 0895      		ret
+ 993               	.Lscope10:
+ 995               		.stabd	78,0,0
+ 996               		.section	.progmem.data,"a",@progbits
+ 999               	__c.2004:
+ 1000 0000 0D0A 00   		.string	"\r\n"
+ 1003               	__c.2002:
+ 1004 0003 5552 4720 		.string	"URG "
+ 1004      00
+ 1007               	__c.2000:
+ 1008 0008 4143 4B20 		.string	"ACK "
+ 1008      00
+ 1011               	__c.1998:
+ 1012 000d 5053 4820 		.string	"PSH "
+ 1012      00
+ 1015               	__c.1996:
+ 1016 0012 5253 5420 		.string	"RST "
+ 1016      00
+ 1019               	__c.1994:
+ 1020 0017 5359 4E20 		.string	"SYN "
+ 1020      00
+ 1023               	__c.1992:
+ 1024 001c 4649 4E20 		.string	"FIN "
+ 1024      00
+ 1027               	__c.1990:
+ 1028 0021 466C 6167 		.string	"Flags   : "
+ 1028      7320 2020 
+ 1028      3A20 00
+ 1031               	__c.1988:
+ 1032 002c 4163 6B20 		.string	"Ack Num : 0x%x\r\n"
+ 1032      4E75 6D20 
+ 1032      3A20 3078 
+ 1032      2578 0D0A 
+ 1032      00
+ 1035               	__c.1986:
+ 1036 003d 5365 7120 		.string	"Seq Num : 0x%x"
+ 1036      4E75 6D20 
+ 1036      3A20 3078 
+ 1036      2578 00
+ 1039               	__c.1984:
+ 1040 004c 4473 7420 		.string	"Dst Port: %d\r\n"
+ 1040      506F 7274 
+ 1040      3A20 2564 
+ 1040      0D0A 00
+ 1043               	__c.1982:
+ 1044 005b 5372 6320 		.string	"Src Port: %d\r\n"
+ 1044      506F 7274 
+ 1044      3A20 2564 
+ 1044      0D0A 00
+ 1047               	__c.1980:
+ 1048 006a 5443 5020 		.string	"TCP Header\r\n"
+ 1048      4865 6164 
+ 1048      6572 0D0A 
+ 1048      00
+ 1051               	__c.1974:
+ 1052 0077 0D0A 00   		.string	"\r\n"
+ 1055               	__c.1972:
+ 1056 007a 4465 7374 		.string	"Dest  IP: "
+ 1056      2020 4950 
+ 1056      3A20 00
+ 1059               	__c.1970:
+ 1060 0085 0D0A 00   		.string	"\r\n"
+ 1063               	__c.1968:
+ 1064 0088 536F 7572 		.string	"SourceIP: "
+ 1064      6365 4950 
+ 1064      3A20 00
+ 1067               	__c.1966:
+ 1068 0093 5072 6F74 		.string	"Protocol: %d\r\n"
+ 1068      6F63 6F6C 
+ 1068      3A20 2564 
+ 1068      0D0A 00
+ 1071               	__c.1964:
+ 1072 00a2 5072 6F74 		.string	"Protocol: UDP\r\n"
+ 1072      6F63 6F6C 
+ 1072      3A20 5544 
+ 1072      500D 0A00 
+ 1075               	__c.1962:
+ 1076 00b2 5072 6F74 		.string	"Protocol: TCP\r\n"
+ 1076      6F63 6F6C 
+ 1076      3A20 5443 
+ 1076      500D 0A00 
+ 1079               	__c.1960:
+ 1080 00c2 5072 6F74 		.string	"Protocol: ICMP\r\n"
+ 1080      6F63 6F6C 
+ 1080      3A20 4943 
+ 1080      4D50 0D0A 
+ 1080      00
+ 1083               	__c.1958:
+ 1084 00d3 4C65 6E67 		.string	"Length  : %d\r\n"
+ 1084      7468 2020 
+ 1084      3A20 2564 
+ 1084      0D0A 00
+ 1087               	__c.1956:
+ 1088 00e2 5665 7220 		.string	"Ver     : %d\r\n"
+ 1088      2020 2020 
+ 1088      3A20 2564 
+ 1088      0D0A 00
+ 1091               	__c.1954:
+ 1092 00f1 4950 2048 		.string	"IP Header\r\n"
+ 1092      6561 6465 
+ 1092      720D 0A00 
+ 1095               	__c.1948:
+ 1096 00fd 2D3E 4453 		.string	"->DST:"
+ 1096      543A 00
+ 1099               	__c.1946:
+ 1100 0104 2053 5243 		.string	" SRC:"
+ 1100      3A00 
+ 1103               	__c.1944:
+ 1104 010a 4574 6820 		.string	"Eth Packet Type: 0x%x"
+ 1104      5061 636B 
+ 1104      6574 2054 
+ 1104      7970 653A 
+ 1104      2030 7825 
+ 1107               	__c.1938:
+ 1108 0120 2564 2E25 		.string	"%d.%d.%d.%d"
+ 1108      642E 2564 
+ 1108      2E25 6400 
+ 1111               	__c.1932:
+ 1112 012c 2530 3278 		.string	"%02x:%02x:%02x:%02x:%02x:%02x"
+ 1112      3A25 3032 
+ 1112      783A 2530 
+ 1112      3278 3A25 
+ 1112      3032 783A 
+ 1113               		.comm	wwwport,1,1
+ 1115               		.text
+ 1117               	.Letext0:
+ 1118               		.ident	"GCC: (GNU) 4.9.2"
+ 1119               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 net.c
+     /tmp/cclkRqCa.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/cclkRqCa.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/cclkRqCa.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/cclkRqCa.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/cclkRqCa.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/cclkRqCa.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/cclkRqCa.s:127    .text:0000000000000000 ntohs
+     /tmp/cclkRqCa.s:150    .text:0000000000000008 htons
+     /tmp/cclkRqCa.s:173    .text:0000000000000010 htonl
+     /tmp/cclkRqCa.s:194    .text:0000000000000016 ntohl
+     /tmp/cclkRqCa.s:216    .text:000000000000001c netChecksum
+     /tmp/cclkRqCa.s:310    .text:000000000000007c netPrintEthAddr
+     /tmp/cclkRqCa.s:1111   .progmem.data:000000000000012c __c.1932
+     /tmp/cclkRqCa.s:364    .text:00000000000000c4 netPrintIPAddr
+     /tmp/cclkRqCa.s:1107   .progmem.data:0000000000000120 __c.1938
+     /tmp/cclkRqCa.s:427    .text:0000000000000118 netPrintEthHeader
+     /tmp/cclkRqCa.s:1103   .progmem.data:000000000000010a __c.1944
+     /tmp/cclkRqCa.s:1099   .progmem.data:0000000000000104 __c.1946
+     /tmp/cclkRqCa.s:1095   .progmem.data:00000000000000fd __c.1948
+     /tmp/cclkRqCa.s:514    .text:0000000000000190 netPrintIpHeader
+     /tmp/cclkRqCa.s:1091   .progmem.data:00000000000000f1 __c.1954
+     /tmp/cclkRqCa.s:1087   .progmem.data:00000000000000e2 __c.1956
+     /tmp/cclkRqCa.s:1083   .progmem.data:00000000000000d3 __c.1958
+     /tmp/cclkRqCa.s:1079   .progmem.data:00000000000000c2 __c.1960
+     /tmp/cclkRqCa.s:1075   .progmem.data:00000000000000b2 __c.1962
+     /tmp/cclkRqCa.s:1071   .progmem.data:00000000000000a2 __c.1964
+     /tmp/cclkRqCa.s:1067   .progmem.data:0000000000000093 __c.1966
+     /tmp/cclkRqCa.s:1063   .progmem.data:0000000000000088 __c.1968
+     /tmp/cclkRqCa.s:1059   .progmem.data:0000000000000085 __c.1970
+     /tmp/cclkRqCa.s:1055   .progmem.data:000000000000007a __c.1972
+     /tmp/cclkRqCa.s:1051   .progmem.data:0000000000000077 __c.1974
+     /tmp/cclkRqCa.s:722    .text:00000000000002dc netPrintTcpHeader
+     /tmp/cclkRqCa.s:1047   .progmem.data:000000000000006a __c.1980
+     /tmp/cclkRqCa.s:1043   .progmem.data:000000000000005b __c.1982
+     /tmp/cclkRqCa.s:1039   .progmem.data:000000000000004c __c.1984
+     /tmp/cclkRqCa.s:1035   .progmem.data:000000000000003d __c.1986
+     /tmp/cclkRqCa.s:1031   .progmem.data:000000000000002c __c.1988
+     /tmp/cclkRqCa.s:1027   .progmem.data:0000000000000021 __c.1990
+     /tmp/cclkRqCa.s:1023   .progmem.data:000000000000001c __c.1992
+     /tmp/cclkRqCa.s:1019   .progmem.data:0000000000000017 __c.1994
+     /tmp/cclkRqCa.s:1015   .progmem.data:0000000000000012 __c.1996
+     /tmp/cclkRqCa.s:1011   .progmem.data:000000000000000d __c.1998
+     /tmp/cclkRqCa.s:1007   .progmem.data:0000000000000008 __c.2000
+     /tmp/cclkRqCa.s:1003   .progmem.data:0000000000000003 __c.2002
+     /tmp/cclkRqCa.s:999    .progmem.data:0000000000000000 __c.2004
+                            *COM*:0000000000000001 wwwport
+
+UNDEFINED SYMBOLS
+__bswapsi2
+fprintf_P
+__do_clear_bss

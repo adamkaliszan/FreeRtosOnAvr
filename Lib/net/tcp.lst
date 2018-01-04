@@ -1,0 +1,1260 @@
+   1               		.file	"tcp.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  10               		.text
+  11               	.Ltext0:
+ 184               	.global	socketInit
+ 186               	socketInit:
+ 187               		.stabd	46,0,0
+   1:../../../../Lib/net/tcp.c **** /**
+   2:../../../../Lib/net/tcp.c ****  * @file        tcp.c
+   3:../../../../Lib/net/tcp.c ****  * @author      Adam Kaliszan
+   4:../../../../Lib/net/tcp.c ****  * @brief       TCP socket
+   5:../../../../Lib/net/tcp.c ****  * @ingroup     network
+   6:../../../../Lib/net/tcp.c ****  * @defgroup    netstack Network Stack
+   7:../../../../Lib/net/tcp.c ****  * @version     0.2
+   8:../../../../Lib/net/tcp.c ****  * Created:     13.10.2010
+   9:../../../../Lib/net/tcp.c ****  * Revised:     05.10.2010
+  10:../../../../Lib/net/tcp.c ****  * Editor Tabs: 2
+  11:../../../../Lib/net/tcp.c ****  *
+  12:../../../../Lib/net/tcp.c ****  */
+  13:../../../../Lib/net/tcp.c **** 
+  14:../../../../Lib/net/tcp.c **** #include "tcp.h"
+  15:../../../../Lib/net/tcp.c **** 
+  16:../../../../Lib/net/tcp.c **** 
+  17:../../../../Lib/net/tcp.c **** static struct TcpIpSocket* findConnectedSocket(void);
+  18:../../../../Lib/net/tcp.c **** 
+  19:../../../../Lib/net/tcp.c **** /**
+  20:../../../../Lib/net/tcp.c ****  * @param *sck socket
+  21:../../../../Lib/net/tcp.c ****  */
+  22:../../../../Lib/net/tcp.c **** static inline void tcpAcceptConn(struct TcpIpSocket *sck);
+  23:../../../../Lib/net/tcp.c **** 
+  24:../../../../Lib/net/tcp.c **** inline void socketInit(void)
+  25:../../../../Lib/net/tcp.c **** {
+ 189               	.LM0:
+ 190               	.LFBB1:
+ 191 0000 8F92      		push r8
+ 192 0002 9F92      		push r9
+ 193 0004 AF92      		push r10
+ 194 0006 BF92      		push r11
+ 195 0008 FF92      		push r15
+ 196 000a 0F93      		push r16
+ 197 000c 1F93      		push r17
+ 198 000e CF93      		push r28
+ 199 0010 DF93      		push r29
+ 200               	/* prologue: function */
+ 201               	/* frame size = 0 */
+ 202               	/* stack size = 9 */
+ 203               	.L__stack_usage = 9
+  26:../../../../Lib/net/tcp.c ****   sockets = xmalloc(NUMBER_OF_SOCKETS * sizeof(struct TcpIpSocket));
+ 205               	.LM1:
+ 206 0012 80E3      		ldi r24,lo8(48)
+ 207 0014 92E0      		ldi r25,lo8(2)
+ 208 0016 0E94 0000 		call xmalloc
+ 209 001a 9093 0000 		sts sockets+1,r25
+ 210 001e 8093 0000 		sts sockets,r24
+  27:../../../../Lib/net/tcp.c ****   memset(sockets, 0, NUMBER_OF_SOCKETS * sizeof(struct TcpIpSocket));
+ 212               	.LM2:
+ 213 0022 20E3      		ldi r18,lo8(48)
+ 214 0024 32E0      		ldi r19,lo8(2)
+ 215 0026 FC01      		movw r30,r24
+ 216 0028 A901      		movw r20,r18
+ 217               		0:
+ 218 002a 1192      		st Z+,__zero_reg__
+ 219 002c 4150      		subi r20,1
+ 220 002e 5040      		sbci r21,0
+ 221 0030 01F4      		brne 0b
+  28:../../../../Lib/net/tcp.c **** 
+  29:../../../../Lib/net/tcp.c ****   uint8_t            i;
+  30:../../../../Lib/net/tcp.c ****   uint8_t            *ptr = (uint8_t *)RTOS_TCP_BUF_BASE_ADDR;
+  31:../../../../Lib/net/tcp.c **** 
+  32:../../../../Lib/net/tcp.c ****   struct TcpIpSocket *sck = sockets;
+ 223               	.LM3:
+ 224 0032 0091 0000 		lds r16,sockets
+ 225 0036 1091 0000 		lds r17,sockets+1
+ 226 003a C8EA      		ldi r28,lo8(-88)
+ 227 003c D1E6      		ldi r29,lo8(97)
+  33:../../../../Lib/net/tcp.c ****   for (i=0; i < NUMBER_OF_SOCKETS; i++)
+  34:../../../../Lib/net/tcp.c ****   {
+  35:../../../../Lib/net/tcp.c **** //    sck->Rx = xQueueCreateExternal(255, 1, (void *)(ptr));
+  36:../../../../Lib/net/tcp.c ****     ptr+=256;
+  37:../../../../Lib/net/tcp.c **** //    sck->Tx = xQueueCreateExternal(255, 1, (void *)(ptr));
+  38:../../../../Lib/net/tcp.c ****     ptr+=256;
+  39:../../../../Lib/net/tcp.c **** 
+  40:../../../../Lib/net/tcp.c ****     sck->localPort     = (i<16) ? htons(MYTELNETPOERT + i) : (MYTELNETPOERT + 16);
+  41:../../../../Lib/net/tcp.c ****     sck->seqNoLastSent = HTONL(0xFF112233);
+ 229               	.LM4:
+ 230 003e 8824      		clr r8
+ 231 0040 8A94      		dec r8
+ 232 0042 81E1      		ldi r24,lo8(17)
+ 233 0044 982E      		mov r9,r24
+ 234 0046 82E2      		ldi r24,lo8(34)
+ 235 0048 A82E      		mov r10,r24
+ 236 004a 83E3      		ldi r24,lo8(51)
+ 237 004c B82E      		mov r11,r24
+  42:../../../../Lib/net/tcp.c ****     sck->state         = LISTEN;
+ 239               	.LM5:
+ 240 004e FF24      		clr r15
+ 241 0050 F394      		inc r15
+ 242               	.L3:
+ 243 0052 8C2F      		mov r24,r28
+ 244 0054 885A      		subi r24,lo8(-(88))
+  40:../../../../Lib/net/tcp.c ****     sck->seqNoLastSent = HTONL(0xFF112233);
+ 246               	.LM6:
+ 247 0056 8031      		cpi r24,lo8(16)
+ 248 0058 00F4      		brsh .L4
+  40:../../../../Lib/net/tcp.c ****     sck->seqNoLastSent = HTONL(0xFF112233);
+ 250               	.LM7:
+ 251 005a CE01      		movw r24,r28
+ 252 005c 0E94 0000 		call htons
+ 253 0060 00C0      		rjmp .L2
+ 254               	.L4:
+  40:../../../../Lib/net/tcp.c ****     sck->seqNoLastSent = HTONL(0xFF112233);
+ 256               	.LM8:
+ 257 0062 88EB      		ldi r24,lo8(-72)
+ 258 0064 91E6      		ldi r25,lo8(97)
+ 259               	.L2:
+  40:../../../../Lib/net/tcp.c ****     sck->seqNoLastSent = HTONL(0xFF112233);
+ 261               	.LM9:
+ 262 0066 F801      		movw r30,r16
+ 263 0068 9683      		std Z+6,r25
+ 264 006a 8583      		std Z+5,r24
+  41:../../../../Lib/net/tcp.c ****     sck->state         = LISTEN;
+ 266               	.LM10:
+ 267 006c 8586      		std Z+13,r8
+ 268 006e 9686      		std Z+14,r9
+ 269 0070 A786      		std Z+15,r10
+ 270 0072 B08A      		std Z+16,r11
+ 272               	.LM11:
+ 273 0074 F082      		st Z,r15
+  43:../../../../Lib/net/tcp.c ****     sck++;
+ 275               	.LM12:
+ 276 0076 045E      		subi r16,-28
+ 277 0078 1F4F      		sbci r17,-1
+ 278 007a 2196      		adiw r28,1
+  33:../../../../Lib/net/tcp.c ****   {
+ 280               	.LM13:
+ 281 007c CC3B      		cpi r28,-68
+ 282 007e F1E6      		ldi r31,97
+ 283 0080 DF07      		cpc r29,r31
+ 284 0082 01F4      		brne .L3
+ 285               	/* epilogue start */
+  44:../../../../Lib/net/tcp.c ****   }
+  45:../../../../Lib/net/tcp.c **** }
+ 287               	.LM14:
+ 288 0084 DF91      		pop r29
+ 289 0086 CF91      		pop r28
+ 290 0088 1F91      		pop r17
+ 291 008a 0F91      		pop r16
+ 292 008c FF90      		pop r15
+ 293 008e BF90      		pop r11
+ 294 0090 AF90      		pop r10
+ 295 0092 9F90      		pop r9
+ 296 0094 8F90      		pop r8
+ 297 0096 0895      		ret
+ 302               	.Lscope1:
+ 304               		.stabd	78,0,0
+ 307               	.global	calculateTcpChecksun
+ 309               	calculateTcpChecksun:
+ 310               		.stabd	46,0,0
+  46:../../../../Lib/net/tcp.c **** 
+  47:../../../../Lib/net/tcp.c **** struct TcpIpSocket* findConnectedSocket(void)
+  48:../../../../Lib/net/tcp.c **** {
+  49:../../../../Lib/net/tcp.c ****   struct TcpIpSocket *result = sockets;
+  50:../../../../Lib/net/tcp.c ****   uint8_t i;
+  51:../../../../Lib/net/tcp.c ****   for (i=0; i<NUMBER_OF_SOCKETS; i++)
+  52:../../../../Lib/net/tcp.c ****   {
+  53:../../../../Lib/net/tcp.c ****     if ( ((result->state != LISTEN) && (result->state != CLOSED))
+  54:../../../../Lib/net/tcp.c ****       && (result->RemoteIpAddr == nicState.layer3.ip->srcipaddr) && (result->localPort == nicState.
+  55:../../../../Lib/net/tcp.c ****     {
+  56:../../../../Lib/net/tcp.c **** #if TCP_DEBUG
+  57:../../../../Lib/net/tcp.c ****       if (tcpDebugStream != NULL)
+  58:../../../../Lib/net/tcp.c ****         if (tcpDebugLevel > 2)
+  59:../../../../Lib/net/tcp.c ****           fprintf_P(tcpDebugStream, PSTR("Found TCP socket state %d\r\n"), result->state);
+  60:../../../../Lib/net/tcp.c **** #endif
+  61:../../../../Lib/net/tcp.c ****       return result;
+  62:../../../../Lib/net/tcp.c ****     }
+  63:../../../../Lib/net/tcp.c ****     result++;
+  64:../../../../Lib/net/tcp.c ****   }
+  65:../../../../Lib/net/tcp.c **** 
+  66:../../../../Lib/net/tcp.c ****   result = sockets;
+  67:../../../../Lib/net/tcp.c ****   for (i=0; i<NUMBER_OF_SOCKETS; i++)
+  68:../../../../Lib/net/tcp.c ****   {
+  69:../../../../Lib/net/tcp.c ****     if ((result->state == LISTEN) && (result->localPort == nicState.layer4.tcp->destport))
+  70:../../../../Lib/net/tcp.c ****     {
+  71:../../../../Lib/net/tcp.c **** #if TCP_DEBUG
+  72:../../../../Lib/net/tcp.c ****       if (tcpDebugStream != NULL)
+  73:../../../../Lib/net/tcp.c ****         if (tcpDebugLevel > 2)
+  74:../../../../Lib/net/tcp.c ****           fprintf_P(tcpDebugStream, PSTR("Found TCP socket no %d state LISTEN\r\n"), i);
+  75:../../../../Lib/net/tcp.c **** #endif
+  76:../../../../Lib/net/tcp.c ****       return &sockets[i];
+  77:../../../../Lib/net/tcp.c ****     }
+  78:../../../../Lib/net/tcp.c ****     result++;
+  79:../../../../Lib/net/tcp.c ****   }
+  80:../../../../Lib/net/tcp.c **** #if TCP_DEBUG
+  81:../../../../Lib/net/tcp.c ****   if (tcpDebugStream != NULL)
+  82:../../../../Lib/net/tcp.c ****     if (tcpDebugLevel > 2)
+  83:../../../../Lib/net/tcp.c ****       fprintf_P(tcpDebugStream, PSTR("Can't find TCP socket with localPort %d\r\n"), htons(nicState
+  84:../../../../Lib/net/tcp.c **** #endif
+  85:../../../../Lib/net/tcp.c ****   return NULL;
+  86:../../../../Lib/net/tcp.c **** }
+  87:../../../../Lib/net/tcp.c **** 
+  88:../../../../Lib/net/tcp.c **** static inline void tcpAcceptConn(struct TcpIpSocket *sck)
+  89:../../../../Lib/net/tcp.c **** {
+  90:../../../../Lib/net/tcp.c ****   sck->state        = SYN_RECEIVED;
+  91:../../../../Lib/net/tcp.c ****   sck->remotePort   = nicState.layer4.tcp->srcport;
+  92:../../../../Lib/net/tcp.c ****   sck->RemoteIpAddr = nicState.layer3.ip->srcipaddr;
+  93:../../../../Lib/net/tcp.c **** }
+  94:../../../../Lib/net/tcp.c **** 
+  95:../../../../Lib/net/tcp.c **** inline uint8_t processTcpPacket(void)
+  96:../../../../Lib/net/tcp.c **** {
+  97:../../../../Lib/net/tcp.c ****   struct TcpIpSocket *socket = findConnectedSocket();
+  98:../../../../Lib/net/tcp.c **** 
+  99:../../../../Lib/net/tcp.c ****   if (socket == NULL)
+ 100:../../../../Lib/net/tcp.c ****     return 1;
+ 101:../../../../Lib/net/tcp.c **** 
+ 102:../../../../Lib/net/tcp.c **** 
+ 103:../../../../Lib/net/tcp.c ****   socket->seqNoLastReceived = htonl(nicState.layer4.tcp->seqno);
+ 104:../../../../Lib/net/tcp.c **** 
+ 105:../../../../Lib/net/tcp.c ****   if (socket->state == LISTEN)
+ 106:../../../../Lib/net/tcp.c ****   {
+ 107:../../../../Lib/net/tcp.c ****     if (nicState.layer4.tcp->flags & TCP_FLAGS_SYN)
+ 108:../../../../Lib/net/tcp.c ****     {
+ 109:../../../../Lib/net/tcp.c **** //      uint16_t len = nicState.layer4.tcp->tcpoffset>>4;
+ 110:../../../../Lib/net/tcp.c **** //      len *=4;
+ 111:../../../../Lib/net/tcp.c **** #if TCP_DEBUG
+ 112:../../../../Lib/net/tcp.c ****       if (tcpDebugStream != NULL)
+ 113:../../../../Lib/net/tcp.c ****         if (tcpDebugLevel > 2)
+ 114:../../../../Lib/net/tcp.c ****           fprintf_P(tcpDebugStream, PSTR("Opening TCP connection socket state change LISTEN->SYN_RE
+ 115:../../../../Lib/net/tcp.c **** #endif
+ 116:../../../../Lib/net/tcp.c ****       tcpAcceptConn(socket);
+ 117:../../../../Lib/net/tcp.c ****       //Preparing response
+ 118:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->srcport   = socket->localPort;
+ 119:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->destport  = socket->remotePort;
+ 120:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->seqno     = htonl(socket->seqNoLastSent);
+ 121:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->ackno     = htonl(socket->seqNoLastReceived+1);
+ 122:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->tcpoffset = 5<<4;
+ 123:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->flags     = TCP_FLAGS_ACK+TCP_FLAGS_SYN;
+ 124:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->wnd       = htons(100);
+ 125:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->tcpchksum = 0;
+ 126:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->urgp      = 0;
+ 127:../../../../Lib/net/tcp.c ****       calculateTcpChecksun(TCP_HEADER_LEN);
+ 128:../../../../Lib/net/tcp.c **** 
+ 129:../../../../Lib/net/tcp.c ****       socket->seqNoLastSent++;
+ 130:../../../../Lib/net/tcp.c ****       ipSend(socket->RemoteIpAddr, IP_PROTO_TCP, TCP_HEADER_LEN);
+ 131:../../../../Lib/net/tcp.c ****     }
+ 132:../../../../Lib/net/tcp.c **** #if TCP_DEBUG
+ 133:../../../../Lib/net/tcp.c ****     else
+ 134:../../../../Lib/net/tcp.c ****     {
+ 135:../../../../Lib/net/tcp.c ****       if (tcpDebugStream != NULL)
+ 136:../../../../Lib/net/tcp.c ****         if (tcpDebugLevel > 1)
+ 137:../../../../Lib/net/tcp.c ****           fprintf_P(tcpDebugStream, PSTR("Opening TCP connection ERROR: syn flag wasn't set\r\n"));
+ 138:../../../../Lib/net/tcp.c ****     }
+ 139:../../../../Lib/net/tcp.c **** #endif
+ 140:../../../../Lib/net/tcp.c ****     return 0;
+ 141:../../../../Lib/net/tcp.c ****   }
+ 142:../../../../Lib/net/tcp.c **** 
+ 143:../../../../Lib/net/tcp.c ****   if (socket->state == SYN_RECEIVED)
+ 144:../../../../Lib/net/tcp.c ****   {
+ 145:../../../../Lib/net/tcp.c ****     if (nicState.layer4.tcp->flags & TCP_FLAGS_ACK)
+ 146:../../../../Lib/net/tcp.c ****     {
+ 147:../../../../Lib/net/tcp.c ****       socket->state    = ESTABILISHED;
+ 148:../../../../Lib/net/tcp.c **** #if TCP_DEBUG
+ 149:../../../../Lib/net/tcp.c ****     if (tcpDebugStream != NULL)
+ 150:../../../../Lib/net/tcp.c ****       if (tcpDebugLevel > 2)
+ 151:../../../../Lib/net/tcp.c ****         fprintf_P(tcpDebugStream, PSTR("Opening TCP connection socket state change SYN_RECEIVED->ES
+ 152:../../../../Lib/net/tcp.c **** #endif
+ 153:../../../../Lib/net/tcp.c **** 
+ 154:../../../../Lib/net/tcp.c ****     }
+ 155:../../../../Lib/net/tcp.c ****     else
+ 156:../../../../Lib/net/tcp.c ****     {
+ 157:../../../../Lib/net/tcp.c ****       socket->state = LISTEN;
+ 158:../../../../Lib/net/tcp.c **** #if TCP_DEBUG
+ 159:../../../../Lib/net/tcp.c ****       if (tcpDebugStream != NULL)
+ 160:../../../../Lib/net/tcp.c ****         if (tcpDebugLevel > 1)
+ 161:../../../../Lib/net/tcp.c ****           fprintf_P(tcpDebugStream, PSTR("Opening TCP connection ERROR: ack flag wasn't set\r\n"));
+ 162:../../../../Lib/net/tcp.c **** #endif
+ 163:../../../../Lib/net/tcp.c ****     }
+ 164:../../../../Lib/net/tcp.c ****     return 0;
+ 165:../../../../Lib/net/tcp.c ****   }
+ 166:../../../../Lib/net/tcp.c **** 
+ 167:../../../../Lib/net/tcp.c **** 
+ 168:../../../../Lib/net/tcp.c ****   if (socket->state == ESTABILISHED)
+ 169:../../../../Lib/net/tcp.c ****   {
+ 170:../../../../Lib/net/tcp.c ****     if (nicState.layer4.tcp->flags & TCP_FLAGS_FIN)  //ESTABILISHED -> CLOSE_WAIT -> closed
+ 171:../../../../Lib/net/tcp.c ****     {
+ 172:../../../../Lib/net/tcp.c ****       socket->timer              = timer100Hz;
+ 173:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->flags = TCP_FLAGS_ACK;
+ 174:../../../../Lib/net/tcp.c **** 
+ 175:../../../../Lib/net/tcp.c ****       uint8_t dataFromBufLen = 0;
+ 176:../../../../Lib/net/tcp.c ****       uint8_t *dataPtr = (uint8_t *)(nicState.layer4.tcp+1);
+ 177:../../../../Lib/net/tcp.c ****       while (xQueueReceive(socket->Tx, dataPtr, 0) == pdTRUE)
+ 178:../../../../Lib/net/tcp.c ****       {
+ 179:../../../../Lib/net/tcp.c ****         dataFromBufLen++;
+ 180:../../../../Lib/net/tcp.c ****         dataPtr++;
+ 181:../../../../Lib/net/tcp.c ****       }
+ 182:../../../../Lib/net/tcp.c ****       ipSend(socket->RemoteIpAddr, IP_PROTO_TCP, TCP_HEADER_LEN + dataFromBufLen);
+ 183:../../../../Lib/net/tcp.c ****       socket->state    = CLOSE_WAIT;
+ 184:../../../../Lib/net/tcp.c **** 
+ 185:../../../../Lib/net/tcp.c **** 
+ 186:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->flags = TCP_FLAGS_FIN;
+ 187:../../../../Lib/net/tcp.c ****       ipSend(socket->RemoteIpAddr, IP_PROTO_TCP, TCP_HEADER_LEN);
+ 188:../../../../Lib/net/tcp.c ****       socket->state    = LAST_ACK;
+ 189:../../../../Lib/net/tcp.c ****     }
+ 190:../../../../Lib/net/tcp.c ****     return 0;
+ 191:../../../../Lib/net/tcp.c ****   }
+ 192:../../../../Lib/net/tcp.c **** 
+ 193:../../../../Lib/net/tcp.c ****   //Read data and put into the queue
+ 194:../../../../Lib/net/tcp.c **** 
+ 195:../../../../Lib/net/tcp.c ****   return 0;
+ 196:../../../../Lib/net/tcp.c **** }
+ 197:../../../../Lib/net/tcp.c **** 
+ 198:../../../../Lib/net/tcp.c **** void calculateTcpChecksun(uint16_t tcpLen)
+ 199:../../../../Lib/net/tcp.c **** {
+ 312               	.LM15:
+ 313               	.LFBB2:
+ 314 0098 CF93      		push r28
+ 315 009a DF93      		push r29
+ 316               	/* prologue: function */
+ 317               	/* frame size = 0 */
+ 318               	/* stack size = 2 */
+ 319               	.L__stack_usage = 2
+ 200:../../../../Lib/net/tcp.c ****   nicState.layer4.tcp->tcpchksum = 0;
+ 321               	.LM16:
+ 322 009c C091 0000 		lds r28,nicState+12
+ 323 00a0 D091 0000 		lds r29,nicState+12+1
+ 324 00a4 198A      		std Y+17,__zero_reg__
+ 325 00a6 188A      		std Y+16,__zero_reg__
+ 201:../../../../Lib/net/tcp.c ****   nicState.layer4.tcp->tcpchksum = netChecksum((uint8_t *)nicState.layer4.tcp, tcpLen); //TODO fini
+ 327               	.LM17:
+ 328 00a8 BC01      		movw r22,r24
+ 329 00aa CE01      		movw r24,r28
+ 330 00ac 0E94 0000 		call netChecksum
+ 331 00b0 998B      		std Y+17,r25
+ 332 00b2 888B      		std Y+16,r24
+ 333               	/* epilogue start */
+ 202:../../../../Lib/net/tcp.c **** }
+ 335               	.LM18:
+ 336 00b4 DF91      		pop r29
+ 337 00b6 CF91      		pop r28
+ 338 00b8 0895      		ret
+ 340               	.Lscope2:
+ 342               		.stabd	78,0,0
+ 344               	.global	processTcpPacket
+ 346               	processTcpPacket:
+ 347               		.stabd	46,0,0
+  96:../../../../Lib/net/tcp.c ****   struct TcpIpSocket *socket = findConnectedSocket();
+ 349               	.LM19:
+ 350               	.LFBB3:
+ 351 00ba 6F92      		push r6
+ 352 00bc 7F92      		push r7
+ 353 00be 8F92      		push r8
+ 354 00c0 9F92      		push r9
+ 355 00c2 AF92      		push r10
+ 356 00c4 BF92      		push r11
+ 357 00c6 CF92      		push r12
+ 358 00c8 DF92      		push r13
+ 359 00ca EF92      		push r14
+ 360 00cc FF92      		push r15
+ 361 00ce 0F93      		push r16
+ 362 00d0 1F93      		push r17
+ 363 00d2 CF93      		push r28
+ 364 00d4 DF93      		push r29
+ 365               	/* prologue: function */
+ 366               	/* frame size = 0 */
+ 367               	/* stack size = 14 */
+ 368               	.L__stack_usage = 14
+ 369               	.LBB25:
+ 370               	.LBB26:
+  49:../../../../Lib/net/tcp.c ****   uint8_t i;
+ 372               	.LM20:
+ 373 00d6 E091 0000 		lds r30,sockets
+ 374 00da F091 0000 		lds r31,sockets+1
+  54:../../../../Lib/net/tcp.c ****     {
+ 376               	.LM21:
+ 377 00de 4091 0000 		lds r20,nicState+10
+ 378 00e2 5091 0000 		lds r21,nicState+10+1
+ 379 00e6 6090 0000 		lds r6,nicState+12
+ 380 00ea 7090 0000 		lds r7,nicState+12+1
+ 381 00ee CF01      		movw r24,r30
+ 382 00f0 805D      		subi r24,-48
+ 383 00f2 9D4F      		sbci r25,-3
+  49:../../../../Lib/net/tcp.c ****   uint8_t i;
+ 385               	.LM22:
+ 386 00f4 EF01      		movw r28,r30
+ 387               	.L12:
+  53:../../../../Lib/net/tcp.c ****       && (result->RemoteIpAddr == nicState.layer3.ip->srcipaddr) && (result->localPort == nicState.
+ 389               	.LM23:
+ 390 00f6 2881      		ld r18,Y
+ 391 00f8 2230      		cpi r18,lo8(2)
+ 392 00fa 00F0      		brlo .L9
+  54:../../../../Lib/net/tcp.c ****     {
+ 394               	.LM24:
+ 395 00fc 8980      		ldd r8,Y+1
+ 396 00fe 9A80      		ldd r9,Y+2
+ 397 0100 AB80      		ldd r10,Y+3
+ 398 0102 BC80      		ldd r11,Y+4
+ 399 0104 DA01      		movw r26,r20
+ 400 0106 1C96      		adiw r26,12
+ 401 0108 CD90      		ld r12,X+
+ 402 010a DD90      		ld r13,X+
+ 403 010c ED90      		ld r14,X+
+ 404 010e FC90      		ld r15,X
+ 405 0110 1F97      		sbiw r26,12+3
+ 406 0112 8C14      		cp r8,r12
+ 407 0114 9D04      		cpc r9,r13
+ 408 0116 AE04      		cpc r10,r14
+ 409 0118 BF04      		cpc r11,r15
+ 410 011a 01F4      		brne .L9
+ 411 011c 0D81      		ldd r16,Y+5
+ 412 011e 1E81      		ldd r17,Y+6
+ 413 0120 D301      		movw r26,r6
+ 414 0122 1296      		adiw r26,2
+ 415 0124 6D91      		ld r22,X+
+ 416 0126 7C91      		ld r23,X
+ 417 0128 1397      		sbiw r26,2+1
+ 418 012a 0617      		cp r16,r22
+ 419 012c 1707      		cpc r17,r23
+ 420 012e 01F4      		brne .L9
+ 421 0130 0F81      		ldd r16,Y+7
+ 422 0132 1885      		ldd r17,Y+8
+ 423 0134 6D91      		ld r22,X+
+ 424 0136 7C91      		ld r23,X
+ 425 0138 0617      		cp r16,r22
+ 426 013a 1707      		cpc r17,r23
+ 427 013c 01F4      		brne .L9
+  57:../../../../Lib/net/tcp.c ****         if (tcpDebugLevel > 2)
+ 429               	.LM25:
+ 430 013e 8091 0000 		lds r24,tcpDebugStream
+ 431 0142 9091 0000 		lds r25,tcpDebugStream+1
+ 432 0146 0097      		sbiw r24,0
+ 433 0148 01F4      		brne .+2
+ 434 014a 00C0      		rjmp .L11
+  58:../../../../Lib/net/tcp.c ****           fprintf_P(tcpDebugStream, PSTR("Found TCP socket state %d\r\n"), result->state);
+ 436               	.LM26:
+ 437 014c 3091 0000 		lds r19,tcpDebugLevel
+ 438 0150 3330      		cpi r19,lo8(3)
+ 439 0152 00F4      		brsh .+2
+ 440 0154 00C0      		rjmp .L11
+  59:../../../../Lib/net/tcp.c **** #endif
+ 442               	.LM27:
+ 443 0156 1F92      		push __zero_reg__
+ 444 0158 2F93      		push r18
+ 445 015a 20E0      		ldi r18,lo8(__c.2682)
+ 446 015c 30E0      		ldi r19,hi8(__c.2682)
+ 447 015e 3F93      		push r19
+ 448 0160 2F93      		push r18
+ 449 0162 9F93      		push r25
+ 450 0164 8F93      		push r24
+ 451 0166 0E94 0000 		call fprintf_P
+ 452 016a 0F90      		pop __tmp_reg__
+ 453 016c 0F90      		pop __tmp_reg__
+ 454 016e 0F90      		pop __tmp_reg__
+ 455 0170 0F90      		pop __tmp_reg__
+ 456 0172 0F90      		pop __tmp_reg__
+ 457 0174 0F90      		pop __tmp_reg__
+ 458 0176 00C0      		rjmp .L11
+ 459               	.L9:
+  63:../../../../Lib/net/tcp.c ****   }
+ 461               	.LM28:
+ 462 0178 6C96      		adiw r28,28
+  51:../../../../Lib/net/tcp.c ****   {
+ 464               	.LM29:
+ 465 017a C817      		cp r28,r24
+ 466 017c D907      		cpc r29,r25
+ 467 017e 01F0      		breq .+2
+ 468 0180 00C0      		rjmp .L12
+ 469 0182 D0E0      		ldi r29,0
+ 470               	.L15:
+  69:../../../../Lib/net/tcp.c ****     {
+ 472               	.LM30:
+ 473 0184 8081      		ld r24,Z
+ 474 0186 8130      		cpi r24,lo8(1)
+ 475 0188 01F4      		brne .L13
+ 476 018a 2581      		ldd r18,Z+5
+ 477 018c 3681      		ldd r19,Z+6
+ 478 018e D301      		movw r26,r6
+ 479 0190 1296      		adiw r26,2
+ 480 0192 8D91      		ld r24,X+
+ 481 0194 9C91      		ld r25,X
+ 482 0196 1397      		sbiw r26,2+1
+ 483 0198 2817      		cp r18,r24
+ 484 019a 3907      		cpc r19,r25
+ 485 019c 01F4      		brne .L13
+  72:../../../../Lib/net/tcp.c ****         if (tcpDebugLevel > 2)
+ 487               	.LM31:
+ 488 019e 8091 0000 		lds r24,tcpDebugStream
+ 489 01a2 9091 0000 		lds r25,tcpDebugStream+1
+ 490 01a6 0097      		sbiw r24,0
+ 491 01a8 01F0      		breq .L14
+  73:../../../../Lib/net/tcp.c ****           fprintf_P(tcpDebugStream, PSTR("Found TCP socket no %d state LISTEN\r\n"), i);
+ 493               	.LM32:
+ 494 01aa 2091 0000 		lds r18,tcpDebugLevel
+ 495 01ae 2330      		cpi r18,lo8(3)
+ 496 01b0 00F0      		brlo .L14
+  74:../../../../Lib/net/tcp.c **** #endif
+ 498               	.LM33:
+ 499 01b2 1F92      		push __zero_reg__
+ 500 01b4 DF93      		push r29
+ 501 01b6 20E0      		ldi r18,lo8(__c.2687)
+ 502 01b8 30E0      		ldi r19,hi8(__c.2687)
+ 503 01ba 3F93      		push r19
+ 504 01bc 2F93      		push r18
+ 505 01be 9F93      		push r25
+ 506 01c0 8F93      		push r24
+ 507 01c2 0E94 0000 		call fprintf_P
+ 508 01c6 0F90      		pop __tmp_reg__
+ 509 01c8 0F90      		pop __tmp_reg__
+ 510 01ca 0F90      		pop __tmp_reg__
+ 511 01cc 0F90      		pop __tmp_reg__
+ 512 01ce 0F90      		pop __tmp_reg__
+ 513 01d0 0F90      		pop __tmp_reg__
+ 514               	.L14:
+  76:../../../../Lib/net/tcp.c ****     }
+ 516               	.LM34:
+ 517 01d2 8091 0000 		lds r24,sockets
+ 518 01d6 9091 0000 		lds r25,sockets+1
+ 519 01da FC01      		movw r30,r24
+ 520 01dc 2CE1      		ldi r18,lo8(28)
+ 521 01de D29F      		mul r29,r18
+ 522 01e0 E00D      		add r30,r0
+ 523 01e2 F11D      		adc r31,r1
+ 524 01e4 1124      		clr __zero_reg__
+ 525 01e6 EF01      		movw r28,r30
+ 526 01e8 00C0      		rjmp .L11
+ 527               	.L13:
+  78:../../../../Lib/net/tcp.c ****   }
+ 529               	.LM35:
+ 530 01ea 7C96      		adiw r30,28
+  67:../../../../Lib/net/tcp.c ****   {
+ 532               	.LM36:
+ 533 01ec DF5F      		subi r29,lo8(-(1))
+ 534 01ee D431      		cpi r29,lo8(20)
+ 535 01f0 01F4      		brne .L15
+  81:../../../../Lib/net/tcp.c ****     if (tcpDebugLevel > 2)
+ 537               	.LM37:
+ 538 01f2 8091 0000 		lds r24,tcpDebugStream
+ 539 01f6 9091 0000 		lds r25,tcpDebugStream+1
+ 540 01fa 892B      		or r24,r25
+ 541 01fc 01F4      		brne .+2
+ 542 01fe 00C0      		rjmp .L16
+  82:../../../../Lib/net/tcp.c ****       fprintf_P(tcpDebugStream, PSTR("Can't find TCP socket with localPort %d\r\n"), htons(nicState
+ 544               	.LM38:
+ 545 0200 8091 0000 		lds r24,tcpDebugLevel
+ 546 0204 8330      		cpi r24,lo8(3)
+ 547 0206 00F4      		brsh .+2
+ 548 0208 00C0      		rjmp .L16
+  83:../../../../Lib/net/tcp.c **** #endif
+ 550               	.LM39:
+ 551 020a D301      		movw r26,r6
+ 552 020c 1296      		adiw r26,2
+ 553 020e 8D91      		ld r24,X+
+ 554 0210 9C91      		ld r25,X
+ 555 0212 1397      		sbiw r26,2+1
+ 556 0214 0E94 0000 		call htons
+ 557 0218 9F93      		push r25
+ 558 021a 8F93      		push r24
+ 559 021c 80E0      		ldi r24,lo8(__c.2692)
+ 560 021e 90E0      		ldi r25,hi8(__c.2692)
+ 561 0220 9F93      		push r25
+ 562 0222 8F93      		push r24
+ 563 0224 8091 0000 		lds r24,tcpDebugStream+1
+ 564 0228 8F93      		push r24
+ 565 022a 8091 0000 		lds r24,tcpDebugStream
+ 566 022e 8F93      		push r24
+ 567 0230 0E94 0000 		call fprintf_P
+ 568 0234 0F90      		pop __tmp_reg__
+ 569 0236 0F90      		pop __tmp_reg__
+ 570 0238 0F90      		pop __tmp_reg__
+ 571 023a 0F90      		pop __tmp_reg__
+ 572 023c 0F90      		pop __tmp_reg__
+ 573 023e 0F90      		pop __tmp_reg__
+ 574 0240 00C0      		rjmp .L16
+ 575               	.L11:
+ 576               	.LBE26:
+ 577               	.LBE25:
+  99:../../../../Lib/net/tcp.c ****     return 1;
+ 579               	.LM40:
+ 580 0242 2097      		sbiw r28,0
+ 581 0244 01F4      		brne .+2
+ 582 0246 00C0      		rjmp .L16
+ 103:../../../../Lib/net/tcp.c **** 
+ 584               	.LM41:
+ 585 0248 E091 0000 		lds r30,nicState+12
+ 586 024c F091 0000 		lds r31,nicState+12+1
+ 587 0250 6481      		ldd r22,Z+4
+ 588 0252 7581      		ldd r23,Z+5
+ 589 0254 8681      		ldd r24,Z+6
+ 590 0256 9781      		ldd r25,Z+7
+ 591 0258 0E94 0000 		call htonl
+ 592 025c 6987      		std Y+9,r22
+ 593 025e 7A87      		std Y+10,r23
+ 594 0260 8B87      		std Y+11,r24
+ 595 0262 9C87      		std Y+12,r25
+ 105:../../../../Lib/net/tcp.c ****   {
+ 597               	.LM42:
+ 598 0264 8881      		ld r24,Y
+ 599 0266 8130      		cpi r24,lo8(1)
+ 600 0268 01F0      		breq .+2
+ 601 026a 00C0      		rjmp .L18
+ 107:../../../../Lib/net/tcp.c ****     {
+ 603               	.LM43:
+ 604 026c E091 0000 		lds r30,nicState+12
+ 605 0270 F091 0000 		lds r31,nicState+12+1
+ 606 0274 2585      		ldd r18,Z+13
+ 607 0276 8091 0000 		lds r24,tcpDebugStream
+ 608 027a 9091 0000 		lds r25,tcpDebugStream+1
+ 609 027e 122F      		mov r17,r18
+ 610 0280 1270      		andi r17,lo8(2)
+ 611 0282 21FF      		sbrs r18,1
+ 612 0284 00C0      		rjmp .L19
+ 112:../../../../Lib/net/tcp.c ****         if (tcpDebugLevel > 2)
+ 614               	.LM44:
+ 615 0286 0097      		sbiw r24,0
+ 616 0288 01F0      		breq .L20
+ 113:../../../../Lib/net/tcp.c ****           fprintf_P(tcpDebugStream, PSTR("Opening TCP connection socket state change LISTEN->SYN_RE
+ 618               	.LM45:
+ 619 028a 2091 0000 		lds r18,tcpDebugLevel
+ 620 028e 2330      		cpi r18,lo8(3)
+ 621 0290 00F0      		brlo .L20
+ 114:../../../../Lib/net/tcp.c **** #endif
+ 623               	.LM46:
+ 624 0292 20E0      		ldi r18,lo8(__c.2701)
+ 625 0294 30E0      		ldi r19,hi8(__c.2701)
+ 626 0296 3F93      		push r19
+ 627 0298 2F93      		push r18
+ 628 029a 9F93      		push r25
+ 629 029c 8F93      		push r24
+ 630 029e 0E94 0000 		call fprintf_P
+ 631 02a2 0F90      		pop __tmp_reg__
+ 632 02a4 0F90      		pop __tmp_reg__
+ 633 02a6 0F90      		pop __tmp_reg__
+ 634 02a8 0F90      		pop __tmp_reg__
+ 635               	.L20:
+ 636               	.LBB27:
+ 637               	.LBB28:
+  90:../../../../Lib/net/tcp.c ****   sck->remotePort   = nicState.layer4.tcp->srcport;
+ 639               	.LM47:
+ 640 02aa 82E0      		ldi r24,lo8(2)
+ 641 02ac 8883      		st Y,r24
+  91:../../../../Lib/net/tcp.c ****   sck->RemoteIpAddr = nicState.layer3.ip->srcipaddr;
+ 643               	.LM48:
+ 644 02ae 0091 0000 		lds r16,nicState+12
+ 645 02b2 1091 0000 		lds r17,nicState+12+1
+ 646 02b6 F801      		movw r30,r16
+ 647 02b8 8081      		ld r24,Z
+ 648 02ba 9181      		ldd r25,Z+1
+ 649 02bc 9887      		std Y+8,r25
+ 650 02be 8F83      		std Y+7,r24
+  92:../../../../Lib/net/tcp.c **** }
+ 652               	.LM49:
+ 653 02c0 E091 0000 		lds r30,nicState+10
+ 654 02c4 F091 0000 		lds r31,nicState+10+1
+ 655 02c8 4485      		ldd r20,Z+12
+ 656 02ca 5585      		ldd r21,Z+13
+ 657 02cc 6685      		ldd r22,Z+14
+ 658 02ce 7785      		ldd r23,Z+15
+ 659 02d0 4983      		std Y+1,r20
+ 660 02d2 5A83      		std Y+2,r21
+ 661 02d4 6B83      		std Y+3,r22
+ 662 02d6 7C83      		std Y+4,r23
+ 663               	.LBE28:
+ 664               	.LBE27:
+ 118:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->destport  = socket->remotePort;
+ 666               	.LM50:
+ 667 02d8 2D81      		ldd r18,Y+5
+ 668 02da 3E81      		ldd r19,Y+6
+ 669 02dc D801      		movw r26,r16
+ 670 02de 1196      		adiw r26,1
+ 671 02e0 3C93      		st X,r19
+ 672 02e2 2E93      		st -X,r18
+ 119:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->seqno     = htonl(socket->seqNoLastSent);
+ 674               	.LM51:
+ 675 02e4 1396      		adiw r26,2+1
+ 676 02e6 9C93      		st X,r25
+ 677 02e8 8E93      		st -X,r24
+ 678 02ea 1297      		sbiw r26,2
+ 120:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->ackno     = htonl(socket->seqNoLastReceived+1);
+ 680               	.LM52:
+ 681 02ec 6D85      		ldd r22,Y+13
+ 682 02ee 7E85      		ldd r23,Y+14
+ 683 02f0 8F85      		ldd r24,Y+15
+ 684 02f2 9889      		ldd r25,Y+16
+ 685 02f4 0E94 0000 		call htonl
+ 686 02f8 F801      		movw r30,r16
+ 687 02fa 6483      		std Z+4,r22
+ 688 02fc 7583      		std Z+5,r23
+ 689 02fe 8683      		std Z+6,r24
+ 690 0300 9783      		std Z+7,r25
+ 121:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->tcpoffset = 5<<4;
+ 692               	.LM53:
+ 693 0302 0091 0000 		lds r16,nicState+12
+ 694 0306 1091 0000 		lds r17,nicState+12+1
+ 695 030a 8985      		ldd r24,Y+9
+ 696 030c 9A85      		ldd r25,Y+10
+ 697 030e AB85      		ldd r26,Y+11
+ 698 0310 BC85      		ldd r27,Y+12
+ 699 0312 BC01      		movw r22,r24
+ 700 0314 CD01      		movw r24,r26
+ 701 0316 6F5F      		subi r22,-1
+ 702 0318 7F4F      		sbci r23,-1
+ 703 031a 8F4F      		sbci r24,-1
+ 704 031c 9F4F      		sbci r25,-1
+ 705 031e 0E94 0000 		call htonl
+ 706 0322 D801      		movw r26,r16
+ 707 0324 1896      		adiw r26,8
+ 708 0326 6D93      		st X+,r22
+ 709 0328 7D93      		st X+,r23
+ 710 032a 8D93      		st X+,r24
+ 711 032c 9C93      		st X,r25
+ 712 032e 1B97      		sbiw r26,8+3
+ 122:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->flags     = TCP_FLAGS_ACK+TCP_FLAGS_SYN;
+ 714               	.LM54:
+ 715 0330 0091 0000 		lds r16,nicState+12
+ 716 0334 1091 0000 		lds r17,nicState+12+1
+ 717 0338 80E5      		ldi r24,lo8(80)
+ 718 033a F801      		movw r30,r16
+ 719 033c 8487      		std Z+12,r24
+ 123:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->wnd       = htons(100);
+ 721               	.LM55:
+ 722 033e 82E1      		ldi r24,lo8(18)
+ 723 0340 8587      		std Z+13,r24
+ 124:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->tcpchksum = 0;
+ 725               	.LM56:
+ 726 0342 84E6      		ldi r24,lo8(100)
+ 727 0344 90E0      		ldi r25,0
+ 728 0346 0E94 0000 		call htons
+ 729 034a D801      		movw r26,r16
+ 730 034c 1F96      		adiw r26,14+1
+ 731 034e 9C93      		st X,r25
+ 732 0350 8E93      		st -X,r24
+ 733 0352 1E97      		sbiw r26,14
+ 125:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->urgp      = 0;
+ 735               	.LM57:
+ 736 0354 E091 0000 		lds r30,nicState+12
+ 737 0358 F091 0000 		lds r31,nicState+12+1
+ 738 035c 118A      		std Z+17,__zero_reg__
+ 739 035e 108A      		std Z+16,__zero_reg__
+ 126:../../../../Lib/net/tcp.c ****       calculateTcpChecksun(TCP_HEADER_LEN);
+ 741               	.LM58:
+ 742 0360 138A      		std Z+19,__zero_reg__
+ 743 0362 128A      		std Z+18,__zero_reg__
+ 127:../../../../Lib/net/tcp.c **** 
+ 745               	.LM59:
+ 746 0364 84E1      		ldi r24,lo8(20)
+ 747 0366 90E0      		ldi r25,0
+ 748 0368 0E94 0000 		call calculateTcpChecksun
+ 129:../../../../Lib/net/tcp.c ****       ipSend(socket->RemoteIpAddr, IP_PROTO_TCP, TCP_HEADER_LEN);
+ 750               	.LM60:
+ 751 036c 8D85      		ldd r24,Y+13
+ 752 036e 9E85      		ldd r25,Y+14
+ 753 0370 AF85      		ldd r26,Y+15
+ 754 0372 B889      		ldd r27,Y+16
+ 755 0374 0196      		adiw r24,1
+ 756 0376 A11D      		adc r26,__zero_reg__
+ 757 0378 B11D      		adc r27,__zero_reg__
+ 758 037a 8D87      		std Y+13,r24
+ 759 037c 9E87      		std Y+14,r25
+ 760 037e AF87      		std Y+15,r26
+ 761 0380 B88B      		std Y+16,r27
+ 130:../../../../Lib/net/tcp.c ****     }
+ 763               	.LM61:
+ 764 0382 6981      		ldd r22,Y+1
+ 765 0384 7A81      		ldd r23,Y+2
+ 766 0386 8B81      		ldd r24,Y+3
+ 767 0388 9C81      		ldd r25,Y+4
+ 768 038a 24E1      		ldi r18,lo8(20)
+ 769 038c 30E0      		ldi r19,0
+ 770 038e 46E0      		ldi r20,lo8(6)
+ 771 0390 0E94 0000 		call ipSend
+ 772 0394 00C0      		rjmp .L52
+ 773               	.L19:
+ 774               	.LBB29:
+ 775               	.LBB30:
+ 135:../../../../Lib/net/tcp.c ****         if (tcpDebugLevel > 1)
+ 777               	.LM62:
+ 778 0396 0097      		sbiw r24,0
+ 779 0398 01F4      		brne .+2
+ 780 039a 00C0      		rjmp .L52
+ 136:../../../../Lib/net/tcp.c ****           fprintf_P(tcpDebugStream, PSTR("Opening TCP connection ERROR: syn flag wasn't set\r\n"));
+ 782               	.LM63:
+ 783 039c 2091 0000 		lds r18,tcpDebugLevel
+ 784 03a0 2230      		cpi r18,lo8(2)
+ 785 03a2 00F4      		brsh .+2
+ 786 03a4 00C0      		rjmp .L52
+ 137:../../../../Lib/net/tcp.c ****     }
+ 788               	.LM64:
+ 789 03a6 20E0      		ldi r18,lo8(__c.2703)
+ 790 03a8 30E0      		ldi r19,hi8(__c.2703)
+ 791 03aa 00C0      		rjmp .L53
+ 792               	.L18:
+ 793               	.LBE30:
+ 794               	.LBE29:
+ 143:../../../../Lib/net/tcp.c ****   {
+ 796               	.LM65:
+ 797 03ac 8230      		cpi r24,lo8(2)
+ 798 03ae 01F4      		brne .L23
+ 145:../../../../Lib/net/tcp.c ****     {
+ 800               	.LM66:
+ 801 03b0 E091 0000 		lds r30,nicState+12
+ 802 03b4 F091 0000 		lds r31,nicState+12+1
+ 803 03b8 2585      		ldd r18,Z+13
+ 804 03ba 8091 0000 		lds r24,tcpDebugStream
+ 805 03be 9091 0000 		lds r25,tcpDebugStream+1
+ 806 03c2 122F      		mov r17,r18
+ 807 03c4 1071      		andi r17,lo8(16)
+ 808 03c6 24FF      		sbrs r18,4
+ 809 03c8 00C0      		rjmp .L24
+ 147:../../../../Lib/net/tcp.c **** #if TCP_DEBUG
+ 811               	.LM67:
+ 812 03ca 23E0      		ldi r18,lo8(3)
+ 813 03cc 2883      		st Y,r18
+ 149:../../../../Lib/net/tcp.c ****       if (tcpDebugLevel > 2)
+ 815               	.LM68:
+ 816 03ce 0097      		sbiw r24,0
+ 817 03d0 01F4      		brne .+2
+ 818 03d2 00C0      		rjmp .L52
+ 150:../../../../Lib/net/tcp.c ****         fprintf_P(tcpDebugStream, PSTR("Opening TCP connection socket state change SYN_RECEIVED->ES
+ 820               	.LM69:
+ 821 03d4 2091 0000 		lds r18,tcpDebugLevel
+ 822 03d8 2330      		cpi r18,lo8(3)
+ 823 03da 00F4      		brsh .+2
+ 824 03dc 00C0      		rjmp .L52
+ 151:../../../../Lib/net/tcp.c **** #endif
+ 826               	.LM70:
+ 827 03de 20E0      		ldi r18,lo8(__c.2705)
+ 828 03e0 30E0      		ldi r19,hi8(__c.2705)
+ 829 03e2 3F93      		push r19
+ 830 03e4 2F93      		push r18
+ 831 03e6 9F93      		push r25
+ 832 03e8 8F93      		push r24
+ 833 03ea 0E94 0000 		call fprintf_P
+ 834 03ee 0F90      		pop __tmp_reg__
+ 835 03f0 0F90      		pop __tmp_reg__
+ 836 03f2 0F90      		pop __tmp_reg__
+ 837 03f4 0F90      		pop __tmp_reg__
+ 838 03f6 00C0      		rjmp .L52
+ 839               	.L24:
+ 157:../../../../Lib/net/tcp.c **** #if TCP_DEBUG
+ 841               	.LM71:
+ 842 03f8 21E0      		ldi r18,lo8(1)
+ 843 03fa 2883      		st Y,r18
+ 159:../../../../Lib/net/tcp.c ****         if (tcpDebugLevel > 1)
+ 845               	.LM72:
+ 846 03fc 0097      		sbiw r24,0
+ 847 03fe 01F4      		brne .+2
+ 848 0400 00C0      		rjmp .L52
+ 160:../../../../Lib/net/tcp.c ****           fprintf_P(tcpDebugStream, PSTR("Opening TCP connection ERROR: ack flag wasn't set\r\n"));
+ 850               	.LM73:
+ 851 0402 2091 0000 		lds r18,tcpDebugLevel
+ 852 0406 2230      		cpi r18,lo8(2)
+ 853 0408 00F4      		brsh .+2
+ 854 040a 00C0      		rjmp .L52
+ 161:../../../../Lib/net/tcp.c **** #endif
+ 856               	.LM74:
+ 857 040c 20E0      		ldi r18,lo8(__c.2707)
+ 858 040e 30E0      		ldi r19,hi8(__c.2707)
+ 859               	.L53:
+ 860 0410 3F93      		push r19
+ 861 0412 2F93      		push r18
+ 862 0414 9F93      		push r25
+ 863 0416 8F93      		push r24
+ 864 0418 0E94 0000 		call fprintf_P
+ 865 041c 0F90      		pop __tmp_reg__
+ 866 041e 0F90      		pop __tmp_reg__
+ 867 0420 0F90      		pop __tmp_reg__
+ 868 0422 0F90      		pop __tmp_reg__
+ 869 0424 00C0      		rjmp .L51
+ 870               	.L23:
+ 168:../../../../Lib/net/tcp.c ****   {
+ 872               	.LM75:
+ 873 0426 8330      		cpi r24,lo8(3)
+ 874 0428 01F4      		brne .L52
+ 170:../../../../Lib/net/tcp.c ****     {
+ 876               	.LM76:
+ 877 042a E091 0000 		lds r30,nicState+12
+ 878 042e F091 0000 		lds r31,nicState+12+1
+ 879 0432 8585      		ldd r24,Z+13
+ 880 0434 80FF      		sbrs r24,0
+ 881 0436 00C0      		rjmp .L52
+ 882               	.LBB31:
+ 172:../../../../Lib/net/tcp.c ****       nicState.layer4.tcp->flags = TCP_FLAGS_ACK;
+ 884               	.LM77:
+ 885 0438 8091 0000 		lds r24,timer100Hz
+ 886 043c 8D8B      		std Y+21,r24
+ 173:../../../../Lib/net/tcp.c **** 
+ 888               	.LM78:
+ 889 043e 80E1      		ldi r24,lo8(16)
+ 890 0440 8587      		std Z+13,r24
+ 176:../../../../Lib/net/tcp.c ****       while (xQueueReceive(socket->Tx, dataPtr, 0) == pdTRUE)
+ 892               	.LM79:
+ 893 0442 8F01      		movw r16,r30
+ 894 0444 0C5E      		subi r16,-20
+ 895 0446 1F4F      		sbci r17,-1
+ 896 0448 6801      		movw r12,r16
+ 897               	.L25:
+ 898 044a FC2C      		mov r15,r12
+ 899 044c F01A      		sub r15,r16
+ 177:../../../../Lib/net/tcp.c ****       {
+ 901               	.LM80:
+ 902 044e 20E0      		ldi r18,0
+ 903 0450 40E0      		ldi r20,0
+ 904 0452 50E0      		ldi r21,0
+ 905 0454 B601      		movw r22,r12
+ 906 0456 888D      		ldd r24,Y+24
+ 907 0458 998D      		ldd r25,Y+25
+ 908 045a 0E94 0000 		call xQueueGenericReceive
+ 909 045e 8130      		cpi r24,lo8(1)
+ 910 0460 01F4      		brne .L54
+ 180:../../../../Lib/net/tcp.c ****       }
+ 912               	.LM81:
+ 913 0462 BFEF      		ldi r27,-1
+ 914 0464 CB1A      		sub r12,r27
+ 915 0466 DB0A      		sbc r13,r27
+ 916 0468 00C0      		rjmp .L25
+ 917               	.L54:
+ 182:../../../../Lib/net/tcp.c ****       socket->state    = CLOSE_WAIT;
+ 919               	.LM82:
+ 920 046a 2F2D      		mov r18,r15
+ 921 046c 30E0      		ldi r19,0
+ 922 046e 2C5E      		subi r18,-20
+ 923 0470 3F4F      		sbci r19,-1
+ 924 0472 6981      		ldd r22,Y+1
+ 925 0474 7A81      		ldd r23,Y+2
+ 926 0476 8B81      		ldd r24,Y+3
+ 927 0478 9C81      		ldd r25,Y+4
+ 928 047a 46E0      		ldi r20,lo8(6)
+ 929 047c 0E94 0000 		call ipSend
+ 183:../../../../Lib/net/tcp.c **** 
+ 931               	.LM83:
+ 932 0480 84E0      		ldi r24,lo8(4)
+ 933 0482 8883      		st Y,r24
+ 186:../../../../Lib/net/tcp.c ****       ipSend(socket->RemoteIpAddr, IP_PROTO_TCP, TCP_HEADER_LEN);
+ 935               	.LM84:
+ 936 0484 E091 0000 		lds r30,nicState+12
+ 937 0488 F091 0000 		lds r31,nicState+12+1
+ 938 048c 81E0      		ldi r24,lo8(1)
+ 939 048e 8587      		std Z+13,r24
+ 187:../../../../Lib/net/tcp.c ****       socket->state    = LAST_ACK;
+ 941               	.LM85:
+ 942 0490 6981      		ldd r22,Y+1
+ 943 0492 7A81      		ldd r23,Y+2
+ 944 0494 8B81      		ldd r24,Y+3
+ 945 0496 9C81      		ldd r25,Y+4
+ 946 0498 24E1      		ldi r18,lo8(20)
+ 947 049a 30E0      		ldi r19,0
+ 948 049c 46E0      		ldi r20,lo8(6)
+ 949 049e 0E94 0000 		call ipSend
+ 188:../../../../Lib/net/tcp.c ****     }
+ 951               	.LM86:
+ 952 04a2 85E0      		ldi r24,lo8(5)
+ 953 04a4 8883      		st Y,r24
+ 954               	.L52:
+ 955               	.LBE31:
+ 190:../../../../Lib/net/tcp.c ****   }
+ 957               	.LM87:
+ 958 04a6 10E0      		ldi r17,0
+ 959 04a8 00C0      		rjmp .L51
+ 960               	.L16:
+ 100:../../../../Lib/net/tcp.c **** 
+ 962               	.LM88:
+ 963 04aa 11E0      		ldi r17,lo8(1)
+ 964               	.L51:
+ 196:../../../../Lib/net/tcp.c **** 
+ 966               	.LM89:
+ 967 04ac 812F      		mov r24,r17
+ 968               	/* epilogue start */
+ 969 04ae DF91      		pop r29
+ 970 04b0 CF91      		pop r28
+ 971 04b2 1F91      		pop r17
+ 972 04b4 0F91      		pop r16
+ 973 04b6 FF90      		pop r15
+ 974 04b8 EF90      		pop r14
+ 975 04ba DF90      		pop r13
+ 976 04bc CF90      		pop r12
+ 977 04be BF90      		pop r11
+ 978 04c0 AF90      		pop r10
+ 979 04c2 9F90      		pop r9
+ 980 04c4 8F90      		pop r8
+ 981 04c6 7F90      		pop r7
+ 982 04c8 6F90      		pop r6
+ 983 04ca 0895      		ret
+ 991               	.Lscope3:
+ 993               		.stabd	78,0,0
+ 996               	.global	sendTcpBuffer
+ 998               	sendTcpBuffer:
+ 999               		.stabd	46,0,0
+ 203:../../../../Lib/net/tcp.c **** 
+ 204:../../../../Lib/net/tcp.c **** 
+ 205:../../../../Lib/net/tcp.c **** 
+ 206:../../../../Lib/net/tcp.c **** uint8_t sendTcpBuffer(uint8_t socketNo)
+ 207:../../../../Lib/net/tcp.c **** {
+ 1001               	.LM90:
+ 1002               	.LFBB4:
+ 1003               	/* prologue: function */
+ 1004               	/* frame size = 0 */
+ 1005               	/* stack size = 0 */
+ 1006               	.L__stack_usage = 0
+ 208:../../../../Lib/net/tcp.c ****   (void) socketNo;
+ 209:../../../../Lib/net/tcp.c ****   //struct TcpIpSocket *sck = &sockets[socketNo];
+ 210:../../../../Lib/net/tcp.c ****   return 0;
+ 211:../../../../Lib/net/tcp.c **** }
+ 1008               	.LM91:
+ 1009 04cc 80E0      		ldi r24,0
+ 1010 04ce 0895      		ret
+ 1012               	.Lscope4:
+ 1014               		.stabd	78,0,0
+ 1016               	.global	netstackTCPIPProcess
+ 1018               	netstackTCPIPProcess:
+ 1019               		.stabd	46,0,0
+ 212:../../../../Lib/net/tcp.c **** 
+ 213:../../../../Lib/net/tcp.c **** void netstackTCPIPProcess(void)
+ 214:../../../../Lib/net/tcp.c **** {
+ 1021               	.LM92:
+ 1022               	.LFBB5:
+ 1023 04d0 CF93      		push r28
+ 1024 04d2 DF93      		push r29
+ 1025               	/* prologue: function */
+ 1026               	/* frame size = 0 */
+ 1027               	/* stack size = 2 */
+ 1028               	.L__stack_usage = 2
+ 215:../../../../Lib/net/tcp.c ****   if (nicState.layer4.tcp->destport == htons(80))
+ 1030               	.LM93:
+ 1031 04d4 E091 0000 		lds r30,nicState+12
+ 1032 04d8 F091 0000 		lds r31,nicState+12+1
+ 1033 04dc C281      		ldd r28,Z+2
+ 1034 04de D381      		ldd r29,Z+3
+ 1035 04e0 80E5      		ldi r24,lo8(80)
+ 1036 04e2 90E0      		ldi r25,0
+ 1037 04e4 0E94 0000 		call htons
+ 1038 04e8 C817      		cp r28,r24
+ 1039 04ea D907      		cpc r29,r25
+ 1040 04ec 01F4      		brne .L57
+ 216:../../../../Lib/net/tcp.c ****   {
+ 217:../../../../Lib/net/tcp.c **** #if TCP_DEBUG
+ 218:../../../../Lib/net/tcp.c ****     if (tcpDebugStream != NULL)
+ 1042               	.LM94:
+ 1043 04ee 8091 0000 		lds r24,tcpDebugStream
+ 1044 04f2 9091 0000 		lds r25,tcpDebugStream+1
+ 1045 04f6 0097      		sbiw r24,0
+ 1046 04f8 01F0      		breq .L56
+ 219:../../../../Lib/net/tcp.c ****       fprintf_P(tcpDebugStream, PSTR("HTTP not implemented\r\n"));
+ 1048               	.LM95:
+ 1049 04fa 20E0      		ldi r18,lo8(__c.2723)
+ 1050 04fc 30E0      		ldi r19,hi8(__c.2723)
+ 1051 04fe 3F93      		push r19
+ 1052 0500 2F93      		push r18
+ 1053 0502 9F93      		push r25
+ 1054 0504 8F93      		push r24
+ 1055 0506 0E94 0000 		call fprintf_P
+ 1056 050a 0F90      		pop __tmp_reg__
+ 1057 050c 0F90      		pop __tmp_reg__
+ 1058 050e 0F90      		pop __tmp_reg__
+ 1059 0510 0F90      		pop __tmp_reg__
+ 1060 0512 00C0      		rjmp .L56
+ 1061               	.L57:
+ 1062               	/* epilogue start */
+ 220:../../../../Lib/net/tcp.c **** #endif
+ 221:../../../../Lib/net/tcp.c ****     ;
+ 222:../../../../Lib/net/tcp.c ****   }
+ 223:../../../../Lib/net/tcp.c ****   else
+ 224:../../../../Lib/net/tcp.c ****   {
+ 225:../../../../Lib/net/tcp.c ****     processTcpPacket();
+ 226:../../../../Lib/net/tcp.c ****   }
+ 227:../../../../Lib/net/tcp.c **** }
+ 1064               	.LM96:
+ 1065 0514 DF91      		pop r29
+ 1066 0516 CF91      		pop r28
+ 225:../../../../Lib/net/tcp.c ****   }
+ 1068               	.LM97:
+ 1069 0518 0C94 0000 		jmp processTcpPacket
+ 1070               	.L56:
+ 1071               	/* epilogue start */
+ 1073               	.LM98:
+ 1074 051c DF91      		pop r29
+ 1075 051e CF91      		pop r28
+ 1076 0520 0895      		ret
+ 1078               	.Lscope5:
+ 1080               		.stabd	78,0,0
+ 1084               	.global	setTcpDebug
+ 1086               	setTcpDebug:
+ 1087               		.stabd	46,0,0
+ 228:../../../../Lib/net/tcp.c **** 
+ 229:../../../../Lib/net/tcp.c **** #if TCP_DEBUG
+ 230:../../../../Lib/net/tcp.c **** void setTcpDebug(FILE *stream, uint8_t level)
+ 231:../../../../Lib/net/tcp.c **** {
+ 1089               	.LM99:
+ 1090               	.LFBB6:
+ 1091               	/* prologue: function */
+ 1092               	/* frame size = 0 */
+ 1093               	/* stack size = 0 */
+ 1094               	.L__stack_usage = 0
+ 232:../../../../Lib/net/tcp.c ****   tcpDebugStream = stream;
+ 1096               	.LM100:
+ 1097 0522 9093 0000 		sts tcpDebugStream+1,r25
+ 1098 0526 8093 0000 		sts tcpDebugStream,r24
+ 233:../../../../Lib/net/tcp.c ****   tcpDebugLevel = level;
+ 1100               	.LM101:
+ 1101 052a 6093 0000 		sts tcpDebugLevel,r22
+ 1102 052e 0895      		ret
+ 1104               	.Lscope6:
+ 1106               		.stabd	78,0,0
+ 1108               	.global	flushTcpQueues
+ 1110               	flushTcpQueues:
+ 1111               		.stabd	46,0,0
+ 234:../../../../Lib/net/tcp.c **** }
+ 235:../../../../Lib/net/tcp.c **** #endif /* TCP_DEBUG */
+ 236:../../../../Lib/net/tcp.c **** 
+ 237:../../../../Lib/net/tcp.c **** void flushTcpQueues()
+ 238:../../../../Lib/net/tcp.c **** {
+ 1113               	.LM102:
+ 1114               	.LFBB7:
+ 1115               	/* prologue: function */
+ 1116               	/* frame size = 0 */
+ 1117               	/* stack size = 0 */
+ 1118               	.L__stack_usage = 0
+ 1119 0530 0895      		ret
+ 1121               	.Lscope7:
+ 1123               		.stabd	78,0,0
+ 1125               	.global	httpProcess
+ 1127               	httpProcess:
+ 1128               		.stabd	46,0,0
+ 239:../../../../Lib/net/tcp.c ****   uint8_t sckNo = 0;
+ 240:../../../../Lib/net/tcp.c ****   struct TcpIpSocket *sck = sockets;
+ 241:../../../../Lib/net/tcp.c ****   for (sckNo = 0; sckNo < NUMBER_OF_SOCKETS; sckNo++)
+ 242:../../../../Lib/net/tcp.c ****   {
+ 243:../../../../Lib/net/tcp.c **** 
+ 244:../../../../Lib/net/tcp.c ****     sck++;
+ 245:../../../../Lib/net/tcp.c ****   }
+ 246:../../../../Lib/net/tcp.c **** }
+ 247:../../../../Lib/net/tcp.c **** 
+ 248:../../../../Lib/net/tcp.c **** 
+ 249:../../../../Lib/net/tcp.c **** inline void httpProcess()
+ 250:../../../../Lib/net/tcp.c **** {
+ 1130               	.LM103:
+ 1131               	.LFBB8:
+ 1132               	/* prologue: function */
+ 1133               	/* frame size = 0 */
+ 1134               	/* stack size = 0 */
+ 1135               	.L__stack_usage = 0
+ 1136 0532 0895      		ret
+ 1138               	.Lscope8:
+ 1140               		.stabd	78,0,0
+ 1141               		.section	.progmem.data,"a",@progbits
+ 1144               	__c.2723:
+ 1145 0000 4854 5450 		.string	"HTTP not implemented\r\n"
+ 1145      206E 6F74 
+ 1145      2069 6D70 
+ 1145      6C65 6D65 
+ 1145      6E74 6564 
+ 1148               	__c.2692:
+ 1149 0017 4361 6E27 		.string	"Can't find TCP socket with localPort %d\r\n"
+ 1149      7420 6669 
+ 1149      6E64 2054 
+ 1149      4350 2073 
+ 1149      6F63 6B65 
+ 1152               	__c.2687:
+ 1153 0041 466F 756E 		.string	"Found TCP socket no %d state LISTEN\r\n"
+ 1153      6420 5443 
+ 1153      5020 736F 
+ 1153      636B 6574 
+ 1153      206E 6F20 
+ 1156               	__c.2682:
+ 1157 0067 466F 756E 		.string	"Found TCP socket state %d\r\n"
+ 1157      6420 5443 
+ 1157      5020 736F 
+ 1157      636B 6574 
+ 1157      2073 7461 
+ 1160               	__c.2707:
+ 1161 0083 4F70 656E 		.string	"Opening TCP connection ERROR: ack flag wasn't set\r\n"
+ 1161      696E 6720 
+ 1161      5443 5020 
+ 1161      636F 6E6E 
+ 1161      6563 7469 
+ 1164               	__c.2705:
+ 1165 00b7 4F70 656E 		.string	"Opening TCP connection socket state change SYN_RECEIVED->ESTABILISHED\r\n"
+ 1165      696E 6720 
+ 1165      5443 5020 
+ 1165      636F 6E6E 
+ 1165      6563 7469 
+ 1168               	__c.2703:
+ 1169 00ff 4F70 656E 		.string	"Opening TCP connection ERROR: syn flag wasn't set\r\n"
+ 1169      696E 6720 
+ 1169      5443 5020 
+ 1169      636F 6E6E 
+ 1169      6563 7469 
+ 1172               	__c.2701:
+ 1173 0133 4F70 656E 		.string	"Opening TCP connection socket state change LISTEN->SYN_RECEIVED\r\n"
+ 1173      696E 6720 
+ 1173      5443 5020 
+ 1173      636F 6E6E 
+ 1173      6563 7469 
+ 1174               		.comm	sockets,2,1
+ 1175               		.comm	tcpDebugLevel,1,1
+ 1176               		.comm	tcpDebugStream,2,1
+ 1177               		.comm	IpMyConfig,15,1
+ 1178               		.comm	udpDbgLevel,1,1
+ 1179               		.comm	udpDbgStream,2,1
+ 1180               		.comm	udpSocket,2,1
+ 1181               		.comm	icmpDebugLevel,1,1
+ 1182               		.comm	icmpDebug,2,1
+ 1183               		.comm	arpDebugLevel,1,1
+ 1184               		.comm	arpDebug,2,1
+ 1185               		.comm	nicState,14,1
+ 1186               		.comm	wwwport,1,1
+ 1200               		.text
+ 1202               	.Letext0:
+ 1203               		.ident	"GCC: (GNU) 4.9.2"
+ 1204               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 tcp.c
+     /tmp/ccRv3TNe.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccRv3TNe.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccRv3TNe.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccRv3TNe.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccRv3TNe.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccRv3TNe.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccRv3TNe.s:186    .text:0000000000000000 socketInit
+                            *COM*:0000000000000002 sockets
+     /tmp/ccRv3TNe.s:309    .text:0000000000000098 calculateTcpChecksun
+                            *COM*:000000000000000e nicState
+     /tmp/ccRv3TNe.s:346    .text:00000000000000ba processTcpPacket
+                            *COM*:0000000000000002 tcpDebugStream
+                            *COM*:0000000000000001 tcpDebugLevel
+     /tmp/ccRv3TNe.s:1156   .progmem.data:0000000000000067 __c.2682
+     /tmp/ccRv3TNe.s:1152   .progmem.data:0000000000000041 __c.2687
+     /tmp/ccRv3TNe.s:1148   .progmem.data:0000000000000017 __c.2692
+     /tmp/ccRv3TNe.s:1172   .progmem.data:0000000000000133 __c.2701
+     /tmp/ccRv3TNe.s:1168   .progmem.data:00000000000000ff __c.2703
+     /tmp/ccRv3TNe.s:1164   .progmem.data:00000000000000b7 __c.2705
+     /tmp/ccRv3TNe.s:1160   .progmem.data:0000000000000083 __c.2707
+     /tmp/ccRv3TNe.s:998    .text:00000000000004cc sendTcpBuffer
+     /tmp/ccRv3TNe.s:1018   .text:00000000000004d0 netstackTCPIPProcess
+     /tmp/ccRv3TNe.s:1144   .progmem.data:0000000000000000 __c.2723
+     /tmp/ccRv3TNe.s:1086   .text:0000000000000522 setTcpDebug
+     /tmp/ccRv3TNe.s:1110   .text:0000000000000530 flushTcpQueues
+     /tmp/ccRv3TNe.s:1127   .text:0000000000000532 httpProcess
+                            *COM*:000000000000000f IpMyConfig
+                            *COM*:0000000000000001 udpDbgLevel
+                            *COM*:0000000000000002 udpDbgStream
+                            *COM*:0000000000000002 udpSocket
+                            *COM*:0000000000000001 icmpDebugLevel
+                            *COM*:0000000000000002 icmpDebug
+                            *COM*:0000000000000001 arpDebugLevel
+                            *COM*:0000000000000002 arpDebug
+                            *COM*:0000000000000001 wwwport
+
+UNDEFINED SYMBOLS
+xmalloc
+htons
+netChecksum
+fprintf_P
+htonl
+ipSend
+timer100Hz
+xQueueGenericReceive
+__do_clear_bss

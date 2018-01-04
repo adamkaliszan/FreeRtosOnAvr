@@ -1,0 +1,259 @@
+   1               		.file	"mcp3008.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  10               		.text
+  11               	.Ltext0:
+ 275               		.weak	enableSpiMCP3008
+ 277               	enableSpiMCP3008:
+ 278               		.stabd	46,0,0
+   1:../../../../Lib/mcp3008.c **** /*****************************************************************************
+   2:../../../../Lib/mcp3008.c **** * vim:sw=2:ts=2:si:et
+   3:../../../../Lib/mcp3008.c **** *
+   4:../../../../Lib/mcp3008.c **** * Title      : MPC23s17 parrarel I/O 16 bit port driver
+   5:../../../../Lib/mcp3008.c **** * Author     : Adam Kaliszan adam.kaliszan@gmail.com
+   6:../../../../Lib/mcp3008.c **** * Copyright  : GPL V2
+   7:../../../../Lib/mcp3008.c **** *
+   8:../../../../Lib/mcp3008.c **** *This driver provides:
+   9:../../../../Lib/mcp3008.c **** * - read/set operation
+  10:../../../../Lib/mcp3008.c **** *Driver uses mutexes and is condition race free. Function can be invoken by any thread.
+  11:../../../../Lib/mcp3008.c **** *****************************************************************************/
+  12:../../../../Lib/mcp3008.c **** //@{
+  13:../../../../Lib/mcp3008.c **** #include <avr/io.h>
+  14:../../../../Lib/mcp3008.c **** #include <util/delay.h>
+  15:../../../../Lib/mcp3008.c **** #include "mcp3008.h"
+  16:../../../../Lib/mcp3008.c **** #include "spiXmega.h"
+  17:../../../../Lib/mcp3008.c **** 
+  18:../../../../Lib/mcp3008.c **** void enableSpiMCP3008(void)   {};
+ 280               	.LM0:
+ 281               	.LFBB1:
+ 282               	/* prologue: function */
+ 283               	/* frame size = 0 */
+ 284               	/* stack size = 0 */
+ 285               	.L__stack_usage = 0
+ 286 0000 0895      		ret
+ 288               	.Lscope1:
+ 290               		.stabd	78,0,0
+ 292               		.weak	disableSpiMCP3008
+ 294               	disableSpiMCP3008:
+ 295               		.stabd	46,0,0
+  19:../../../../Lib/mcp3008.c **** void disableSpiMCP3008(void)  {};
+ 297               	.LM1:
+ 298               	.LFBB2:
+ 299               	/* prologue: function */
+ 300               	/* frame size = 0 */
+ 301               	/* stack size = 0 */
+ 302               	.L__stack_usage = 0
+ 303 0002 0895      		ret
+ 305               	.Lscope2:
+ 307               		.stabd	78,0,0
+ 310               	.global	MCP3008_getSampleDiff
+ 312               	MCP3008_getSampleDiff:
+ 313               		.stabd	46,0,0
+  20:../../../../Lib/mcp3008.c **** 
+  21:../../../../Lib/mcp3008.c **** 
+  22:../../../../Lib/mcp3008.c **** uint16_t MCP3008_getSampleDiff(uint8_t inputNo)
+  23:../../../../Lib/mcp3008.c **** {
+ 315               	.LM2:
+ 316               	.LFBB3:
+ 318               	.LM3:
+ 319 0004 CF93      		push r28
+ 320 0006 DF93      		push r29
+ 321               	/* prologue: function */
+ 322               	/* frame size = 0 */
+ 323               	/* stack size = 2 */
+ 324               	.L__stack_usage = 2
+  24:../../../../Lib/mcp3008.c ****   uint8_t resultLo;
+  25:../../../../Lib/mcp3008.c ****   uint8_t resultHi;
+  26:../../../../Lib/mcp3008.c ****   inputNo = inputNo << 4;
+ 326               	.LM4:
+ 327 0008 C82F      		mov r28,r24
+ 328 000a C295      		swap r28
+ 329 000c C07F      		andi r28,lo8(-16)
+  27:../../../../Lib/mcp3008.c ****   inputNo &= 0x70;
+  28:../../../../Lib/mcp3008.c ****   
+  29:../../../../Lib/mcp3008.c ****   spiTake();
+ 331               	.LM5:
+ 332 000e 0E94 0000 		call spiTake
+  30:../../../../Lib/mcp3008.c ****   enableSpiMCP3008();
+ 334               	.LM6:
+ 335 0012 0E94 0000 		call enableSpiMCP3008
+  31:../../../../Lib/mcp3008.c ****   
+  32:../../../../Lib/mcp3008.c ****   spiSend(0x01);                               //Start
+ 337               	.LM7:
+ 338 0016 81E0      		ldi r24,lo8(1)
+ 339 0018 0E94 0000 		call spiSend
+  33:../../../../Lib/mcp3008.c ****   resultHi = spiSend(inputNo);  //DIFF/!SGL A2 A1 A0 X X X X
+ 341               	.LM8:
+ 342 001c 8C2F      		mov r24,r28
+ 343 001e 8077      		andi r24,lo8(112)
+ 344 0020 0E94 0000 		call spiSend
+ 345 0024 D82F      		mov r29,r24
+  34:../../../../Lib/mcp3008.c ****   resultLo = spiSend(0);        //X X X X X X X X
+ 347               	.LM9:
+ 348 0026 80E0      		ldi r24,0
+ 349 0028 0E94 0000 		call spiSend
+ 350 002c C82F      		mov r28,r24
+  35:../../../../Lib/mcp3008.c ****   
+  36:../../../../Lib/mcp3008.c ****   disableSpiMCP3008(); 
+ 352               	.LM10:
+ 353 002e 0E94 0000 		call disableSpiMCP3008
+  37:../../../../Lib/mcp3008.c ****   spiGive();
+ 355               	.LM11:
+ 356 0032 0E94 0000 		call spiGive
+  38:../../../../Lib/mcp3008.c ****   
+  39:../../../../Lib/mcp3008.c ****   resultHi &= 0x03;
+ 358               	.LM12:
+ 359 0036 D370      		andi r29,lo8(3)
+  40:../../../../Lib/mcp3008.c ****   return resultHi << 8 | resultLo;
+ 361               	.LM13:
+ 362 0038 8C2F      		mov r24,r28
+ 363 003a 90E0      		ldi r25,0
+  41:../../../../Lib/mcp3008.c **** }
+ 365               	.LM14:
+ 366 003c 9D2B      		or r25,r29
+ 367               	/* epilogue start */
+ 368 003e DF91      		pop r29
+ 369 0040 CF91      		pop r28
+ 370 0042 0895      		ret
+ 375               	.Lscope3:
+ 377               		.stabd	78,0,0
+ 380               	.global	MCP3008_getSampleSingle
+ 382               	MCP3008_getSampleSingle:
+ 383               		.stabd	46,0,0
+  42:../../../../Lib/mcp3008.c **** 
+  43:../../../../Lib/mcp3008.c **** uint16_t MCP3008_getSampleSingle(uint8_t inputNo)
+  44:../../../../Lib/mcp3008.c **** {
+ 385               	.LM15:
+ 386               	.LFBB4:
+ 387 0044 CF93      		push r28
+ 388 0046 DF93      		push r29
+ 389               	/* prologue: function */
+ 390               	/* frame size = 0 */
+ 391               	/* stack size = 2 */
+ 392               	.L__stack_usage = 2
+  45:../../../../Lib/mcp3008.c ****   uint8_t resultLo;
+  46:../../../../Lib/mcp3008.c ****   uint8_t resultHi;
+  47:../../../../Lib/mcp3008.c ****   inputNo = inputNo << 4;
+ 394               	.LM16:
+ 395 0048 8295      		swap r24
+ 396 004a 807F      		andi r24,lo8(-16)
+  48:../../../../Lib/mcp3008.c ****   inputNo &= 0x70;
+ 398               	.LM17:
+ 399 004c C82F      		mov r28,r24
+ 400 004e C077      		andi r28,lo8(112)
+  49:../../../../Lib/mcp3008.c ****   inputNo |= 0x80;
+  50:../../../../Lib/mcp3008.c ****   
+  51:../../../../Lib/mcp3008.c ****   spiTake();
+ 402               	.LM18:
+ 403 0050 0E94 0000 		call spiTake
+  52:../../../../Lib/mcp3008.c ****   enableSpiMCP3008();
+ 405               	.LM19:
+ 406 0054 0E94 0000 		call enableSpiMCP3008
+  53:../../../../Lib/mcp3008.c ****   
+  54:../../../../Lib/mcp3008.c ****   spiSend(0x01);                //Start
+ 408               	.LM20:
+ 409 0058 81E0      		ldi r24,lo8(1)
+ 410 005a 0E94 0000 		call spiSend
+  55:../../../../Lib/mcp3008.c ****   resultHi = spiSend(inputNo);  //DIFF/!SGL A2 A1 A0 X X X X
+ 412               	.LM21:
+ 413 005e 8C2F      		mov r24,r28
+ 414 0060 8068      		ori r24,lo8(-128)
+ 415 0062 0E94 0000 		call spiSend
+ 416 0066 D82F      		mov r29,r24
+  56:../../../../Lib/mcp3008.c ****   resultLo = spiSend(0);        //X X X X X X X X
+ 418               	.LM22:
+ 419 0068 80E0      		ldi r24,0
+ 420 006a 0E94 0000 		call spiSend
+ 421 006e C82F      		mov r28,r24
+  57:../../../../Lib/mcp3008.c ****   
+  58:../../../../Lib/mcp3008.c ****   disableSpiMCP3008(); 
+ 423               	.LM23:
+ 424 0070 0E94 0000 		call disableSpiMCP3008
+  59:../../../../Lib/mcp3008.c ****   spiGive();
+ 426               	.LM24:
+ 427 0074 0E94 0000 		call spiGive
+  60:../../../../Lib/mcp3008.c ****   
+  61:../../../../Lib/mcp3008.c ****   resultHi &= 0x03;
+ 429               	.LM25:
+ 430 0078 D370      		andi r29,lo8(3)
+  62:../../../../Lib/mcp3008.c ****   return resultHi << 8 | resultLo;
+ 432               	.LM26:
+ 433 007a 8C2F      		mov r24,r28
+ 434 007c 90E0      		ldi r25,0
+  63:../../../../Lib/mcp3008.c **** }
+ 436               	.LM27:
+ 437 007e 9D2B      		or r25,r29
+ 438               	/* epilogue start */
+ 439 0080 DF91      		pop r29
+ 440 0082 CF91      		pop r28
+ 441 0084 0895      		ret
+ 446               	.Lscope4:
+ 448               		.stabd	78,0,0
+ 449               		.comm	czasRtc,7,1
+ 450               		.comm	sockets,2,1
+ 451               		.comm	tcpDebugLevel,1,1
+ 452               		.comm	tcpDebugStream,2,1
+ 453               		.comm	IpMyConfig,15,1
+ 454               		.comm	udpDbgLevel,1,1
+ 455               		.comm	udpDbgStream,2,1
+ 456               		.comm	udpSocket,2,1
+ 457               		.comm	icmpDebugLevel,1,1
+ 458               		.comm	icmpDebug,2,1
+ 459               		.comm	arpDebugLevel,1,1
+ 460               		.comm	arpDebug,2,1
+ 461               		.comm	nicState,14,1
+ 462               		.comm	xSemaphoreRs485,2,1
+ 463               		.comm	lockSensors,2,1
+ 464               		.comm	portB,1,1
+ 465               		.comm	portA,1,1
+ 466               		.comm	xSemaphoreSpiSS,2,1
+ 467               		.comm	rollers,2,1
+ 468               		.comm	wwwport,1,1
+ 469               		.comm	klastry,128,1
+ 491               		.weak	spiSend
+ 493               	.Letext0:
+ 494               		.ident	"GCC: (GNU) 4.9.2"
+ 495               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 mcp3008.c
+     /tmp/ccsZ9vk1.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccsZ9vk1.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccsZ9vk1.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccsZ9vk1.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccsZ9vk1.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccsZ9vk1.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccsZ9vk1.s:277    .text:0000000000000000 enableSpiMCP3008
+     /tmp/ccsZ9vk1.s:294    .text:0000000000000002 disableSpiMCP3008
+     /tmp/ccsZ9vk1.s:312    .text:0000000000000004 MCP3008_getSampleDiff
+     /tmp/ccsZ9vk1.s:382    .text:0000000000000044 MCP3008_getSampleSingle
+                            *COM*:0000000000000007 czasRtc
+                            *COM*:0000000000000002 sockets
+                            *COM*:0000000000000001 tcpDebugLevel
+                            *COM*:0000000000000002 tcpDebugStream
+                            *COM*:000000000000000f IpMyConfig
+                            *COM*:0000000000000001 udpDbgLevel
+                            *COM*:0000000000000002 udpDbgStream
+                            *COM*:0000000000000002 udpSocket
+                            *COM*:0000000000000001 icmpDebugLevel
+                            *COM*:0000000000000002 icmpDebug
+                            *COM*:0000000000000001 arpDebugLevel
+                            *COM*:0000000000000002 arpDebug
+                            *COM*:000000000000000e nicState
+                            *COM*:0000000000000002 xSemaphoreRs485
+                            *COM*:0000000000000002 lockSensors
+                            *COM*:0000000000000001 portB
+                            *COM*:0000000000000001 portA
+                            *COM*:0000000000000002 xSemaphoreSpiSS
+                            *COM*:0000000000000002 rollers
+                            *COM*:0000000000000001 wwwport
+                            *COM*:0000000000000080 klastry
+
+UNDEFINED SYMBOLS
+spiTake
+spiSend
+spiGive
+__do_clear_bss

@@ -1,0 +1,750 @@
+   1               		.file	"mpc23s17.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  10               		.text
+  11               	.Ltext0:
+ 275               		.weak	enableSpiMPC23S17
+ 277               	enableSpiMPC23S17:
+ 278               		.stabd	46,0,0
+   1:../../../../Lib/mpc23s17.c **** /*****************************************************************************
+   2:../../../../Lib/mpc23s17.c **** * vim:sw=2:ts=2:si:et
+   3:../../../../Lib/mpc23s17.c **** *
+   4:../../../../Lib/mpc23s17.c **** * Title      : MPC23s17 parrarel I/O 16 bit port driver
+   5:../../../../Lib/mpc23s17.c **** * Author     : Adam Kaliszan
+   6:../../../../Lib/mpc23s17.c **** * Copyright: GPL V2
+   7:../../../../Lib/mpc23s17.c **** *
+   8:../../../../Lib/mpc23s17.c **** *This driver provides:
+   9:../../../../Lib/mpc23s17.c **** * - read/set operation
+  10:../../../../Lib/mpc23s17.c **** *Driver uses mutexex and is condition race free. Function can be invoken by any thread.
+  11:../../../../Lib/mpc23s17.c **** *****************************************************************************/
+  12:../../../../Lib/mpc23s17.c **** //@{
+  13:../../../../Lib/mpc23s17.c **** #include <avr/io.h>
+  14:../../../../Lib/mpc23s17.c **** #include <util/delay.h>
+  15:../../../../Lib/mpc23s17.c **** #include "mpc23s17.h"
+  16:../../../../Lib/mpc23s17.c **** #include "spiXmega.h"
+  17:../../../../Lib/mpc23s17.c **** 
+  18:../../../../Lib/mpc23s17.c **** void enableSpiMPC23S17(void)  {}
+ 280               	.LM0:
+ 281               	.LFBB1:
+ 282               	/* prologue: function */
+ 283               	/* frame size = 0 */
+ 284               	/* stack size = 0 */
+ 285               	.L__stack_usage = 0
+ 286 0000 0895      		ret
+ 288               	.Lscope1:
+ 290               		.stabd	78,0,0
+ 292               		.weak	disableSpiMPC23S17
+ 294               	disableSpiMPC23S17:
+ 295               		.stabd	46,0,0
+  19:../../../../Lib/mpc23s17.c **** void disableSpiMPC23S17(void) {}
+ 297               	.LM1:
+ 298               	.LFBB2:
+ 299               	/* prologue: function */
+ 300               	/* frame size = 0 */
+ 301               	/* stack size = 0 */
+ 302               	.L__stack_usage = 0
+ 303 0002 0895      		ret
+ 305               	.Lscope2:
+ 307               		.stabd	78,0,0
+ 311               	.global	MPC23s17SetDirA
+ 313               	MPC23s17SetDirA:
+ 314               		.stabd	46,0,0
+  20:../../../../Lib/mpc23s17.c **** 
+  21:../../../../Lib/mpc23s17.c **** 
+  22:../../../../Lib/mpc23s17.c **** void MPC23s17SetDirA(uint8_t portAdir, uint8_t addr)
+  23:../../../../Lib/mpc23s17.c **** {
+ 316               	.LM2:
+ 317               	.LFBB3:
+ 319               	.LM3:
+ 320 0004 CF93      		push r28
+ 321 0006 DF93      		push r29
+ 322               	/* prologue: function */
+ 323               	/* frame size = 0 */
+ 324               	/* stack size = 2 */
+ 325               	.L__stack_usage = 2
+ 326 0008 D82F      		mov r29,r24
+  24:../../../../Lib/mpc23s17.c ****   addr = addr<<1;
+ 328               	.LM4:
+ 329 000a C62F      		mov r28,r22
+ 330 000c CC0F      		lsl r28
+  25:../../../../Lib/mpc23s17.c ****   addr &= 0x0E;
+ 332               	.LM5:
+ 333 000e CE70      		andi r28,lo8(14)
+  26:../../../../Lib/mpc23s17.c ****   addr |= 0x40;        //OPCODE 0100 AAA 0 bit0: 0 - zapis, 1 - odczyt 
+  27:../../../../Lib/mpc23s17.c **** 
+  28:../../../../Lib/mpc23s17.c ****   spiTake();
+ 335               	.LM6:
+ 336 0010 0E94 0000 		call spiTake
+  29:../../../../Lib/mpc23s17.c ****   enableSpiMPC23S17(); 
+ 338               	.LM7:
+ 339 0014 0E94 0000 		call enableSpiMPC23S17
+  30:../../../../Lib/mpc23s17.c ****   spiSend(addr);
+ 341               	.LM8:
+ 342 0018 8C2F      		mov r24,r28
+ 343 001a 8064      		ori r24,lo8(64)
+ 344 001c 0E94 0000 		call spiSend
+  31:../../../../Lib/mpc23s17.c ****   spiSend(B0_IODIRA);
+ 346               	.LM9:
+ 347 0020 80E0      		ldi r24,0
+ 348 0022 0E94 0000 		call spiSend
+  32:../../../../Lib/mpc23s17.c ****   spiSend(portAdir);  
+ 350               	.LM10:
+ 351 0026 8D2F      		mov r24,r29
+ 352 0028 0E94 0000 		call spiSend
+  33:../../../../Lib/mpc23s17.c ****   
+  34:../../../../Lib/mpc23s17.c ****   disableSpiMPC23S17();
+ 354               	.LM11:
+ 355 002c 0E94 0000 		call disableSpiMPC23S17
+ 356               	/* epilogue start */
+  35:../../../../Lib/mpc23s17.c ****   spiGive();
+  36:../../../../Lib/mpc23s17.c **** }
+ 358               	.LM12:
+ 359 0030 DF91      		pop r29
+ 360 0032 CF91      		pop r28
+  35:../../../../Lib/mpc23s17.c ****   spiGive();
+ 362               	.LM13:
+ 363 0034 0C94 0000 		jmp spiGive
+ 365               	.Lscope3:
+ 367               		.stabd	78,0,0
+ 371               	.global	MPC23s17SetDirB
+ 373               	MPC23s17SetDirB:
+ 374               		.stabd	46,0,0
+  37:../../../../Lib/mpc23s17.c **** 
+  38:../../../../Lib/mpc23s17.c **** void MPC23s17SetDirB(uint8_t portBdir, uint8_t addr)
+  39:../../../../Lib/mpc23s17.c **** {
+ 376               	.LM14:
+ 377               	.LFBB4:
+ 378 0038 CF93      		push r28
+ 379 003a DF93      		push r29
+ 380               	/* prologue: function */
+ 381               	/* frame size = 0 */
+ 382               	/* stack size = 2 */
+ 383               	.L__stack_usage = 2
+ 384 003c D82F      		mov r29,r24
+  40:../../../../Lib/mpc23s17.c ****   addr = addr<<1;
+ 386               	.LM15:
+ 387 003e C62F      		mov r28,r22
+ 388 0040 CC0F      		lsl r28
+  41:../../../../Lib/mpc23s17.c ****   addr &= 0x0E;
+ 390               	.LM16:
+ 391 0042 CE70      		andi r28,lo8(14)
+  42:../../../../Lib/mpc23s17.c ****   addr |= 0x40;        //OPCODE 0100 AAA 0 bit0: 0 - zapis, 1 - odczyt 
+  43:../../../../Lib/mpc23s17.c **** 
+  44:../../../../Lib/mpc23s17.c ****   spiTake();
+ 393               	.LM17:
+ 394 0044 0E94 0000 		call spiTake
+  45:../../../../Lib/mpc23s17.c ****   enableSpiMPC23S17();
+ 396               	.LM18:
+ 397 0048 0E94 0000 		call enableSpiMPC23S17
+  46:../../../../Lib/mpc23s17.c ****   
+  47:../../../../Lib/mpc23s17.c ****   spiSend(addr);
+ 399               	.LM19:
+ 400 004c 8C2F      		mov r24,r28
+ 401 004e 8064      		ori r24,lo8(64)
+ 402 0050 0E94 0000 		call spiSend
+  48:../../../../Lib/mpc23s17.c ****   spiSend(B0_IODIRB);
+ 404               	.LM20:
+ 405 0054 81E0      		ldi r24,lo8(1)
+ 406 0056 0E94 0000 		call spiSend
+  49:../../../../Lib/mpc23s17.c ****   spiSend(portBdir);  
+ 408               	.LM21:
+ 409 005a 8D2F      		mov r24,r29
+ 410 005c 0E94 0000 		call spiSend
+  50:../../../../Lib/mpc23s17.c ****   
+  51:../../../../Lib/mpc23s17.c ****   disableSpiMPC23S17();
+ 412               	.LM22:
+ 413 0060 0E94 0000 		call disableSpiMPC23S17
+ 414               	/* epilogue start */
+  52:../../../../Lib/mpc23s17.c ****   spiGive();
+  53:../../../../Lib/mpc23s17.c **** }
+ 416               	.LM23:
+ 417 0064 DF91      		pop r29
+ 418 0066 CF91      		pop r28
+  52:../../../../Lib/mpc23s17.c ****   spiGive();
+ 420               	.LM24:
+ 421 0068 0C94 0000 		jmp spiGive
+ 423               	.Lscope4:
+ 425               		.stabd	78,0,0
+ 429               	.global	MPC23s17SetPortA
+ 431               	MPC23s17SetPortA:
+ 432               		.stabd	46,0,0
+  54:../../../../Lib/mpc23s17.c **** 
+  55:../../../../Lib/mpc23s17.c **** void MPC23s17SetPortA(uint8_t portAout, uint8_t addr)
+  56:../../../../Lib/mpc23s17.c **** {
+ 434               	.LM25:
+ 435               	.LFBB5:
+ 436 006c 1F93      		push r17
+ 437 006e CF93      		push r28
+ 438 0070 DF93      		push r29
+ 439 0072 1F92      		push __zero_reg__
+ 440 0074 CDB7      		in r28,__SP_L__
+ 441 0076 DEB7      		in r29,__SP_H__
+ 442               	/* prologue: function */
+ 443               	/* frame size = 1 */
+ 444               	/* stack size = 4 */
+ 445               	.L__stack_usage = 4
+  57:../../../../Lib/mpc23s17.c ****   addr = addr<<1;
+ 447               	.LM26:
+ 448 0078 660F      		lsl r22
+  58:../../../../Lib/mpc23s17.c ****   addr &= 0x0E;
+ 450               	.LM27:
+ 451 007a 162F      		mov r17,r22
+ 452 007c 1E70      		andi r17,lo8(14)
+  59:../../../../Lib/mpc23s17.c ****   addr |= 0x40;        //OPCODE 0100 AAA 0 bit0: 0 - zapis, 1 - odczyt 
+  60:../../../../Lib/mpc23s17.c **** 
+  61:../../../../Lib/mpc23s17.c ****   spiTake();
+ 454               	.LM28:
+ 455 007e 8983      		std Y+1,r24
+ 456 0080 0E94 0000 		call spiTake
+  62:../../../../Lib/mpc23s17.c ****   enableSpiMPC23S17();
+ 458               	.LM29:
+ 459 0084 0E94 0000 		call enableSpiMPC23S17
+  63:../../../../Lib/mpc23s17.c ****   portA = portAout;  
+ 461               	.LM30:
+ 462 0088 8981      		ldd r24,Y+1
+ 463 008a 8093 0000 		sts portA,r24
+  64:../../../../Lib/mpc23s17.c ****   spiSend(addr);
+ 465               	.LM31:
+ 466 008e 812F      		mov r24,r17
+ 467 0090 8064      		ori r24,lo8(64)
+ 468 0092 0E94 0000 		call spiSend
+  65:../../../../Lib/mpc23s17.c ****   spiSend(B0_OLATA);
+ 470               	.LM32:
+ 471 0096 84E1      		ldi r24,lo8(20)
+ 472 0098 0E94 0000 		call spiSend
+  66:../../../../Lib/mpc23s17.c ****   spiSend(portA);  
+ 474               	.LM33:
+ 475 009c 8091 0000 		lds r24,portA
+ 476 00a0 0E94 0000 		call spiSend
+  67:../../../../Lib/mpc23s17.c **** 
+  68:../../../../Lib/mpc23s17.c ****   disableSpiMPC23S17();
+ 478               	.LM34:
+ 479 00a4 0E94 0000 		call disableSpiMPC23S17
+ 480               	/* epilogue start */
+  69:../../../../Lib/mpc23s17.c ****   spiGive();
+  70:../../../../Lib/mpc23s17.c **** }
+ 482               	.LM35:
+ 483 00a8 0F90      		pop __tmp_reg__
+ 484 00aa DF91      		pop r29
+ 485 00ac CF91      		pop r28
+ 486 00ae 1F91      		pop r17
+  69:../../../../Lib/mpc23s17.c ****   spiGive();
+ 488               	.LM36:
+ 489 00b0 0C94 0000 		jmp spiGive
+ 491               	.Lscope5:
+ 493               		.stabd	78,0,0
+ 497               	.global	MPC23s17SetBitsOnPortA
+ 499               	MPC23s17SetBitsOnPortA:
+ 500               		.stabd	46,0,0
+  71:../../../../Lib/mpc23s17.c **** 
+  72:../../../../Lib/mpc23s17.c **** void MPC23s17SetBitsOnPortA(uint8_t portAout, uint8_t addr)
+  73:../../../../Lib/mpc23s17.c **** {
+ 502               	.LM37:
+ 503               	.LFBB6:
+ 504 00b4 CF93      		push r28
+ 505               	/* prologue: function */
+ 506               	/* frame size = 0 */
+ 507               	/* stack size = 1 */
+ 508               	.L__stack_usage = 1
+  74:../../../../Lib/mpc23s17.c ****   addr = addr<<1;
+ 510               	.LM38:
+ 511 00b6 C62F      		mov r28,r22
+ 512 00b8 CC0F      		lsl r28
+  75:../../../../Lib/mpc23s17.c ****   addr &= 0x0E;
+ 514               	.LM39:
+ 515 00ba CE70      		andi r28,lo8(14)
+  76:../../../../Lib/mpc23s17.c ****   addr |= 0x40;        //OPCODE 0100 AAA 0 bit0: 0 - zapis, 1 - odczyt 
+  77:../../../../Lib/mpc23s17.c **** 
+  78:../../../../Lib/mpc23s17.c ****   portA |= portAout;  
+ 517               	.LM40:
+ 518 00bc 9091 0000 		lds r25,portA
+ 519 00c0 892B      		or r24,r25
+ 520 00c2 8093 0000 		sts portA,r24
+  79:../../../../Lib/mpc23s17.c **** 
+  80:../../../../Lib/mpc23s17.c ****   spiTake();
+ 522               	.LM41:
+ 523 00c6 0E94 0000 		call spiTake
+  81:../../../../Lib/mpc23s17.c ****   enableSpiMPC23S17();
+ 525               	.LM42:
+ 526 00ca 0E94 0000 		call enableSpiMPC23S17
+  82:../../../../Lib/mpc23s17.c ****   spiSend(addr);
+ 528               	.LM43:
+ 529 00ce 8C2F      		mov r24,r28
+ 530 00d0 8064      		ori r24,lo8(64)
+ 531 00d2 0E94 0000 		call spiSend
+  83:../../../../Lib/mpc23s17.c ****   spiSend(B0_OLATA);
+ 533               	.LM44:
+ 534 00d6 84E1      		ldi r24,lo8(20)
+ 535 00d8 0E94 0000 		call spiSend
+  84:../../../../Lib/mpc23s17.c ****   spiSend(portA);  
+ 537               	.LM45:
+ 538 00dc 8091 0000 		lds r24,portA
+ 539 00e0 0E94 0000 		call spiSend
+  85:../../../../Lib/mpc23s17.c ****   disableSpiMPC23S17();
+ 541               	.LM46:
+ 542 00e4 0E94 0000 		call disableSpiMPC23S17
+ 543               	/* epilogue start */
+  86:../../../../Lib/mpc23s17.c ****   spiGive();
+  87:../../../../Lib/mpc23s17.c **** }
+ 545               	.LM47:
+ 546 00e8 CF91      		pop r28
+  86:../../../../Lib/mpc23s17.c ****   spiGive();
+ 548               	.LM48:
+ 549 00ea 0C94 0000 		jmp spiGive
+ 551               	.Lscope6:
+ 553               		.stabd	78,0,0
+ 557               	.global	MPC23s17ClearBitsOnPortA
+ 559               	MPC23s17ClearBitsOnPortA:
+ 560               		.stabd	46,0,0
+  88:../../../../Lib/mpc23s17.c **** 
+  89:../../../../Lib/mpc23s17.c **** void MPC23s17ClearBitsOnPortA(uint8_t portAout, uint8_t addr)
+  90:../../../../Lib/mpc23s17.c **** {
+ 562               	.LM49:
+ 563               	.LFBB7:
+ 564 00ee CF93      		push r28
+ 565               	/* prologue: function */
+ 566               	/* frame size = 0 */
+ 567               	/* stack size = 1 */
+ 568               	.L__stack_usage = 1
+  91:../../../../Lib/mpc23s17.c ****   addr = addr<<1;
+ 570               	.LM50:
+ 571 00f0 C62F      		mov r28,r22
+ 572 00f2 CC0F      		lsl r28
+  92:../../../../Lib/mpc23s17.c ****   addr &= 0x0E;
+ 574               	.LM51:
+ 575 00f4 CE70      		andi r28,lo8(14)
+  93:../../../../Lib/mpc23s17.c ****   addr |= 0x40;        //OPCODE 0100 AAA 0 bit0: 0 - zapis, 1 - odczyt 
+  94:../../../../Lib/mpc23s17.c **** 
+  95:../../../../Lib/mpc23s17.c ****   portA &= (~portAout);
+ 577               	.LM52:
+ 578 00f6 9091 0000 		lds r25,portA
+ 579 00fa 8095      		com r24
+ 580 00fc 9823      		and r25,r24
+ 581 00fe 9093 0000 		sts portA,r25
+  96:../../../../Lib/mpc23s17.c **** 
+  97:../../../../Lib/mpc23s17.c ****   spiTake();
+ 583               	.LM53:
+ 584 0102 0E94 0000 		call spiTake
+  98:../../../../Lib/mpc23s17.c ****   enableSpiMPC23S17();
+ 586               	.LM54:
+ 587 0106 0E94 0000 		call enableSpiMPC23S17
+  99:../../../../Lib/mpc23s17.c ****   spiSend(addr);
+ 589               	.LM55:
+ 590 010a 8C2F      		mov r24,r28
+ 591 010c 8064      		ori r24,lo8(64)
+ 592 010e 0E94 0000 		call spiSend
+ 100:../../../../Lib/mpc23s17.c ****   spiSend(B0_OLATA);
+ 594               	.LM56:
+ 595 0112 84E1      		ldi r24,lo8(20)
+ 596 0114 0E94 0000 		call spiSend
+ 101:../../../../Lib/mpc23s17.c ****   spiSend(portA);  
+ 598               	.LM57:
+ 599 0118 8091 0000 		lds r24,portA
+ 600 011c 0E94 0000 		call spiSend
+ 102:../../../../Lib/mpc23s17.c ****   disableSpiMPC23S17();
+ 602               	.LM58:
+ 603 0120 0E94 0000 		call disableSpiMPC23S17
+ 604               	/* epilogue start */
+ 103:../../../../Lib/mpc23s17.c ****   spiGive();
+ 104:../../../../Lib/mpc23s17.c **** }
+ 606               	.LM59:
+ 607 0124 CF91      		pop r28
+ 103:../../../../Lib/mpc23s17.c ****   spiGive();
+ 609               	.LM60:
+ 610 0126 0C94 0000 		jmp spiGive
+ 612               	.Lscope7:
+ 614               		.stabd	78,0,0
+ 618               	.global	MPC23s17SetPortB
+ 620               	MPC23s17SetPortB:
+ 621               		.stabd	46,0,0
+ 105:../../../../Lib/mpc23s17.c **** 
+ 106:../../../../Lib/mpc23s17.c **** void MPC23s17SetPortB(uint8_t portBout, uint8_t addr)
+ 107:../../../../Lib/mpc23s17.c **** {
+ 623               	.LM61:
+ 624               	.LFBB8:
+ 625 012a CF93      		push r28
+ 626               	/* prologue: function */
+ 627               	/* frame size = 0 */
+ 628               	/* stack size = 1 */
+ 629               	.L__stack_usage = 1
+ 108:../../../../Lib/mpc23s17.c ****   addr = addr<<1;
+ 631               	.LM62:
+ 632 012c C62F      		mov r28,r22
+ 633 012e CC0F      		lsl r28
+ 109:../../../../Lib/mpc23s17.c ****   addr &= 0x0E;
+ 635               	.LM63:
+ 636 0130 CE70      		andi r28,lo8(14)
+ 110:../../../../Lib/mpc23s17.c ****   addr |= 0x40;        //OPCODE 0100 AAA 0 bit0: 0 - zapis, 1 - odczyt 
+ 111:../../../../Lib/mpc23s17.c **** 
+ 112:../../../../Lib/mpc23s17.c ****   portB = portBout;
+ 638               	.LM64:
+ 639 0132 8093 0000 		sts portB,r24
+ 113:../../../../Lib/mpc23s17.c **** 
+ 114:../../../../Lib/mpc23s17.c ****   spiTake();
+ 641               	.LM65:
+ 642 0136 0E94 0000 		call spiTake
+ 115:../../../../Lib/mpc23s17.c ****   enableSpiMPC23S17();
+ 644               	.LM66:
+ 645 013a 0E94 0000 		call enableSpiMPC23S17
+ 116:../../../../Lib/mpc23s17.c ****   spiSend(addr);
+ 647               	.LM67:
+ 648 013e 8C2F      		mov r24,r28
+ 649 0140 8064      		ori r24,lo8(64)
+ 650 0142 0E94 0000 		call spiSend
+ 117:../../../../Lib/mpc23s17.c ****   spiSend(B0_OLATB);
+ 652               	.LM68:
+ 653 0146 85E1      		ldi r24,lo8(21)
+ 654 0148 0E94 0000 		call spiSend
+ 118:../../../../Lib/mpc23s17.c ****   spiSend(portB);  
+ 656               	.LM69:
+ 657 014c 8091 0000 		lds r24,portB
+ 658 0150 0E94 0000 		call spiSend
+ 119:../../../../Lib/mpc23s17.c ****   disableSpiMPC23S17();
+ 660               	.LM70:
+ 661 0154 0E94 0000 		call disableSpiMPC23S17
+ 662               	/* epilogue start */
+ 120:../../../../Lib/mpc23s17.c ****   spiGive();
+ 121:../../../../Lib/mpc23s17.c **** }
+ 664               	.LM71:
+ 665 0158 CF91      		pop r28
+ 120:../../../../Lib/mpc23s17.c ****   spiGive();
+ 667               	.LM72:
+ 668 015a 0C94 0000 		jmp spiGive
+ 670               	.Lscope8:
+ 672               		.stabd	78,0,0
+ 676               	.global	MPC23s17SetBitsOnPortB
+ 678               	MPC23s17SetBitsOnPortB:
+ 679               		.stabd	46,0,0
+ 122:../../../../Lib/mpc23s17.c **** 
+ 123:../../../../Lib/mpc23s17.c **** void MPC23s17SetBitsOnPortB(uint8_t portBout, uint8_t addr)
+ 124:../../../../Lib/mpc23s17.c **** {
+ 681               	.LM73:
+ 682               	.LFBB9:
+ 683 015e CF93      		push r28
+ 684               	/* prologue: function */
+ 685               	/* frame size = 0 */
+ 686               	/* stack size = 1 */
+ 687               	.L__stack_usage = 1
+ 125:../../../../Lib/mpc23s17.c ****   addr = addr<<1;
+ 689               	.LM74:
+ 690 0160 C62F      		mov r28,r22
+ 691 0162 CC0F      		lsl r28
+ 126:../../../../Lib/mpc23s17.c ****   addr &= 0x0E;
+ 693               	.LM75:
+ 694 0164 CE70      		andi r28,lo8(14)
+ 127:../../../../Lib/mpc23s17.c ****   addr |= 0x40;        //OPCODE 0100 AAA 0 bit0: 0 - zapis, 1 - odczyt 
+ 128:../../../../Lib/mpc23s17.c **** 
+ 129:../../../../Lib/mpc23s17.c ****   portB |= portBout;
+ 696               	.LM76:
+ 697 0166 9091 0000 		lds r25,portB
+ 698 016a 892B      		or r24,r25
+ 699 016c 8093 0000 		sts portB,r24
+ 130:../../../../Lib/mpc23s17.c **** 
+ 131:../../../../Lib/mpc23s17.c ****   spiTake();
+ 701               	.LM77:
+ 702 0170 0E94 0000 		call spiTake
+ 132:../../../../Lib/mpc23s17.c ****   enableSpiMPC23S17();
+ 704               	.LM78:
+ 705 0174 0E94 0000 		call enableSpiMPC23S17
+ 133:../../../../Lib/mpc23s17.c ****   spiSend(addr);
+ 707               	.LM79:
+ 708 0178 8C2F      		mov r24,r28
+ 709 017a 8064      		ori r24,lo8(64)
+ 710 017c 0E94 0000 		call spiSend
+ 134:../../../../Lib/mpc23s17.c ****   spiSend(B0_OLATB);
+ 712               	.LM80:
+ 713 0180 85E1      		ldi r24,lo8(21)
+ 714 0182 0E94 0000 		call spiSend
+ 135:../../../../Lib/mpc23s17.c ****   spiSend(portB);  
+ 716               	.LM81:
+ 717 0186 8091 0000 		lds r24,portB
+ 718 018a 0E94 0000 		call spiSend
+ 136:../../../../Lib/mpc23s17.c ****   disableSpiMPC23S17();
+ 720               	.LM82:
+ 721 018e 0E94 0000 		call disableSpiMPC23S17
+ 722               	/* epilogue start */
+ 137:../../../../Lib/mpc23s17.c ****   spiGive();
+ 138:../../../../Lib/mpc23s17.c **** }
+ 724               	.LM83:
+ 725 0192 CF91      		pop r28
+ 137:../../../../Lib/mpc23s17.c ****   spiGive();
+ 727               	.LM84:
+ 728 0194 0C94 0000 		jmp spiGive
+ 730               	.Lscope9:
+ 732               		.stabd	78,0,0
+ 736               	.global	MPC23s17ClearBitsOnPortB
+ 738               	MPC23s17ClearBitsOnPortB:
+ 739               		.stabd	46,0,0
+ 139:../../../../Lib/mpc23s17.c **** 
+ 140:../../../../Lib/mpc23s17.c **** void MPC23s17ClearBitsOnPortB(uint8_t portBout, uint8_t addr)
+ 141:../../../../Lib/mpc23s17.c **** {
+ 741               	.LM85:
+ 742               	.LFBB10:
+ 743 0198 CF93      		push r28
+ 744               	/* prologue: function */
+ 745               	/* frame size = 0 */
+ 746               	/* stack size = 1 */
+ 747               	.L__stack_usage = 1
+ 142:../../../../Lib/mpc23s17.c ****   addr = addr<<1;
+ 749               	.LM86:
+ 750 019a C62F      		mov r28,r22
+ 751 019c CC0F      		lsl r28
+ 143:../../../../Lib/mpc23s17.c ****   addr &= 0x0E;
+ 753               	.LM87:
+ 754 019e CE70      		andi r28,lo8(14)
+ 144:../../../../Lib/mpc23s17.c ****   addr |= 0x40;        //OPCODE 0100 AAA 0 bit0: 0 - zapis, 1 - odczyt 
+ 145:../../../../Lib/mpc23s17.c **** 
+ 146:../../../../Lib/mpc23s17.c ****   portB &= (~portBout);
+ 756               	.LM88:
+ 757 01a0 9091 0000 		lds r25,portB
+ 758 01a4 8095      		com r24
+ 759 01a6 9823      		and r25,r24
+ 760 01a8 9093 0000 		sts portB,r25
+ 147:../../../../Lib/mpc23s17.c **** 
+ 148:../../../../Lib/mpc23s17.c ****   spiTake();
+ 762               	.LM89:
+ 763 01ac 0E94 0000 		call spiTake
+ 149:../../../../Lib/mpc23s17.c ****   enableSpiMPC23S17();
+ 765               	.LM90:
+ 766 01b0 0E94 0000 		call enableSpiMPC23S17
+ 150:../../../../Lib/mpc23s17.c ****   spiSend(addr);
+ 768               	.LM91:
+ 769 01b4 8C2F      		mov r24,r28
+ 770 01b6 8064      		ori r24,lo8(64)
+ 771 01b8 0E94 0000 		call spiSend
+ 151:../../../../Lib/mpc23s17.c ****   spiSend(B0_OLATB);
+ 773               	.LM92:
+ 774 01bc 85E1      		ldi r24,lo8(21)
+ 775 01be 0E94 0000 		call spiSend
+ 152:../../../../Lib/mpc23s17.c ****   spiSend(portB);  
+ 777               	.LM93:
+ 778 01c2 8091 0000 		lds r24,portB
+ 779 01c6 0E94 0000 		call spiSend
+ 153:../../../../Lib/mpc23s17.c **** 
+ 154:../../../../Lib/mpc23s17.c ****   disableSpiMPC23S17();
+ 781               	.LM94:
+ 782 01ca 0E94 0000 		call disableSpiMPC23S17
+ 783               	/* epilogue start */
+ 155:../../../../Lib/mpc23s17.c ****   spiGive();
+ 156:../../../../Lib/mpc23s17.c **** }
+ 785               	.LM95:
+ 786 01ce CF91      		pop r28
+ 155:../../../../Lib/mpc23s17.c ****   spiGive();
+ 788               	.LM96:
+ 789 01d0 0C94 0000 		jmp spiGive
+ 791               	.Lscope10:
+ 793               		.stabd	78,0,0
+ 796               	.global	MPC23s17ReadPortA
+ 798               	MPC23s17ReadPortA:
+ 799               		.stabd	46,0,0
+ 157:../../../../Lib/mpc23s17.c **** 
+ 158:../../../../Lib/mpc23s17.c **** uint8_t MPC23s17ReadPortA(uint8_t addr)
+ 159:../../../../Lib/mpc23s17.c **** {
+ 801               	.LM97:
+ 802               	.LFBB11:
+ 803 01d4 1F93      		push r17
+ 804 01d6 CF93      		push r28
+ 805 01d8 DF93      		push r29
+ 806 01da 1F92      		push __zero_reg__
+ 807 01dc CDB7      		in r28,__SP_L__
+ 808 01de DEB7      		in r29,__SP_H__
+ 809               	/* prologue: function */
+ 810               	/* frame size = 1 */
+ 811               	/* stack size = 4 */
+ 812               	.L__stack_usage = 4
+ 160:../../../../Lib/mpc23s17.c ****   addr = addr<<1;
+ 814               	.LM98:
+ 815 01e0 880F      		lsl r24
+ 161:../../../../Lib/mpc23s17.c ****   addr &= 0x0E;
+ 817               	.LM99:
+ 818 01e2 8E70      		andi r24,lo8(14)
+ 162:../../../../Lib/mpc23s17.c ****   addr |= 0x41;        //OPCODE 0100 AAA 0 bit0: 0 - zapis, 1 - odczyt 
+ 820               	.LM100:
+ 821 01e4 182F      		mov r17,r24
+ 822 01e6 1164      		ori r17,lo8(65)
+ 163:../../../../Lib/mpc23s17.c **** 
+ 164:../../../../Lib/mpc23s17.c ****   spiTake();
+ 824               	.LM101:
+ 825 01e8 0E94 0000 		call spiTake
+ 165:../../../../Lib/mpc23s17.c ****   enableSpiMPC23S17();
+ 827               	.LM102:
+ 828 01ec 0E94 0000 		call enableSpiMPC23S17
+ 166:../../../../Lib/mpc23s17.c **** 
+ 167:../../../../Lib/mpc23s17.c ****   spiSend(addr);
+ 830               	.LM103:
+ 831 01f0 812F      		mov r24,r17
+ 832 01f2 0E94 0000 		call spiSend
+ 168:../../../../Lib/mpc23s17.c ****   spiSend(B0_GPIOA);
+ 834               	.LM104:
+ 835 01f6 82E1      		ldi r24,lo8(18)
+ 836 01f8 0E94 0000 		call spiSend
+ 169:../../../../Lib/mpc23s17.c ****   uint8_t result = spiSend(addr);  
+ 838               	.LM105:
+ 839 01fc 812F      		mov r24,r17
+ 840 01fe 0E94 0000 		call spiSend
+ 170:../../../../Lib/mpc23s17.c **** 
+ 171:../../../../Lib/mpc23s17.c ****   disableSpiMPC23S17();
+ 842               	.LM106:
+ 843 0202 8983      		std Y+1,r24
+ 844 0204 0E94 0000 		call disableSpiMPC23S17
+ 172:../../../../Lib/mpc23s17.c ****   spiGive();
+ 846               	.LM107:
+ 847 0208 0E94 0000 		call spiGive
+ 173:../../../../Lib/mpc23s17.c **** 
+ 174:../../../../Lib/mpc23s17.c ****   return result; 
+ 175:../../../../Lib/mpc23s17.c **** }
+ 849               	.LM108:
+ 850 020c 8981      		ldd r24,Y+1
+ 851               	/* epilogue start */
+ 852 020e 0F90      		pop __tmp_reg__
+ 853 0210 DF91      		pop r29
+ 854 0212 CF91      		pop r28
+ 855 0214 1F91      		pop r17
+ 856 0216 0895      		ret
+ 861               	.Lscope11:
+ 863               		.stabd	78,0,0
+ 866               	.global	MPC23s17ReadPortB
+ 868               	MPC23s17ReadPortB:
+ 869               		.stabd	46,0,0
+ 176:../../../../Lib/mpc23s17.c **** 
+ 177:../../../../Lib/mpc23s17.c **** uint8_t MPC23s17ReadPortB(uint8_t addr)
+ 178:../../../../Lib/mpc23s17.c **** {
+ 871               	.LM109:
+ 872               	.LFBB12:
+ 873 0218 1F93      		push r17
+ 874 021a CF93      		push r28
+ 875 021c DF93      		push r29
+ 876 021e 1F92      		push __zero_reg__
+ 877 0220 CDB7      		in r28,__SP_L__
+ 878 0222 DEB7      		in r29,__SP_H__
+ 879               	/* prologue: function */
+ 880               	/* frame size = 1 */
+ 881               	/* stack size = 4 */
+ 882               	.L__stack_usage = 4
+ 179:../../../../Lib/mpc23s17.c ****   addr = addr<<1;
+ 884               	.LM110:
+ 885 0224 880F      		lsl r24
+ 180:../../../../Lib/mpc23s17.c ****   addr &= 0x0E;
+ 887               	.LM111:
+ 888 0226 8E70      		andi r24,lo8(14)
+ 181:../../../../Lib/mpc23s17.c ****   addr |= 0x41;        //OPCODE 0100 AAA 0 bit0: 0 - zapis, 1 - odczyt 
+ 890               	.LM112:
+ 891 0228 182F      		mov r17,r24
+ 892 022a 1164      		ori r17,lo8(65)
+ 182:../../../../Lib/mpc23s17.c **** 
+ 183:../../../../Lib/mpc23s17.c ****   spiTake();
+ 894               	.LM113:
+ 895 022c 0E94 0000 		call spiTake
+ 184:../../../../Lib/mpc23s17.c ****   enableSpiMPC23S17();
+ 897               	.LM114:
+ 898 0230 0E94 0000 		call enableSpiMPC23S17
+ 185:../../../../Lib/mpc23s17.c **** 
+ 186:../../../../Lib/mpc23s17.c ****   spiSend(addr);
+ 900               	.LM115:
+ 901 0234 812F      		mov r24,r17
+ 902 0236 0E94 0000 		call spiSend
+ 187:../../../../Lib/mpc23s17.c ****   spiSend(B0_GPIOB);
+ 904               	.LM116:
+ 905 023a 83E1      		ldi r24,lo8(19)
+ 906 023c 0E94 0000 		call spiSend
+ 188:../../../../Lib/mpc23s17.c ****   uint8_t result = spiSend(addr);  
+ 908               	.LM117:
+ 909 0240 812F      		mov r24,r17
+ 910 0242 0E94 0000 		call spiSend
+ 189:../../../../Lib/mpc23s17.c **** 
+ 190:../../../../Lib/mpc23s17.c ****   disableSpiMPC23S17();
+ 912               	.LM118:
+ 913 0246 8983      		std Y+1,r24
+ 914 0248 0E94 0000 		call disableSpiMPC23S17
+ 191:../../../../Lib/mpc23s17.c ****   spiGive();
+ 916               	.LM119:
+ 917 024c 0E94 0000 		call spiGive
+ 192:../../../../Lib/mpc23s17.c **** 
+ 193:../../../../Lib/mpc23s17.c ****   return result; 
+ 194:../../../../Lib/mpc23s17.c **** }
+ 919               	.LM120:
+ 920 0250 8981      		ldd r24,Y+1
+ 921               	/* epilogue start */
+ 922 0252 0F90      		pop __tmp_reg__
+ 923 0254 DF91      		pop r29
+ 924 0256 CF91      		pop r28
+ 925 0258 1F91      		pop r17
+ 926 025a 0895      		ret
+ 931               	.Lscope12:
+ 933               		.stabd	78,0,0
+ 934               		.comm	portB,1,1
+ 935               		.comm	portA,1,1
+ 936               		.comm	czasRtc,7,1
+ 937               		.comm	sockets,2,1
+ 938               		.comm	tcpDebugLevel,1,1
+ 939               		.comm	tcpDebugStream,2,1
+ 940               		.comm	IpMyConfig,15,1
+ 941               		.comm	udpDbgLevel,1,1
+ 942               		.comm	udpDbgStream,2,1
+ 943               		.comm	udpSocket,2,1
+ 944               		.comm	icmpDebugLevel,1,1
+ 945               		.comm	icmpDebug,2,1
+ 946               		.comm	arpDebugLevel,1,1
+ 947               		.comm	arpDebug,2,1
+ 948               		.comm	nicState,14,1
+ 949               		.comm	xSemaphoreRs485,2,1
+ 950               		.comm	lockSensors,2,1
+ 951               		.comm	xSemaphoreSpiSS,2,1
+ 952               		.comm	rollers,2,1
+ 953               		.comm	wwwport,1,1
+ 954               		.comm	klastry,128,1
+ 976               		.weak	spiSend
+ 978               	.Letext0:
+ 979               		.ident	"GCC: (GNU) 4.9.2"
+ 980               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 mpc23s17.c
+     /tmp/cci90RbV.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/cci90RbV.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/cci90RbV.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/cci90RbV.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/cci90RbV.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/cci90RbV.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/cci90RbV.s:277    .text:0000000000000000 enableSpiMPC23S17
+     /tmp/cci90RbV.s:294    .text:0000000000000002 disableSpiMPC23S17
+     /tmp/cci90RbV.s:313    .text:0000000000000004 MPC23s17SetDirA
+     /tmp/cci90RbV.s:373    .text:0000000000000038 MPC23s17SetDirB
+     /tmp/cci90RbV.s:431    .text:000000000000006c MPC23s17SetPortA
+                            *COM*:0000000000000001 portA
+     /tmp/cci90RbV.s:499    .text:00000000000000b4 MPC23s17SetBitsOnPortA
+     /tmp/cci90RbV.s:559    .text:00000000000000ee MPC23s17ClearBitsOnPortA
+     /tmp/cci90RbV.s:620    .text:000000000000012a MPC23s17SetPortB
+                            *COM*:0000000000000001 portB
+     /tmp/cci90RbV.s:678    .text:000000000000015e MPC23s17SetBitsOnPortB
+     /tmp/cci90RbV.s:738    .text:0000000000000198 MPC23s17ClearBitsOnPortB
+     /tmp/cci90RbV.s:798    .text:00000000000001d4 MPC23s17ReadPortA
+     /tmp/cci90RbV.s:868    .text:0000000000000218 MPC23s17ReadPortB
+                            *COM*:0000000000000007 czasRtc
+                            *COM*:0000000000000002 sockets
+                            *COM*:0000000000000001 tcpDebugLevel
+                            *COM*:0000000000000002 tcpDebugStream
+                            *COM*:000000000000000f IpMyConfig
+                            *COM*:0000000000000001 udpDbgLevel
+                            *COM*:0000000000000002 udpDbgStream
+                            *COM*:0000000000000002 udpSocket
+                            *COM*:0000000000000001 icmpDebugLevel
+                            *COM*:0000000000000002 icmpDebug
+                            *COM*:0000000000000001 arpDebugLevel
+                            *COM*:0000000000000002 arpDebug
+                            *COM*:000000000000000e nicState
+                            *COM*:0000000000000002 xSemaphoreRs485
+                            *COM*:0000000000000002 lockSensors
+                            *COM*:0000000000000002 xSemaphoreSpiSS
+                            *COM*:0000000000000002 rollers
+                            *COM*:0000000000000001 wwwport
+                            *COM*:0000000000000080 klastry
+
+UNDEFINED SYMBOLS
+spiTake
+spiSend
+spiGive
+__do_clear_bss

@@ -1,0 +1,37 @@
+(ISO8859-1 latin 1 encoding)
+- hex2bin 1.0.8 - 20100402 - Jacques Pelletier
+	Fixed a bug with physical address calculation with extended linear address records
+	ADDRESS_MASK is now calculated from MEMORY_SIZE
+
+- hex2bin 1.0.7 - 20091212 - Jacques Pelletier
+	Fixed the crash on 0 byte length data records
+	
+- hex2bin 1.0.6 - 20080103 - Jacques Pelletier
+	Fixed a bug when generating binary files near the end of the buffer
+	
+- hex2bin 1.0.5	- 20071005 - Paweł Grabski -
+	Improved parsing of options.
+
+- hex2bin 1.0.4	- 20050126 - Jacques Pelletier -
+	Corrected the conversion LF -> CR+LF bug
+	applied patch for correcting the incorrect handling of 
+	extended segment address record
+	added the Rockwell checksum extensions, and modified them a bit to allow
+	other types later.
+	
+- hex2bin 1.0.3	- 20040617 - Alf Lacis -
+	Added pad byte (may not always want FF).
+	Added 'break;' to remove GNU compiler warning about label at
+	end of compound statement
+	Added PROGRAM & VERSION strings.
+
+- hex2bin 1.0.2	-
+	Corrected Bug in checksum verification
+
+- hex2bin 1.0.1 -
+	Added checking for memory indexing out of bound.
+	Added segmented and linear extended addressing in hex2bin.
+	Corrected an error: & were interverted with && (and bitwise, logical and).
+
+- hex2bin 1.0.0 -
+    Initial release

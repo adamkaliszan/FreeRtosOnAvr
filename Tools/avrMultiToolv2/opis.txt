@@ -1,0 +1,11 @@
+PORT A - JTAG
+0 - TCK
+1 - TDI
+2 - TDO
+3 - TMS
+
+PORT B - ISP
+0 - SCK
+1 - MOSI
+2 - MISO
+3 - RST

@@ -1,0 +1,890 @@
+   1               		.file	"main.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  10               		.text
+  11               	.Ltext0:
+ 272               		.section	.init4,"ax",@progbits
+ 274               	.global	initExternalMem
+ 276               	initExternalMem:
+ 277               		.stabd	46,0,0
+   1:main.c        **** /*
+   2:main.c        **** 
+   3:main.c        **** 	FreeRTOS.org V5.2.0 - Copyright (C) 2003-2009 Richard Barry.
+   4:main.c        **** 	This file is part of the FreeRTOS.org distribution.
+   5:main.c        **** 	FreeRTOS.org is free software; you can redistribute it and/or modify it
+   6:main.c        **** 	under the terms of the GNU General Public License (version 2) as published
+   7:main.c        **** 	by the Free Software Foundation and modified by the FreeRTOS exception.
+   8:main.c        **** 	FreeRTOS.org is distributed in the hope that it will be useful,	but WITHOUT
+   9:main.c        **** 	ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  10:main.c        **** 	FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+  11:main.c        **** 	more details.
+  12:main.c        **** 
+  13:main.c        **** 	You should have received a copy of the GNU General Public License along
+  14:main.c        **** 	with FreeRTOS.org; if not, write to the Free Software Foundation, Inc., 59
+  15:main.c        **** 	Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+  16:main.c        **** 
+  17:main.c        **** 	A special exception to the GPL is included to allow you to distribute a
+  18:main.c        **** 	combined work that includes FreeRTOS.org without being obliged to provide
+  19:main.c        **** 	the source code for any proprietary components.  See the licensing section
+  20:main.c        **** 	of http://www.FreeRTOS.org for full details.
+  21:main.c        **** 	***************************************************************************
+  22:main.c        **** 	*                                                                         *
+  23:main.c        **** 	* Get the FreeRTOS eBook!  See http://www.FreeRTOS.org/Documentation      *
+  24:main.c        **** 	*                                                                         *
+  25:main.c        **** 	* This is a concise, step by step, 'hands on' guide that describes both   *
+  26:main.c        **** 	* general multitasking concepts and FreeRTOS specifics. It presents and   *
+  27:main.c        **** 	* explains numerous examples that are written using the FreeRTOS API.     *
+  28:main.c        **** 	* Full source code for all the examples is provided in an accompanying    *
+  29:main.c        **** 	* .zip file.                                                              *
+  30:main.c        **** 	*                                                                         *
+  31:main.c        **** 	***************************************************************************
+  32:main.c        **** 	1 tab == 4 spaces!
+  33:main.c        **** 	Please ensure to read the configuration and relevant port sections of the
+  34:main.c        **** 	online documentation.
+  35:main.c        **** 
+  36:main.c        **** 	http://www.FreeRTOS.org - Documentation, latest information, license and
+  37:main.c        **** 	contact details.
+  38:main.c        **** 
+  39:main.c        **** 	http://www.SafeRTOS.com - A version that is certified for use in safety
+  40:main.c        **** 	critical systems.
+  41:main.c        **** 
+  42:main.c        **** 	http://www.OpenRTOS.com - Commercial support, development, porting,
+  43:main.c        **** 	licensing and training services.
+  44:main.c        **** */
+  45:main.c        **** 
+  46:main.c        **** #include "main.h"
+  47:main.c        **** 
+  48:main.c        **** uint8_t timer100Hz = 0;
+  49:main.c        **** 
+  50:main.c        **** xQueueHandle xVtyTx;
+  51:main.c        **** xQueueHandle xVtyRec;
+  52:main.c        **** 
+  53:main.c        **** xQueueHandle xRs485Tx;
+  54:main.c        **** xQueueHandle xRs485Rec;
+  55:main.c        **** 
+  56:main.c        **** 
+  57:main.c        **** volatile uint8_t temperature;
+  58:main.c        **** volatile uint8_t voltage;
+  59:main.c        **** 
+  60:main.c        **** 
+  61:main.c        **** void vApplicationIdleHook( void );
+  62:main.c        **** 
+  63:main.c        **** /**
+  64:main.c        ****  * RTC clock support
+  65:main.c        ****  */
+  66:main.c        **** void vApplicationTickHook( void );
+  67:main.c        **** 
+  68:main.c        **** xTaskHandle xHandleVTY_USB;
+  69:main.c        **** xTaskHandle xHandleVTY_UDP;
+  70:main.c        **** xTaskHandle xHandleEnc;
+  71:main.c        **** xTaskHandle xHandleSensors;
+  72:main.c        **** 
+  73:main.c        **** void initExternalMem(void)
+  74:main.c        **** {
+ 279               	.LM0:
+ 280               	.LFBB1:
+ 281               	/* prologue: naked */
+ 282               	/* frame size = 0 */
+ 283               	/* stack size = 0 */
+ 284               	.L__stack_usage = 0
+  75:main.c        ****   MCUCR |= _BV(SRE);          //Włączenie pamięci zewnętrznej
+ 286               	.LM1:
+ 287 0000 85B7      		in r24,0x35
+ 288 0002 8068      		ori r24,lo8(-128)
+ 289 0004 85BF      		out 0x35,r24
+  76:main.c        ****   MCUCR |= 0x0E;
+ 291               	.LM2:
+ 292 0006 85B7      		in r24,0x35
+ 293 0008 8E60      		ori r24,lo8(14)
+ 294 000a 85BF      		out 0x35,r24
+  77:main.c        **** 
+  78:main.c        **** #define testZewPamiec 1
+  79:main.c        **** #if testZewPamiec == 1
+  80:main.c        **** #define SND(DTA) UDR1=DTA; \
+  81:main.c        ****   while( ! (UCSR1A & (1<<UDRE))); \
+  82:main.c        **** 
+  83:main.c        ****   UBRR1L = 7;
+ 296               	.LM3:
+ 297 000c 87E0      		ldi r24,lo8(7)
+ 298 000e 8093 9900 		sts 153,r24
+  84:main.c        ****   UBRR1H = 0;
+ 300               	.LM4:
+ 301 0012 1092 9800 		sts 152,__zero_reg__
+  85:main.c        ****   UCSR1B = 1<<TXEN1;
+ 303               	.LM5:
+ 304 0016 88E0      		ldi r24,lo8(8)
+ 305 0018 8093 9A00 		sts 154,r24
+  86:main.c        **** 
+  87:main.c        ****   SND('\r') SND('\n') SND('M') SND('e') SND('m') SND('o') SND('r') SND('y') SND('t') SND('e') SND('
+ 307               	.LM6:
+ 308 001c 8DE0      		ldi r24,lo8(13)
+ 309 001e 8093 9C00 		sts 156,r24
+ 310               	.L2:
+ 312               	.LM7:
+ 313 0022 8091 9B00 		lds r24,155
+ 314 0026 85FF      		sbrs r24,5
+ 315 0028 00C0      		rjmp .L2
+ 317               	.LM8:
+ 318 002a 8AE0      		ldi r24,lo8(10)
+ 319 002c 8093 9C00 		sts 156,r24
+ 320               	.L3:
+ 322               	.LM9:
+ 323 0030 8091 9B00 		lds r24,155
+ 324 0034 85FF      		sbrs r24,5
+ 325 0036 00C0      		rjmp .L3
+ 327               	.LM10:
+ 328 0038 8DE4      		ldi r24,lo8(77)
+ 329 003a 8093 9C00 		sts 156,r24
+ 330               	.L4:
+ 332               	.LM11:
+ 333 003e 8091 9B00 		lds r24,155
+ 334 0042 85FF      		sbrs r24,5
+ 335 0044 00C0      		rjmp .L4
+ 337               	.LM12:
+ 338 0046 85E6      		ldi r24,lo8(101)
+ 339 0048 8093 9C00 		sts 156,r24
+ 340               	.L5:
+ 342               	.LM13:
+ 343 004c 8091 9B00 		lds r24,155
+ 344 0050 85FF      		sbrs r24,5
+ 345 0052 00C0      		rjmp .L5
+ 347               	.LM14:
+ 348 0054 8DE6      		ldi r24,lo8(109)
+ 349 0056 8093 9C00 		sts 156,r24
+ 350               	.L6:
+ 352               	.LM15:
+ 353 005a 8091 9B00 		lds r24,155
+ 354 005e 85FF      		sbrs r24,5
+ 355 0060 00C0      		rjmp .L6
+ 357               	.LM16:
+ 358 0062 8FE6      		ldi r24,lo8(111)
+ 359 0064 8093 9C00 		sts 156,r24
+ 360               	.L7:
+ 362               	.LM17:
+ 363 0068 8091 9B00 		lds r24,155
+ 364 006c 85FF      		sbrs r24,5
+ 365 006e 00C0      		rjmp .L7
+ 367               	.LM18:
+ 368 0070 82E7      		ldi r24,lo8(114)
+ 369 0072 8093 9C00 		sts 156,r24
+ 370               	.L8:
+ 372               	.LM19:
+ 373 0076 8091 9B00 		lds r24,155
+ 374 007a 85FF      		sbrs r24,5
+ 375 007c 00C0      		rjmp .L8
+ 377               	.LM20:
+ 378 007e 89E7      		ldi r24,lo8(121)
+ 379 0080 8093 9C00 		sts 156,r24
+ 380               	.L9:
+ 382               	.LM21:
+ 383 0084 8091 9B00 		lds r24,155
+ 384 0088 85FF      		sbrs r24,5
+ 385 008a 00C0      		rjmp .L9
+ 387               	.LM22:
+ 388 008c 84E7      		ldi r24,lo8(116)
+ 389 008e 8093 9C00 		sts 156,r24
+ 390               	.L10:
+ 392               	.LM23:
+ 393 0092 8091 9B00 		lds r24,155
+ 394 0096 85FF      		sbrs r24,5
+ 395 0098 00C0      		rjmp .L10
+ 397               	.LM24:
+ 398 009a 85E6      		ldi r24,lo8(101)
+ 399 009c 8093 9C00 		sts 156,r24
+ 400               	.L11:
+ 402               	.LM25:
+ 403 00a0 8091 9B00 		lds r24,155
+ 404 00a4 85FF      		sbrs r24,5
+ 405 00a6 00C0      		rjmp .L11
+ 407               	.LM26:
+ 408 00a8 83E7      		ldi r24,lo8(115)
+ 409 00aa 8093 9C00 		sts 156,r24
+ 410               	.L12:
+ 412               	.LM27:
+ 413 00ae 8091 9B00 		lds r24,155
+ 414 00b2 85FF      		sbrs r24,5
+ 415 00b4 00C0      		rjmp .L12
+ 417               	.LM28:
+ 418 00b6 84E7      		ldi r24,lo8(116)
+ 419 00b8 8093 9C00 		sts 156,r24
+ 420               	.L13:
+ 422               	.LM29:
+ 423 00bc 8091 9B00 		lds r24,155
+ 424 00c0 85FF      		sbrs r24,5
+ 425 00c2 00C0      		rjmp .L13
+ 427               	.LM30:
+ 428 00c4 8DE0      		ldi r24,lo8(13)
+ 429 00c6 8093 9C00 		sts 156,r24
+ 430               	.L14:
+ 432               	.LM31:
+ 433 00ca 8091 9B00 		lds r24,155
+ 434 00ce 85FF      		sbrs r24,5
+ 435 00d0 00C0      		rjmp .L14
+ 437               	.LM32:
+ 438 00d2 8AE0      		ldi r24,lo8(10)
+ 439 00d4 8093 9C00 		sts 156,r24
+ 440               	.L15:
+ 442               	.LM33:
+ 443 00d8 8091 9B00 		lds r24,155
+ 444 00dc 85FF      		sbrs r24,5
+ 445 00de 00C0      		rjmp .L15
+ 446 00e0 81E1      		ldi r24,lo8(17)
+ 447 00e2 90E0      		ldi r25,0
+ 448               	.LBB2:
+  88:main.c        **** 
+  89:main.c        ****   uint8_t hiAddr;
+  90:main.c        ****   for (hiAddr = 0x11; hiAddr < 0xFF; hiAddr++)
+  91:main.c        ****   {
+  92:main.c        ****     uint8_t znHi = (hiAddr>>4 & 0x0F);
+  93:main.c        ****     uint8_t znLo = (hiAddr & 0x0F);
+  94:main.c        **** 
+  95:main.c        ****     znHi = (znHi < 10) ? znHi + '0' : znHi + 'A' - 10;
+  96:main.c        ****     znLo = (znLo < 10) ? znLo + '0' : znLo + 'A' - 10;
+  97:main.c        **** 
+  98:main.c        ****     SND('\r') SND('0') SND('x') SND(znHi) SND(znLo) SND('*') SND('*') SND(' ')
+ 450               	.LM34:
+ 451 00e4 6DE0      		ldi r22,lo8(13)
+ 452 00e6 70E3      		ldi r23,lo8(48)
+ 453 00e8 C8E7      		ldi r28,lo8(120)
+ 454 00ea 4AE2      		ldi r20,lo8(42)
+ 455 00ec D0E2      		ldi r29,lo8(32)
+  99:main.c        **** 
+ 100:main.c        ****     uint16_t addr;
+ 101:main.c        ****     uint16_t startAddr = hiAddr<<8;
+ 102:main.c        ****     uint16_t stopAddr = startAddr + 0xFF;
+ 103:main.c        **** 
+ 104:main.c        ****     for (addr = startAddr; addr <= stopAddr; addr++)
+ 105:main.c        ****         *((uint8_t *) addr) = (uint8_t)((addr>>1) & 0xFF);
+ 106:main.c        **** 
+ 107:main.c        ****     uint8_t isOK=1;
+ 108:main.c        ****     for (addr = startAddr; addr <= stopAddr; addr++)
+ 109:main.c        ****         if (*((uint8_t *) addr) != (uint8_t)((addr>>1) & 0xFF))
+ 110:main.c        ****             isOK = 0;
+ 111:main.c        **** 
+ 112:main.c        ****     if (isOK == 1) { SND ('O') SND ('K') SND('\n') }
+ 113:main.c        ****     else           { SND ('F') SND ('A') SND ('I') SND('L') SND('\n') }
+ 457               	.LM35:
+ 458 00ee 16E4      		ldi r17,lo8(70)
+ 459 00f0 01E4      		ldi r16,lo8(65)
+ 460 00f2 39E4      		ldi r19,lo8(73)
+ 461 00f4 D32E      		mov r13,r19
+ 462 00f6 5CE4      		ldi r21,lo8(76)
+ 463 00f8 C52E      		mov r12,r21
+ 464 00fa 5AE0      		ldi r21,lo8(10)
+ 112:main.c        ****     else           { SND ('F') SND ('A') SND ('I') SND('L') SND('\n') }
+ 466               	.LM36:
+ 467 00fc EFE4      		ldi r30,lo8(79)
+ 468 00fe BE2E      		mov r11,r30
+ 469 0100 FBE4      		ldi r31,lo8(75)
+ 470 0102 AF2E      		mov r10,r31
+ 471               	.L37:
+  92:main.c        ****     uint8_t znLo = (hiAddr & 0x0F);
+ 473               	.LM37:
+ 474 0104 382F      		mov r19,r24
+ 475 0106 3295      		swap r19
+ 476 0108 3F70      		andi r19,lo8(15)
+  93:main.c        **** 
+ 478               	.LM38:
+ 479 010a 282F      		mov r18,r24
+ 480 010c 2F70      		andi r18,lo8(15)
+  95:main.c        ****     znLo = (znLo < 10) ? znLo + '0' : znLo + 'A' - 10;
+ 482               	.LM39:
+ 483 010e 3A30      		cpi r19,lo8(10)
+ 484 0110 00F4      		brsh .L16
+  95:main.c        ****     znLo = (znLo < 10) ? znLo + '0' : znLo + 'A' - 10;
+ 486               	.LM40:
+ 487 0112 305D      		subi r19,lo8(-(48))
+ 488 0114 00C0      		rjmp .L17
+ 489               	.L16:
+  95:main.c        ****     znLo = (znLo < 10) ? znLo + '0' : znLo + 'A' - 10;
+ 491               	.LM41:
+ 492 0116 395C      		subi r19,lo8(-(55))
+ 493               	.L17:
+  96:main.c        **** 
+ 495               	.LM42:
+ 496 0118 2A30      		cpi r18,lo8(10)
+ 497 011a 00F4      		brsh .L18
+  96:main.c        **** 
+ 499               	.LM43:
+ 500 011c 205D      		subi r18,lo8(-(48))
+ 501 011e 00C0      		rjmp .L19
+ 502               	.L18:
+  96:main.c        **** 
+ 504               	.LM44:
+ 505 0120 295C      		subi r18,lo8(-(55))
+ 506               	.L19:
+  98:main.c        **** 
+ 508               	.LM45:
+ 509 0122 6093 9C00 		sts 156,r22
+ 510               	.L20:
+  98:main.c        **** 
+ 512               	.LM46:
+ 513 0126 E091 9B00 		lds r30,155
+ 514 012a E5FF      		sbrs r30,5
+ 515 012c 00C0      		rjmp .L20
+  98:main.c        **** 
+ 517               	.LM47:
+ 518 012e 7093 9C00 		sts 156,r23
+ 519               	.L21:
+  98:main.c        **** 
+ 521               	.LM48:
+ 522 0132 E091 9B00 		lds r30,155
+ 523 0136 E5FF      		sbrs r30,5
+ 524 0138 00C0      		rjmp .L21
+  98:main.c        **** 
+ 526               	.LM49:
+ 527 013a C093 9C00 		sts 156,r28
+ 528               	.L22:
+  98:main.c        **** 
+ 530               	.LM50:
+ 531 013e E091 9B00 		lds r30,155
+ 532 0142 E5FF      		sbrs r30,5
+ 533 0144 00C0      		rjmp .L22
+  98:main.c        **** 
+ 535               	.LM51:
+ 536 0146 3093 9C00 		sts 156,r19
+ 537               	.L23:
+  98:main.c        **** 
+ 539               	.LM52:
+ 540 014a 3091 9B00 		lds r19,155
+ 541 014e 35FF      		sbrs r19,5
+ 542 0150 00C0      		rjmp .L23
+  98:main.c        **** 
+ 544               	.LM53:
+ 545 0152 2093 9C00 		sts 156,r18
+ 546               	.L24:
+  98:main.c        **** 
+ 548               	.LM54:
+ 549 0156 2091 9B00 		lds r18,155
+ 550 015a 25FF      		sbrs r18,5
+ 551 015c 00C0      		rjmp .L24
+  98:main.c        **** 
+ 553               	.LM55:
+ 554 015e 4093 9C00 		sts 156,r20
+ 555               	.L25:
+  98:main.c        **** 
+ 557               	.LM56:
+ 558 0162 2091 9B00 		lds r18,155
+ 559 0166 25FF      		sbrs r18,5
+ 560 0168 00C0      		rjmp .L25
+  98:main.c        **** 
+ 562               	.LM57:
+ 563 016a 4093 9C00 		sts 156,r20
+ 564               	.L26:
+  98:main.c        **** 
+ 566               	.LM58:
+ 567 016e 2091 9B00 		lds r18,155
+ 568 0172 25FF      		sbrs r18,5
+ 569 0174 00C0      		rjmp .L26
+  98:main.c        **** 
+ 571               	.LM59:
+ 572 0176 D093 9C00 		sts 156,r29
+ 573               	.L27:
+  98:main.c        **** 
+ 575               	.LM60:
+ 576 017a 2091 9B00 		lds r18,155
+ 577 017e 25FF      		sbrs r18,5
+ 578 0180 00C0      		rjmp .L27
+ 101:main.c        ****     uint16_t stopAddr = startAddr + 0xFF;
+ 580               	.LM61:
+ 581 0182 F82F      		mov r31,r24
+ 582 0184 EE27      		clr r30
+ 102:main.c        **** 
+ 584               	.LM62:
+ 585 0186 9F01      		movw r18,r30
+ 586 0188 2150      		subi r18,1
+ 587 018a 3F4F      		sbci r19,-1
+ 104:main.c        ****         *((uint8_t *) addr) = (uint8_t)((addr>>1) & 0xFF);
+ 589               	.LM63:
+ 590 018c DF01      		movw r26,r30
+ 591 018e 00C0      		rjmp .L28
+ 592               	.L29:
+ 105:main.c        **** 
+ 594               	.LM64:
+ 595 0190 7D01      		movw r14,r26
+ 596 0192 F694      		lsr r15
+ 597 0194 E794      		ror r14
+ 598 0196 ED92      		st X+,r14
+ 599               	.L28:
+ 104:main.c        ****         *((uint8_t *) addr) = (uint8_t)((addr>>1) & 0xFF);
+ 601               	.LM65:
+ 602 0198 2A17      		cp r18,r26
+ 603 019a 3B07      		cpc r19,r27
+ 604 019c 00F4      		brsh .L29
+ 605 019e 9924      		clr r9
+ 606 01a0 9394      		inc r9
+ 607 01a2 00C0      		rjmp .L30
+ 608               	.L32:
+ 609 01a4 DF01      		movw r26,r30
+ 610 01a6 1196      		adiw r26,1
+ 109:main.c        ****             isOK = 0;
+ 612               	.LM66:
+ 613 01a8 7F01      		movw r14,r30
+ 614 01aa F694      		lsr r15
+ 615 01ac E794      		ror r14
+ 616 01ae E081      		ld r30,Z
+ 617 01b0 EE11      		cpse r30,r14
+ 110:main.c        **** 
+ 619               	.LM67:
+ 620 01b2 912C      		mov r9,__zero_reg__
+ 621               	.L31:
+ 622 01b4 FD01      		movw r30,r26
+ 623               	.L30:
+ 108:main.c        ****         if (*((uint8_t *) addr) != (uint8_t)((addr>>1) & 0xFF))
+ 625               	.LM68:
+ 626 01b6 2E17      		cp r18,r30
+ 627 01b8 3F07      		cpc r19,r31
+ 628 01ba 00F4      		brsh .L32
+ 112:main.c        ****     else           { SND ('F') SND ('A') SND ('I') SND('L') SND('\n') }
+ 630               	.LM69:
+ 631 01bc 21E0      		ldi r18,lo8(1)
+ 632 01be 9212      		cpse r9,r18
+ 633 01c0 00C0      		rjmp .L33
+ 112:main.c        ****     else           { SND ('F') SND ('A') SND ('I') SND('L') SND('\n') }
+ 635               	.LM70:
+ 636 01c2 B092 9C00 		sts 156,r11
+ 637               	.L34:
+ 112:main.c        ****     else           { SND ('F') SND ('A') SND ('I') SND('L') SND('\n') }
+ 639               	.LM71:
+ 640 01c6 2091 9B00 		lds r18,155
+ 641 01ca 25FF      		sbrs r18,5
+ 642 01cc 00C0      		rjmp .L34
+ 112:main.c        ****     else           { SND ('F') SND ('A') SND ('I') SND('L') SND('\n') }
+ 644               	.LM72:
+ 645 01ce A092 9C00 		sts 156,r10
+ 646               	.L35:
+ 112:main.c        ****     else           { SND ('F') SND ('A') SND ('I') SND('L') SND('\n') }
+ 648               	.LM73:
+ 649 01d2 2091 9B00 		lds r18,155
+ 650 01d6 25FF      		sbrs r18,5
+ 651 01d8 00C0      		rjmp .L35
+ 112:main.c        ****     else           { SND ('F') SND ('A') SND ('I') SND('L') SND('\n') }
+ 653               	.LM74:
+ 654 01da 5093 9C00 		sts 156,r21
+ 655               	.L36:
+ 112:main.c        ****     else           { SND ('F') SND ('A') SND ('I') SND('L') SND('\n') }
+ 657               	.LM75:
+ 658 01de 2091 9B00 		lds r18,155
+ 659 01e2 25FF      		sbrs r18,5
+ 660 01e4 00C0      		rjmp .L36
+ 661               	.L44:
+ 662 01e6 0196      		adiw r24,1
+ 663               	.LBE2:
+  90:main.c        ****   {
+ 665               	.LM76:
+ 666 01e8 8F3F      		cpi r24,-1
+ 667 01ea 9105      		cpc r25,__zero_reg__
+ 668 01ec 01F0      		breq .+2
+ 669 01ee 00C0      		rjmp .L37
+ 670 01f0 00C0      		rjmp .L112
+ 671               	.L33:
+ 672               	.LBB3:
+ 674               	.LM77:
+ 675 01f2 1093 9C00 		sts 156,r17
+ 676               	.L39:
+ 678               	.LM78:
+ 679 01f6 2091 9B00 		lds r18,155
+ 680 01fa 25FF      		sbrs r18,5
+ 681 01fc 00C0      		rjmp .L39
+ 683               	.LM79:
+ 684 01fe 0093 9C00 		sts 156,r16
+ 685               	.L40:
+ 687               	.LM80:
+ 688 0202 2091 9B00 		lds r18,155
+ 689 0206 25FF      		sbrs r18,5
+ 690 0208 00C0      		rjmp .L40
+ 692               	.LM81:
+ 693 020a D092 9C00 		sts 156,r13
+ 694               	.L41:
+ 696               	.LM82:
+ 697 020e 2091 9B00 		lds r18,155
+ 698 0212 25FF      		sbrs r18,5
+ 699 0214 00C0      		rjmp .L41
+ 701               	.LM83:
+ 702 0216 C092 9C00 		sts 156,r12
+ 703               	.L42:
+ 705               	.LM84:
+ 706 021a 2091 9B00 		lds r18,155
+ 707 021e 25FF      		sbrs r18,5
+ 708 0220 00C0      		rjmp .L42
+ 710               	.LM85:
+ 711 0222 5093 9C00 		sts 156,r21
+ 712               	.L43:
+ 714               	.LM86:
+ 715 0226 2091 9B00 		lds r18,155
+ 716 022a 25FF      		sbrs r18,5
+ 717 022c 00C0      		rjmp .L43
+ 718 022e 00C0      		rjmp .L44
+ 719               	.L112:
+ 720               	.LBE3:
+ 114:main.c        ****   }
+ 115:main.c        ****   SND ('\r') SND ('\n')
+ 722               	.LM87:
+ 723 0230 8DE0      		ldi r24,lo8(13)
+ 724 0232 8093 9C00 		sts 156,r24
+ 725               	.L45:
+ 727               	.LM88:
+ 728 0236 8091 9B00 		lds r24,155
+ 729 023a 85FF      		sbrs r24,5
+ 730 023c 00C0      		rjmp .L45
+ 732               	.LM89:
+ 733 023e 8AE0      		ldi r24,lo8(10)
+ 734 0240 8093 9C00 		sts 156,r24
+ 735               	.L46:
+ 737               	.LM90:
+ 738 0244 8091 9B00 		lds r24,155
+ 739 0248 85FF      		sbrs r24,5
+ 740 024a 00C0      		rjmp .L46
+ 741               	/* epilogue start */
+ 116:main.c        **** #undef SND
+ 117:main.c        **** #endif
+ 118:main.c        **** }
+ 743               	.LM91:
+ 753               	.Lscope1:
+ 755               		.stabd	78,0,0
+ 756               		.section	.text.startup,"ax",@progbits
+ 758               	.global	main
+ 760               	main:
+ 761               		.stabd	46,0,0
+ 119:main.c        **** 
+ 120:main.c        **** cmdState_t *CLIStateSerialUsb;
+ 121:main.c        **** cmdState_t *CLIStateSerialUdp;
+ 122:main.c        **** FILE usbStream;
+ 123:main.c        **** FILE udpStream;
+ 124:main.c        **** 
+ 125:main.c        **** streamBuffers_t udpBuffers;
+ 126:main.c        **** 
+ 127:main.c        **** portSHORT main( void )
+ 128:main.c        **** {
+ 763               	.LM92:
+ 764               	.LFBB2:
+ 765 0000 AF92      		push r10
+ 766 0002 BF92      		push r11
+ 767 0004 CF92      		push r12
+ 768 0006 DF92      		push r13
+ 769 0008 EF92      		push r14
+ 770 000a FF92      		push r15
+ 771 000c 0F93      		push r16
+ 772               	/* prologue: function */
+ 773               	/* frame size = 0 */
+ 774               	/* stack size = 7 */
+ 775               	.L__stack_usage = 7
+ 129:main.c        ****   ramDyskInit();              //Inicjalizacja Ram dysku
+ 777               	.LM93:
+ 778 000e 0E94 0000 		call ramDyskInit
+ 130:main.c        ****   hardwareInit();
+ 780               	.LM94:
+ 781 0012 0E94 0000 		call hardwareInit
+ 131:main.c        ****   spiInit(disableAllSpiDevices);
+ 783               	.LM95:
+ 784 0016 80E0      		ldi r24,lo8(gs(disableAllSpiDevices))
+ 785 0018 90E0      		ldi r25,hi8(gs(disableAllSpiDevices))
+ 786 001a 0E94 0000 		call spiInit
+ 132:main.c        **** 
+ 133:main.c        **** // VTY on serial
+ 134:main.c        ****   xSerialPortInitMinimal();
+ 788               	.LM96:
+ 789 001e 0E94 0000 		call xSerialPortInitMinimal
+ 135:main.c        ****   CLIStateSerialUsb  = xmalloc(sizeof(cmdState_t));
+ 791               	.LM97:
+ 792 0022 83E2      		ldi r24,lo8(35)
+ 793 0024 90E0      		ldi r25,0
+ 794 0026 0E94 0000 		call xmalloc
+ 795 002a 9093 0000 		sts CLIStateSerialUsb+1,r25
+ 796 002e 8093 0000 		sts CLIStateSerialUsb,r24
+ 136:main.c        ****   CLIStateSerialUdp  = xmalloc(sizeof(cmdState_t));
+ 798               	.LM98:
+ 799 0032 83E2      		ldi r24,lo8(35)
+ 800 0034 90E0      		ldi r25,0
+ 801 0036 0E94 0000 		call xmalloc
+ 802 003a 9093 0000 		sts CLIStateSerialUdp+1,r25
+ 803 003e 8093 0000 		sts CLIStateSerialUdp,r24
+ 137:main.c        **** 
+ 138:main.c        **** 
+ 139:main.c        **** //  cmdStateClear(newCmdState);
+ 140:main.c        **** 
+ 141:main.c        ****   sensorsTaskInit();
+ 805               	.LM99:
+ 806 0042 0E94 0000 		call sensorsTaskInit
+ 142:main.c        ****   loadConfiguration();
+ 808               	.LM100:
+ 809 0046 0E94 0000 		call loadConfiguration
+ 143:main.c        **** 
+ 144:main.c        ****   initQueueStreamUSB(&usbStream);
+ 811               	.LM101:
+ 812 004a 80E0      		ldi r24,lo8(usbStream)
+ 813 004c 90E0      		ldi r25,hi8(usbStream)
+ 814 004e 0E94 0000 		call initQueueStreamUSB
+ 145:main.c        ****   VtyInit(CLIStateSerialUsb, &usbStream);
+ 816               	.LM102:
+ 817 0052 60E0      		ldi r22,lo8(usbStream)
+ 818 0054 70E0      		ldi r23,hi8(usbStream)
+ 819 0056 8091 0000 		lds r24,CLIStateSerialUsb
+ 820 005a 9091 0000 		lds r25,CLIStateSerialUsb+1
+ 821 005e 0E94 0000 		call VtyInit
+ 146:main.c        **** 
+ 147:main.c        ****   udpInit_0();
+ 823               	.LM103:
+ 824 0062 0E94 0000 		call udpInit_0
+ 148:main.c        ****   socketInit();
+ 826               	.LM104:
+ 827 0066 0E94 0000 		call socketInit
+ 149:main.c        ****   initQueueStream(&udpStream, &udpBuffers, udpSocket->Rx, udpSocket->Tx);
+ 829               	.LM105:
+ 830 006a E091 0000 		lds r30,udpSocket
+ 831 006e F091 0000 		lds r31,udpSocket+1
+ 832 0072 2485      		ldd r18,Z+12
+ 833 0074 3585      		ldd r19,Z+13
+ 834 0076 4285      		ldd r20,Z+10
+ 835 0078 5385      		ldd r21,Z+11
+ 836 007a 60E0      		ldi r22,lo8(udpBuffers)
+ 837 007c 70E0      		ldi r23,hi8(udpBuffers)
+ 838 007e 80E0      		ldi r24,lo8(udpStream)
+ 839 0080 90E0      		ldi r25,hi8(udpStream)
+ 840 0082 0E94 0000 		call initQueueStream
+ 150:main.c        ****   VtyInit(CLIStateSerialUdp, &udpStream);
+ 842               	.LM106:
+ 843 0086 60E0      		ldi r22,lo8(udpStream)
+ 844 0088 70E0      		ldi r23,hi8(udpStream)
+ 845 008a 8091 0000 		lds r24,CLIStateSerialUdp
+ 846 008e 9091 0000 		lds r25,CLIStateSerialUdp+1
+ 847 0092 0E94 0000 		call VtyInit
+ 151:main.c        **** 
+ 152:main.c        **** //xTaskCreate(encTask,        NULL /*"ENC"    */, STACK_SIZE_ENC,       (void *)CLIStateSerialUsb->
+ 153:main.c        ****   xTaskCreate(vTaskVTYusb,    NULL /*"VTY"    */, STACK_SIZE_VTY,       (void *)(CLIStateSerialUsb)
+ 849               	.LM107:
+ 850 0096 2091 0000 		lds r18,CLIStateSerialUsb
+ 851 009a 3091 0000 		lds r19,CLIStateSerialUsb+1
+ 852 009e A12C      		mov r10,__zero_reg__
+ 853 00a0 B12C      		mov r11,__zero_reg__
+ 854 00a2 C12C      		mov r12,__zero_reg__
+ 855 00a4 D12C      		mov r13,__zero_reg__
+ 856 00a6 80E0      		ldi r24,lo8(xHandleVTY_USB)
+ 857 00a8 E82E      		mov r14,r24
+ 858 00aa 80E0      		ldi r24,hi8(xHandleVTY_USB)
+ 859 00ac F82E      		mov r15,r24
+ 860 00ae 01E0      		ldi r16,lo8(1)
+ 861 00b0 4CEB      		ldi r20,lo8(-68)
+ 862 00b2 52E0      		ldi r21,lo8(2)
+ 863 00b4 60E0      		ldi r22,0
+ 864 00b6 70E0      		ldi r23,0
+ 865 00b8 80E0      		ldi r24,lo8(gs(vTaskVTYusb))
+ 866 00ba 90E0      		ldi r25,hi8(gs(vTaskVTYusb))
+ 867 00bc 0E94 0000 		call xTaskGenericCreate
+ 154:main.c        **** //xTaskCreate(vTaskVTYsocket, NULL /*"VTY"    */, STACK_SIZE_VTY,       (void *)(CLIStateSerialUdp)
+ 155:main.c        ****   xTaskCreate(sensorsTask,    NULL /*"Sensors"*/, STACK_SIZE_SENSORS,   NULL,                      
+ 869               	.LM108:
+ 870 00c0 90E0      		ldi r25,lo8(xHandleSensors)
+ 871 00c2 E92E      		mov r14,r25
+ 872 00c4 90E0      		ldi r25,hi8(xHandleSensors)
+ 873 00c6 F92E      		mov r15,r25
+ 874 00c8 20E0      		ldi r18,0
+ 875 00ca 30E0      		ldi r19,0
+ 876 00cc 44EF      		ldi r20,lo8(-12)
+ 877 00ce 51E0      		ldi r21,lo8(1)
+ 878 00d0 60E0      		ldi r22,0
+ 879 00d2 70E0      		ldi r23,0
+ 880 00d4 80E0      		ldi r24,lo8(gs(sensorsTask))
+ 881 00d6 90E0      		ldi r25,hi8(gs(sensorsTask))
+ 882 00d8 0E94 0000 		call xTaskGenericCreate
+ 156:main.c        ****   vTaskStartScheduler();
+ 884               	.LM109:
+ 885 00dc 0E94 0000 		call vTaskStartScheduler
+ 157:main.c        ****   return 0;
+ 158:main.c        **** }
+ 887               	.LM110:
+ 888 00e0 80E0      		ldi r24,0
+ 889 00e2 90E0      		ldi r25,0
+ 890               	/* epilogue start */
+ 891 00e4 0F91      		pop r16
+ 892 00e6 FF90      		pop r15
+ 893 00e8 EF90      		pop r14
+ 894 00ea DF90      		pop r13
+ 895 00ec CF90      		pop r12
+ 896 00ee BF90      		pop r11
+ 897 00f0 AF90      		pop r10
+ 898 00f2 0895      		ret
+ 900               	.Lscope2:
+ 902               		.stabd	78,0,0
+ 903               		.text
+ 905               	.global	vApplicationIdleHook
+ 907               	vApplicationIdleHook:
+ 908               		.stabd	46,0,0
+ 159:main.c        **** /*-----------------------------------------------------------*/
+ 160:main.c        **** 
+ 161:main.c        **** void vApplicationIdleHook( void )
+ 162:main.c        **** {
+ 910               	.LM111:
+ 911               	.LFBB3:
+ 912               	/* prologue: function */
+ 913               	/* frame size = 0 */
+ 914               	/* stack size = 0 */
+ 915               	.L__stack_usage = 0
+ 916               	.L115:
+ 163:main.c        ****   for( ;; )
+ 164:main.c        ****   {
+ 165:main.c        ****     vCoRoutineSchedule();
+ 918               	.LM112:
+ 919 0000 0E94 0000 		call vCoRoutineSchedule
+ 166:main.c        ****   }
+ 921               	.LM113:
+ 922 0004 00C0      		rjmp .L115
+ 924               	.Lscope3:
+ 926               		.stabd	78,0,0
+ 928               	.global	vApplicationTickHook
+ 930               	vApplicationTickHook:
+ 931               		.stabd	46,0,0
+ 167:main.c        **** }
+ 168:main.c        **** 
+ 169:main.c        **** void vApplicationTickHook( void )
+ 170:main.c        **** {
+ 933               	.LM114:
+ 934               	.LFBB4:
+ 935               	/* prologue: function */
+ 936               	/* frame size = 0 */
+ 937               	/* stack size = 0 */
+ 938               	.L__stack_usage = 0
+ 171:main.c        ****   static uint8_t tickCntr = configTICK_RATE_HZ;
+ 172:main.c        ****   if (--tickCntr == 0)
+ 940               	.LM115:
+ 941 0006 8091 0000 		lds r24,tickCntr.3566
+ 942 000a 8150      		subi r24,lo8(-(-1))
+ 943 000c 01F0      		breq .L117
+ 944 000e 8093 0000 		sts tickCntr.3566,r24
+ 945 0012 0895      		ret
+ 946               	.L117:
+ 173:main.c        ****   {
+ 174:main.c        ****     tickCntr = configTICK_RATE_HZ;
+ 948               	.LM116:
+ 949 0014 84E6      		ldi r24,lo8(100)
+ 950 0016 8093 0000 		sts tickCntr.3566,r24
+ 175:main.c        ****     arpTimer();
+ 952               	.LM117:
+ 953 001a 0C94 0000 		jmp arpTimer
+ 958               	.Lscope4:
+ 960               		.stabd	78,0,0
+ 961               		.data
+ 964               	tickCntr.3566:
+ 965 0000 64        		.byte	100
+ 966               		.comm	udpBuffers,4,1
+ 967               		.comm	udpStream,14,1
+ 968               		.comm	usbStream,14,1
+ 969               		.comm	CLIStateSerialUdp,2,1
+ 970               		.comm	CLIStateSerialUsb,2,1
+ 971               		.comm	xHandleSensors,2,1
+ 972               		.comm	xHandleEnc,2,1
+ 973               		.comm	xHandleVTY_UDP,2,1
+ 974               		.comm	xHandleVTY_USB,2,1
+ 975               		.comm	voltage,1,1
+ 976               		.comm	temperature,1,1
+ 977               		.comm	xRs485Rec,2,1
+ 978               		.comm	xRs485Tx,2,1
+ 979               		.comm	xVtyRec,2,1
+ 980               		.comm	xVtyTx,2,1
+ 981               	.global	timer100Hz
+ 982               		.section .bss
+ 985               	timer100Hz:
+ 986 0000 00        		.zero	1
+ 987               		.comm	czasRtc,7,1
+ 988               		.comm	sockets,2,1
+ 989               		.comm	tcpDebugLevel,1,1
+ 990               		.comm	tcpDebugStream,2,1
+ 991               		.comm	IpMyConfig,15,1
+ 992               		.comm	udpDbgLevel,1,1
+ 993               		.comm	udpDbgStream,2,1
+ 994               		.comm	udpSocket,2,1
+ 995               		.comm	icmpDebugLevel,1,1
+ 996               		.comm	icmpDebug,2,1
+ 997               		.comm	arpDebugLevel,1,1
+ 998               		.comm	arpDebug,2,1
+ 999               		.comm	nicState,14,1
+ 1000               		.comm	xSemaphoreRs485,2,1
+ 1001               		.comm	lockSensors,2,1
+ 1002               		.comm	portB,1,1
+ 1003               		.comm	portA,1,1
+ 1004               		.comm	xSemaphoreSpiSS,2,1
+ 1005               		.comm	rollers,2,1
+ 1006               		.comm	wwwport,1,1
+ 1007               		.comm	klastry,128,1
+ 1045               		.text
+ 1047               	.Letext0:
+ 1048               		.ident	"GCC: (GNU) 4.9.2"
+ 1049               	.global __do_copy_data
+ 1050               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 main.c
+     /tmp/ccwA9pJ9.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccwA9pJ9.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccwA9pJ9.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccwA9pJ9.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccwA9pJ9.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccwA9pJ9.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccwA9pJ9.s:276    .init4:0000000000000000 initExternalMem
+     /tmp/ccwA9pJ9.s:760    .text.startup:0000000000000000 main
+                            *COM*:0000000000000002 CLIStateSerialUsb
+                            *COM*:0000000000000002 CLIStateSerialUdp
+                            *COM*:000000000000000e usbStream
+                            *COM*:0000000000000002 udpSocket
+                            *COM*:0000000000000004 udpBuffers
+                            *COM*:000000000000000e udpStream
+                            *COM*:0000000000000002 xHandleVTY_USB
+                            *COM*:0000000000000002 xHandleSensors
+     /tmp/ccwA9pJ9.s:907    .text:0000000000000000 vApplicationIdleHook
+     /tmp/ccwA9pJ9.s:930    .text:0000000000000006 vApplicationTickHook
+     /tmp/ccwA9pJ9.s:964    .data:0000000000000000 tickCntr.3566
+                            *COM*:0000000000000002 xHandleEnc
+                            *COM*:0000000000000002 xHandleVTY_UDP
+                            *COM*:0000000000000001 voltage
+                            *COM*:0000000000000001 temperature
+                            *COM*:0000000000000002 xRs485Rec
+                            *COM*:0000000000000002 xRs485Tx
+                            *COM*:0000000000000002 xVtyRec
+                            *COM*:0000000000000002 xVtyTx
+     /tmp/ccwA9pJ9.s:985    .bss:0000000000000000 timer100Hz
+                            *COM*:0000000000000007 czasRtc
+                            *COM*:0000000000000002 sockets
+                            *COM*:0000000000000001 tcpDebugLevel
+                            *COM*:0000000000000002 tcpDebugStream
+                            *COM*:000000000000000f IpMyConfig
+                            *COM*:0000000000000001 udpDbgLevel
+                            *COM*:0000000000000002 udpDbgStream
+                            *COM*:0000000000000001 icmpDebugLevel
+                            *COM*:0000000000000002 icmpDebug
+                            *COM*:0000000000000001 arpDebugLevel
+                            *COM*:0000000000000002 arpDebug
+                            *COM*:000000000000000e nicState
+                            *COM*:0000000000000002 xSemaphoreRs485
+                            *COM*:0000000000000002 lockSensors
+                            *COM*:0000000000000001 portB
+                            *COM*:0000000000000001 portA
+                            *COM*:0000000000000002 xSemaphoreSpiSS
+                            *COM*:0000000000000002 rollers
+                            *COM*:0000000000000001 wwwport
+                            *COM*:0000000000000080 klastry
+
+UNDEFINED SYMBOLS
+ramDyskInit
+hardwareInit
+disableAllSpiDevices
+spiInit
+xSerialPortInitMinimal
+xmalloc
+sensorsTaskInit
+loadConfiguration
+initQueueStreamUSB
+VtyInit
+udpInit_0
+socketInit
+initQueueStream
+vTaskVTYusb
+xTaskGenericCreate
+sensorsTask
+vTaskStartScheduler
+vCoRoutineSchedule
+arpTimer
+__do_copy_data
+__do_clear_bss

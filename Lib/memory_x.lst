@@ -1,0 +1,100 @@
+   1               		.file	"memory_x.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  10               		.text
+  11               	.Ltext0:
+  73               	.global	xmalloc
+  75               	xmalloc:
+  76               		.stabd	46,0,0
+   1:../../../../Lib/memory_x.c **** #include "hardwareConfig.h"
+   2:../../../../Lib/memory_x.c **** #include "memory_x.h"
+   3:../../../../Lib/memory_x.c **** 
+   4:../../../../Lib/memory_x.c **** 
+   5:../../../../Lib/memory_x.c **** #ifdef HEAP_BEGIN
+   6:../../../../Lib/memory_x.c **** char *heapEnd =  (char *)HEAP_BEGIN;
+   7:../../../../Lib/memory_x.c **** 
+   8:../../../../Lib/memory_x.c **** void *xmalloc(size_t size)
+   9:../../../../Lib/memory_x.c **** {
+  78               	.LM0:
+  79               	.LFBB1:
+  80 0000 CF93      		push r28
+  81 0002 DF93      		push r29
+  82               	/* prologue: function */
+  83               	/* frame size = 0 */
+  84               	/* stack size = 2 */
+  85               	.L__stack_usage = 2
+  86 0004 EC01      		movw r28,r24
+  10:../../../../Lib/memory_x.c ****   void *result = malloc(size);
+  88               	.LM1:
+  89 0006 0E94 0000 		call malloc
+  11:../../../../Lib/memory_x.c **** 
+  12:../../../../Lib/memory_x.c ****   heapEnd = (char *)(result);
+  13:../../../../Lib/memory_x.c ****   heapEnd += size;
+  91               	.LM2:
+  92 000a C80F      		add r28,r24
+  93 000c D91F      		adc r29,r25
+  94 000e D093 0000 		sts heapEnd+1,r29
+  95 0012 C093 0000 		sts heapEnd,r28
+  96               	/* epilogue start */
+  14:../../../../Lib/memory_x.c ****   return result;
+  15:../../../../Lib/memory_x.c **** }
+  98               	.LM3:
+  99 0016 DF91      		pop r29
+ 100 0018 CF91      		pop r28
+ 101 001a 0895      		ret
+ 103               	.Lscope1:
+ 105               		.stabd	78,0,0
+ 107               	.global	xmallocAvailable
+ 109               	xmallocAvailable:
+ 110               		.stabd	46,0,0
+  16:../../../../Lib/memory_x.c **** 
+  17:../../../../Lib/memory_x.c **** size_t xmallocAvailable(void)
+  18:../../../../Lib/memory_x.c **** {
+ 112               	.LM4:
+ 113               	.LFBB2:
+ 114               	/* prologue: function */
+ 115               	/* frame size = 0 */
+ 116               	/* stack size = 0 */
+ 117               	.L__stack_usage = 0
+  19:../../../../Lib/memory_x.c ****   return __malloc_heap_end - heapEnd + 1;
+ 119               	.LM5:
+ 120 001c 8091 0000 		lds r24,__malloc_heap_end
+ 121 0020 9091 0000 		lds r25,__malloc_heap_end+1
+ 122 0024 2091 0000 		lds r18,heapEnd
+ 123 0028 3091 0000 		lds r19,heapEnd+1
+ 124 002c 821B      		sub r24,r18
+ 125 002e 930B      		sbc r25,r19
+  20:../../../../Lib/memory_x.c **** }
+ 127               	.LM6:
+ 128 0030 0196      		adiw r24,1
+ 129 0032 0895      		ret
+ 131               	.Lscope2:
+ 133               		.stabd	78,0,0
+ 134               	.global	heapEnd
+ 135               		.data
+ 138               	heapEnd:
+ 139 0000 0011      		.word	4352
+ 141               		.text
+ 143               	.Letext0:
+ 144               		.ident	"GCC: (GNU) 4.9.2"
+ 145               	.global __do_copy_data
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 memory_x.c
+     /tmp/ccVG9VBA.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccVG9VBA.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccVG9VBA.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccVG9VBA.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccVG9VBA.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccVG9VBA.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccVG9VBA.s:75     .text:0000000000000000 xmalloc
+     /tmp/ccVG9VBA.s:138    .data:0000000000000000 heapEnd
+     /tmp/ccVG9VBA.s:109    .text:000000000000001c xmallocAvailable
+
+UNDEFINED SYMBOLS
+malloc
+__malloc_heap_end
+__do_copy_data

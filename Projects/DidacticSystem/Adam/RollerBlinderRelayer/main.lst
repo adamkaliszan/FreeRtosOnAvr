@@ -1,0 +1,752 @@
+   1               		.file	"main.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   9               		.text
+  10               	.Ltext0:
+ 171               	vRoleta:
+ 172               		.stabd	46,0,0
+   1:main.c        **** /*
+   2:main.c        **** 	FreeRTOS.org V5.2.0 - Copyright (C) 2003-2009 Richard Barry.
+   3:main.c        **** 
+   4:main.c        **** 	This file is part of the FreeRTOS.org distribution.
+   5:main.c        **** 
+   6:main.c        **** 	FreeRTOS.org is free software; you can redistribute it and/or modify it 
+   7:main.c        **** 	under the terms of the GNU General Public License (version 2) as published
+   8:main.c        **** 	by the Free Software Foundation and modified by the FreeRTOS exception.
+   9:main.c        **** 
+  10:main.c        **** 	FreeRTOS.org is distributed in the hope that it will be useful,	but WITHOUT
+  11:main.c        **** 	ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+  12:main.c        **** 	FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for 
+  13:main.c        **** 	more details.
+  14:main.c        **** 
+  15:main.c        **** 	You should have received a copy of the GNU General Public License along 
+  16:main.c        **** 	with FreeRTOS.org; if not, write to the Free Software Foundation, Inc., 59 
+  17:main.c        **** 	Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+  18:main.c        **** 
+  19:main.c        **** 	A special exception to the GPL is included to allow you to distribute a 
+  20:main.c        **** 	combined work that includes FreeRTOS.org without being obliged to provide
+  21:main.c        **** 	the source code for any proprietary components.  See the licensing section
+  22:main.c        **** 	of http://www.FreeRTOS.org for full details.
+  23:main.c        **** 
+  24:main.c        **** 
+  25:main.c        **** 	***************************************************************************
+  26:main.c        **** 	*                                                                         *
+  27:main.c        **** 	* Get the FreeRTOS eBook!  See http://www.FreeRTOS.org/Documentation      *
+  28:main.c        **** 	*                                                                         *
+  29:main.c        **** 	* This is a concise, step by step, 'hands on' guide that describes both   *
+  30:main.c        **** 	* general multitasking concepts and FreeRTOS specifics. It presents and   *
+  31:main.c        **** 	* explains numerous examples that are written using the FreeRTOS API.     *
+  32:main.c        **** 	* Full source code for all the examples is provided in an accompanying    *
+  33:main.c        **** 	* .zip file.                                                              *
+  34:main.c        **** 	*                                                                         *
+  35:main.c        **** 	***************************************************************************
+  36:main.c        **** 
+  37:main.c        **** 	1 tab == 4 spaces!
+  38:main.c        **** 
+  39:main.c        **** 	Please ensure to read the configuration and relevant port sections of the
+  40:main.c        **** 	online documentation.
+  41:main.c        **** 
+  42:main.c        **** 	http://www.FreeRTOS.org - Documentation, latest information, license and
+  43:main.c        **** 	contact details.
+  44:main.c        **** 
+  45:main.c        **** 	http://www.SafeRTOS.com - A version that is certified for use in safety
+  46:main.c        **** 	critical systems.
+  47:main.c        **** 
+  48:main.c        **** 	http://www.OpenRTOS.com - Commercial support, development, porting,
+  49:main.c        **** 	licensing and training services.
+  50:main.c        **** */
+  51:main.c        **** 
+  52:main.c        **** #include "main.h"
+  53:main.c        **** 
+  54:main.c        **** /**
+  55:main.c        ****  * Proces odpowiedzialny za obsługę klawiszy
+  56:main.c        ****  * @param pvParameters ignorowane parametry
+  57:main.c        ****  */
+  58:main.c        **** static void vKlawisze(xCoRoutineHandle xHandle, unsigned portBASE_TYPE uxIndex);
+  59:main.c        **** 
+  60:main.c        **** /**
+  61:main.c        ****  * Proces odpowiedzialny za obsługę rolety
+  62:main.c        ****  * @param pvParameters ignorowane parametry
+  63:main.c        ****  */
+  64:main.c        **** static void vRoleta(xCoRoutineHandle xHandle, unsigned portBASE_TYPE uxIndex);
+  65:main.c        **** 
+  66:main.c        **** static void prvIncrementResetCount( void );
+  67:main.c        **** 
+  68:main.c        **** void vApplicationIdleHook( void );
+  69:main.c        **** 
+  70:main.c        **** 
+  71:main.c        **** /*-----------------------------------------------------------*/
+  72:main.c        **** 
+  73:main.c        **** /* Device address on RS 485 bus */
+  74:main.c        **** uint8_t adres;
+  75:main.c        **** char bHelloResp[HELLO_RESP_LEN+HDR_LEN] = {SYNC, 0, rHELLO, HELLO_RESP_LEN, 'r', 0, 'v', '0', '.', 
+  76:main.c        **** 
+  77:main.c        **** t_stan_klawiszy	roleta1 = {0, 0, 0, 0, bezczynny};
+  78:main.c        **** t_stan_klawiszy	roleta2 = {0, 0, 0, 0, bezczynny};
+  79:main.c        **** 
+  80:main.c        **** extern xQueueHandle xRxedChars;
+  81:main.c        **** extern xQueueHandle xCharsForTx; 
+  82:main.c        **** 
+  83:main.c        **** xQueueHandle xRoleta[2];
+  84:main.c        **** 
+  85:main.c        **** portSHORT main( void )
+  86:main.c        **** {
+  87:main.c        **** //prvIncrementResetCount();
+  88:main.c        **** 
+  89:main.c        ****   hardwareInit();
+  90:main.c        ****   xSerialPortInitMinimal(16);
+  91:main.c        **** 
+  92:main.c        ****   xRoleta[0] = xQueueCreate(4, 1);
+  93:main.c        ****   xRoleta[1] = xQueueCreate(4, 1);
+  94:main.c        **** 
+  95:main.c        ****   xCoRoutineCreate(vProtocol, 0, 0);
+  96:main.c        ****   xCoRoutineCreate(vKlawisze, 0, 0);
+  97:main.c        ****   xCoRoutineCreate(vRoleta, 0, 0);
+  98:main.c        ****   xCoRoutineCreate(vRoleta, 0, 1);
+  99:main.c        **** 
+ 100:main.c        ****   vTaskStartScheduler();
+ 101:main.c        ****   return 0;
+ 102:main.c        **** }
+ 103:main.c        **** /*-----------------------------------------------------------*/
+ 104:main.c        **** 
+ 105:main.c        **** static void vKlawisze(xCoRoutineHandle xHandle, unsigned portBASE_TYPE uxIndex)
+ 106:main.c        **** {
+ 107:main.c        ****   (void) uxIndex;
+ 108:main.c        ****   static portBASE_TYPE xResult;
+ 109:main.c        **** 
+ 110:main.c        ****   crSTART( xHandle );
+ 111:main.c        ****   for( ;; )
+ 112:main.c        ****   {
+ 113:main.c        ****     crDELAY( xHandle, 1);
+ 114:main.c        ****     uint8_t wiadomosc;
+ 115:main.c        ****     wiadomosc = (uint8_t) (automatStanowKlawiszy(czytKlawiszRol1wGore(), czytKlawiszRol1wDol(), &ro
+ 116:main.c        ****     if (wiadomosc)
+ 117:main.c        ****     {
+ 118:main.c        ****       crQUEUE_SEND(xHandle, xRoleta[0], &wiadomosc, 10, &xResult);
+ 119:main.c        ****     }
+ 120:main.c        ****     wiadomosc = (uint8_t)(automatStanowKlawiszy(czytKlawiszRol2wGore(), czytKlawiszRol2wDol(), &rol
+ 121:main.c        ****     if (wiadomosc)
+ 122:main.c        ****     {
+ 123:main.c        ****       crQUEUE_SEND(xHandle, xRoleta[1], &wiadomosc, 10, &xResult);
+ 124:main.c        ****     }
+ 125:main.c        ****   }
+ 126:main.c        ****   crEND();
+ 127:main.c        **** }
+ 128:main.c        **** 
+ 129:main.c        **** static void vRoleta(xCoRoutineHandle xHandle, unsigned portBASE_TYPE uxIndex)
+ 130:main.c        **** {
+ 174               	.LM0:
+ 175               	.LFBB1:
+ 176 0000 CF92      		push r12
+ 177 0002 DF92      		push r13
+ 178 0004 FF92      		push r15
+ 179 0006 0F93      		push r16
+ 180 0008 1F93      		push r17
+ 181 000a CF93      		push r28
+ 182 000c DF93      		push r29
+ 183               	/* prologue: function */
+ 184               	/* frame size = 0 */
+ 185               	/* stack size = 7 */
+ 186               	.L__stack_usage = 7
+ 187 000e 6C01      		movw r12,r24
+ 188 0010 F62E      		mov r15,r22
+ 131:main.c        ****   static uint8_t	rozkaz[2];
+ 132:main.c        ****   static uint16_t	czasAkcji[2];
+ 133:main.c        ****   czasAkcji[uxIndex]  = portMAX_DELAY;
+ 190               	.LM1:
+ 191 0012 C62F      		mov r28,r22
+ 192 0014 D0E0      		ldi r29,0
+ 193 0016 8E01      		movw r16,r28
+ 194 0018 000F      		lsl r16
+ 195 001a 111F      		rol r17
+ 196 001c F801      		movw r30,r16
+ 197 001e E050      		subi r30,lo8(-(czasAkcji.2195))
+ 198 0020 F040      		sbci r31,hi8(-(czasAkcji.2195))
+ 199 0022 8FEF      		ldi r24,lo8(-1)
+ 200 0024 9FEF      		ldi r25,lo8(-1)
+ 201 0026 9183      		std Z+1,r25
+ 202 0028 8083      		st Z,r24
+ 134:main.c        ****   static portBASE_TYPE xResult[2];
+ 135:main.c        ****   crSTART( xHandle );
+ 204               	.LM2:
+ 205 002a F601      		movw r30,r12
+ 206 002c 808D      		ldd r24,Z+24
+ 207 002e 918D      		ldd r25,Z+25
+ 208 0030 8431      		cpi r24,20
+ 209 0032 F1E0      		ldi r31,1
+ 210 0034 9F07      		cpc r25,r31
+ 211 0036 01F0      		breq .L3
+ 212 0038 8531      		cpi r24,21
+ 213 003a 21E0      		ldi r18,1
+ 214 003c 9207      		cpc r25,r18
+ 215 003e 01F0      		breq .L4
+ 216 0040 892B      		or r24,r25
+ 217 0042 01F0      		breq .+2
+ 218 0044 00C0      		rjmp .L1
+ 219               	.L5:
+ 136:main.c        ****   for (;;)
+ 137:main.c        ****   {
+ 138:main.c        ****     crQUEUE_RECEIVE(xHandle, xRoleta[uxIndex], &rozkaz[uxIndex], czasAkcji[uxIndex], &xResult[uxInd
+ 221               	.LM3:
+ 222 0046 F801      		movw r30,r16
+ 223 0048 E050      		subi r30,lo8(-(czasAkcji.2195))
+ 224 004a F040      		sbci r31,hi8(-(czasAkcji.2195))
+ 225 004c 4081      		ld r20,Z
+ 226 004e 5181      		ldd r21,Z+1
+ 227 0050 BE01      		movw r22,r28
+ 228 0052 6050      		subi r22,lo8(-(rozkaz.2194))
+ 229 0054 7040      		sbci r23,hi8(-(rozkaz.2194))
+ 230 0056 F801      		movw r30,r16
+ 231 0058 E050      		subi r30,lo8(-(xRoleta))
+ 232 005a F040      		sbci r31,hi8(-(xRoleta))
+ 233 005c 8081      		ld r24,Z
+ 234 005e 9181      		ldd r25,Z+1
+ 235 0060 0E94 0000 		call xQueueCRReceive
+ 236 0064 FE01      		movw r30,r28
+ 237 0066 E050      		subi r30,lo8(-(xResult.2196))
+ 238 0068 F040      		sbci r31,hi8(-(xResult.2196))
+ 239 006a 8083      		st Z,r24
+ 240 006c 8C3F      		cpi r24,lo8(-4)
+ 241 006e 01F4      		brne .L6
+ 243               	.LM4:
+ 244 0070 84E1      		ldi r24,lo8(20)
+ 245 0072 91E0      		ldi r25,lo8(1)
+ 246 0074 00C0      		rjmp .L18
+ 247               	.L3:
+ 249               	.LM5:
+ 250 0076 40E0      		ldi r20,0
+ 251 0078 50E0      		ldi r21,0
+ 252 007a BE01      		movw r22,r28
+ 253 007c 6050      		subi r22,lo8(-(rozkaz.2194))
+ 254 007e 7040      		sbci r23,hi8(-(rozkaz.2194))
+ 255 0080 F801      		movw r30,r16
+ 256 0082 E050      		subi r30,lo8(-(xRoleta))
+ 257 0084 F040      		sbci r31,hi8(-(xRoleta))
+ 258 0086 8081      		ld r24,Z
+ 259 0088 9181      		ldd r25,Z+1
+ 260 008a 0E94 0000 		call xQueueCRReceive
+ 261 008e FE01      		movw r30,r28
+ 262 0090 E050      		subi r30,lo8(-(xResult.2196))
+ 263 0092 F040      		sbci r31,hi8(-(xResult.2196))
+ 264 0094 8083      		st Z,r24
+ 265               	.L6:
+ 267               	.LM6:
+ 268 0096 FE01      		movw r30,r28
+ 269 0098 E050      		subi r30,lo8(-(xResult.2196))
+ 270 009a F040      		sbci r31,hi8(-(xResult.2196))
+ 271 009c 8081      		ld r24,Z
+ 272 009e 8B3F      		cpi r24,lo8(-5)
+ 273 00a0 01F4      		brne .L7
+ 275               	.LM7:
+ 276 00a2 85E1      		ldi r24,lo8(21)
+ 277 00a4 91E0      		ldi r25,lo8(1)
+ 278               	.L18:
+ 279 00a6 F601      		movw r30,r12
+ 280 00a8 918F      		std Z+25,r25
+ 281 00aa 808F      		std Z+24,r24
+ 282 00ac 00C0      		rjmp .L1
+ 283               	.L4:
+ 285               	.LM8:
+ 286 00ae 81E0      		ldi r24,lo8(1)
+ 287 00b0 FE01      		movw r30,r28
+ 288 00b2 E050      		subi r30,lo8(-(xResult.2196))
+ 289 00b4 F040      		sbci r31,hi8(-(xResult.2196))
+ 290 00b6 8083      		st Z,r24
+ 291               	.L7:
+ 139:main.c        **** 
+ 140:main.c        ****     if (xResult[uxIndex] == pdTRUE)
+ 293               	.LM9:
+ 294 00b8 FE01      		movw r30,r28
+ 295 00ba E050      		subi r30,lo8(-(xResult.2196))
+ 296 00bc F040      		sbci r31,hi8(-(xResult.2196))
+ 297 00be 8081      		ld r24,Z
+ 298 00c0 8130      		cpi r24,lo8(1)
+ 299 00c2 01F4      		brne .L8
+ 300               	.LBB2:
+ 141:main.c        ****     {
+ 142:main.c        ****       uint8_t tmp = rozkaz[uxIndex] & 0x3F;
+ 302               	.LM10:
+ 303 00c4 FE01      		movw r30,r28
+ 304 00c6 E050      		subi r30,lo8(-(rozkaz.2194))
+ 305 00c8 F040      		sbci r31,hi8(-(rozkaz.2194))
+ 306 00ca 8081      		ld r24,Z
+ 307 00cc 282F      		mov r18,r24
+ 308 00ce 2F73      		andi r18,lo8(63)
+ 143:main.c        ****       if (tmp == 0)
+ 310               	.LM11:
+ 311 00d0 01F4      		brne .L9
+ 144:main.c        ****         czasAkcji[uxIndex] = portMAX_DELAY;
+ 313               	.LM12:
+ 314 00d2 2FEF      		ldi r18,lo8(-1)
+ 315 00d4 3FEF      		ldi r19,lo8(-1)
+ 316 00d6 F801      		movw r30,r16
+ 317 00d8 E050      		subi r30,lo8(-(czasAkcji.2195))
+ 318 00da F040      		sbci r31,hi8(-(czasAkcji.2195))
+ 319 00dc 00C0      		rjmp .L17
+ 320               	.L9:
+ 145:main.c        ****       else
+ 146:main.c        ****         czasAkcji[uxIndex] = tmp*20;
+ 322               	.LM13:
+ 323 00de F801      		movw r30,r16
+ 324 00e0 E050      		subi r30,lo8(-(czasAkcji.2195))
+ 325 00e2 F040      		sbci r31,hi8(-(czasAkcji.2195))
+ 326 00e4 94E1      		ldi r25,lo8(20)
+ 327 00e6 299F      		mul r18,r25
+ 328 00e8 9001      		movw r18,r0
+ 329 00ea 1124      		clr __zero_reg__
+ 330               	.L17:
+ 331 00ec 3183      		std Z+1,r19
+ 332 00ee 2083      		st Z,r18
+ 147:main.c        ****       if (rozkaz[uxIndex] & 0x40)
+ 334               	.LM14:
+ 335 00f0 86FD      		sbrc r24,6
+ 336 00f2 00C0      		rjmp .L16
+ 148:main.c        ****       {
+ 149:main.c        ****         roletaStop(uxIndex);
+ 150:main.c        ****       }
+ 151:main.c        ****       else
+ 152:main.c        ****       {
+ 153:main.c        ****         if (rozkaz[uxIndex] & 0x80)
+ 338               	.LM15:
+ 339 00f4 87FF      		sbrs r24,7
+ 340 00f6 00C0      		rjmp .L12
+ 154:main.c        ****           roletawGore(uxIndex);
+ 342               	.LM16:
+ 343 00f8 8F2D      		mov r24,r15
+ 344 00fa 0E94 0000 		call roletawGore
+ 345 00fe 00C0      		rjmp .L5
+ 346               	.L12:
+ 155:main.c        ****         else
+ 156:main.c        ****           roletawDol(uxIndex);
+ 348               	.LM17:
+ 349 0100 8F2D      		mov r24,r15
+ 350 0102 0E94 0000 		call roletawDol
+ 351 0106 00C0      		rjmp .L5
+ 352               	.L8:
+ 353               	.LBE2:
+ 157:main.c        ****       }
+ 158:main.c        ****     }
+ 159:main.c        ****     else
+ 160:main.c        ****     {
+ 161:main.c        ****       czasAkcji[uxIndex] = portMAX_DELAY;
+ 355               	.LM18:
+ 356 0108 8FEF      		ldi r24,lo8(-1)
+ 357 010a 9FEF      		ldi r25,lo8(-1)
+ 358 010c F801      		movw r30,r16
+ 359 010e E050      		subi r30,lo8(-(czasAkcji.2195))
+ 360 0110 F040      		sbci r31,hi8(-(czasAkcji.2195))
+ 361 0112 9183      		std Z+1,r25
+ 362 0114 8083      		st Z,r24
+ 363               	.L16:
+ 162:main.c        ****       roletaStop(uxIndex);
+ 365               	.LM19:
+ 366 0116 8F2D      		mov r24,r15
+ 367 0118 0E94 0000 		call roletaStop
+ 368 011c 00C0      		rjmp .L5
+ 369               	.L1:
+ 370               	/* epilogue start */
+ 163:main.c        ****     }
+ 164:main.c        ****   }
+ 165:main.c        ****   crEND();
+ 166:main.c        **** }
+ 372               	.LM20:
+ 373 011e DF91      		pop r29
+ 374 0120 CF91      		pop r28
+ 375 0122 1F91      		pop r17
+ 376 0124 0F91      		pop r16
+ 377 0126 FF90      		pop r15
+ 378 0128 DF90      		pop r13
+ 379 012a CF90      		pop r12
+ 380 012c 0895      		ret
+ 390               	.Lscope1:
+ 392               		.stabd	78,0,0
+ 397               	vKlawisze:
+ 398               		.stabd	46,0,0
+ 106:main.c        ****   (void) uxIndex;
+ 400               	.LM21:
+ 401               	.LFBB2:
+ 402 012e 0F93      		push r16
+ 403 0130 1F93      		push r17
+ 404 0132 CF93      		push r28
+ 405 0134 DF93      		push r29
+ 406 0136 00D0      		rcall .
+ 407 0138 CDB7      		in r28,__SP_L__
+ 408 013a DEB7      		in r29,__SP_H__
+ 409               	/* prologue: function */
+ 410               	/* frame size = 2 */
+ 411               	/* stack size = 6 */
+ 412               	.L__stack_usage = 6
+ 413 013c 8C01      		movw r16,r24
+ 110:main.c        ****   for( ;; )
+ 415               	.LM22:
+ 416 013e FC01      		movw r30,r24
+ 417 0140 208D      		ldd r18,Z+24
+ 418 0142 318D      		ldd r19,Z+25
+ 419 0144 2C3E      		cpi r18,-20
+ 420 0146 3105      		cpc r19,__zero_reg__
+ 421 0148 01F4      		brne .+2
+ 422 014a 00C0      		rjmp .L22
+ 423 014c 00F4      		brsh .L23
+ 424 014e 2115      		cp r18,__zero_reg__
+ 425 0150 3105      		cpc r19,__zero_reg__
+ 426 0152 01F0      		breq .L24
+ 427 0154 223E      		cpi r18,-30
+ 428 0156 3105      		cpc r19,__zero_reg__
+ 429 0158 01F0      		breq .L25
+ 430 015a 00C0      		rjmp .L20
+ 431               	.L23:
+ 432 015c 263F      		cpi r18,-10
+ 433 015e 3105      		cpc r19,__zero_reg__
+ 434 0160 01F4      		brne .+2
+ 435 0162 00C0      		rjmp .L26
+ 436 0164 273F      		cpi r18,-9
+ 437 0166 3105      		cpc r19,__zero_reg__
+ 438 0168 01F4      		brne .+2
+ 439 016a 00C0      		rjmp .L27
+ 440 016c 2D3E      		cpi r18,-19
+ 441 016e 3105      		cpc r19,__zero_reg__
+ 442 0170 01F0      		breq .+2
+ 443 0172 00C0      		rjmp .L20
+ 444               	.LBB3:
+ 118:main.c        ****     }
+ 446               	.LM23:
+ 447 0174 81E0      		ldi r24,lo8(1)
+ 448 0176 8093 0000 		sts xResult.2181,r24
+ 449 017a 00C0      		rjmp .L31
+ 450               	.L25:
+ 115:main.c        ****     if (wiadomosc)
+ 452               	.LM24:
+ 453 017c 0E94 0000 		call czytKlawiszRol1wDol
+ 454 0180 8A83      		std Y+2,r24
+ 455 0182 0E94 0000 		call czytKlawiszRol1wGore
+ 456 0186 40E0      		ldi r20,lo8(roleta1)
+ 457 0188 50E0      		ldi r21,hi8(roleta1)
+ 458 018a 6A81      		ldd r22,Y+2
+ 459 018c 0E94 0000 		call automatStanowKlawiszy
+ 460 0190 8983      		std Y+1,r24
+ 116:main.c        ****     {
+ 462               	.LM25:
+ 463 0192 8111      		cpse r24,__zero_reg__
+ 464 0194 00C0      		rjmp .L42
+ 465               	.L31:
+ 120:main.c        ****     if (wiadomosc)
+ 467               	.LM26:
+ 468 0196 0E94 0000 		call czytKlawiszRol2wDol
+ 469 019a 8A83      		std Y+2,r24
+ 470 019c 0E94 0000 		call czytKlawiszRol2wGore
+ 471 01a0 40E0      		ldi r20,lo8(roleta2)
+ 472 01a2 50E0      		ldi r21,hi8(roleta2)
+ 473 01a4 6A81      		ldd r22,Y+2
+ 474 01a6 0E94 0000 		call automatStanowKlawiszy
+ 475 01aa 8983      		std Y+1,r24
+ 121:main.c        ****     {
+ 477               	.LM27:
+ 478 01ac 8111      		cpse r24,__zero_reg__
+ 479 01ae 00C0      		rjmp .L43
+ 480               	.L24:
+ 113:main.c        ****     uint8_t wiadomosc;
+ 482               	.LM28:
+ 483 01b0 60E0      		ldi r22,0
+ 484 01b2 70E0      		ldi r23,0
+ 485 01b4 81E0      		ldi r24,lo8(1)
+ 486 01b6 90E0      		ldi r25,0
+ 487 01b8 0E94 0000 		call vCoRoutineAddToDelayedList
+ 488 01bc 82EE      		ldi r24,lo8(-30)
+ 489 01be 90E0      		ldi r25,0
+ 490 01c0 00C0      		rjmp .L41
+ 491               	.L42:
+ 118:main.c        ****     }
+ 493               	.LM29:
+ 494 01c2 4AE0      		ldi r20,lo8(10)
+ 495 01c4 50E0      		ldi r21,0
+ 496 01c6 BE01      		movw r22,r28
+ 497 01c8 6F5F      		subi r22,-1
+ 498 01ca 7F4F      		sbci r23,-1
+ 499 01cc 8091 0000 		lds r24,xRoleta
+ 500 01d0 9091 0000 		lds r25,xRoleta+1
+ 501 01d4 0E94 0000 		call xQueueCRSend
+ 502 01d8 8093 0000 		sts xResult.2181,r24
+ 503 01dc 8C3F      		cpi r24,lo8(-4)
+ 504 01de 01F4      		brne .L32
+ 118:main.c        ****     }
+ 506               	.LM30:
+ 507 01e0 8CEE      		ldi r24,lo8(-20)
+ 508 01e2 90E0      		ldi r25,0
+ 509 01e4 00C0      		rjmp .L41
+ 510               	.L22:
+ 118:main.c        ****     }
+ 512               	.LM31:
+ 513 01e6 40E0      		ldi r20,0
+ 514 01e8 50E0      		ldi r21,0
+ 515 01ea BE01      		movw r22,r28
+ 516 01ec 6F5F      		subi r22,-1
+ 517 01ee 7F4F      		sbci r23,-1
+ 518 01f0 8091 0000 		lds r24,xRoleta
+ 519 01f4 9091 0000 		lds r25,xRoleta+1
+ 520 01f8 0E94 0000 		call xQueueCRSend
+ 521 01fc 8093 0000 		sts xResult.2181,r24
+ 522               	.L32:
+ 118:main.c        ****     }
+ 524               	.LM32:
+ 525 0200 8091 0000 		lds r24,xResult.2181
+ 526 0204 8B3F      		cpi r24,lo8(-5)
+ 527 0206 01F4      		brne .L31
+ 118:main.c        ****     }
+ 529               	.LM33:
+ 530 0208 8DEE      		ldi r24,lo8(-19)
+ 531 020a 90E0      		ldi r25,0
+ 532 020c 00C0      		rjmp .L41
+ 533               	.L43:
+ 123:main.c        ****     }
+ 535               	.LM34:
+ 536 020e 4AE0      		ldi r20,lo8(10)
+ 537 0210 50E0      		ldi r21,0
+ 538 0212 BE01      		movw r22,r28
+ 539 0214 6F5F      		subi r22,-1
+ 540 0216 7F4F      		sbci r23,-1
+ 541 0218 8091 0000 		lds r24,xRoleta+2
+ 542 021c 9091 0000 		lds r25,xRoleta+2+1
+ 543 0220 0E94 0000 		call xQueueCRSend
+ 544 0224 8093 0000 		sts xResult.2181,r24
+ 545 0228 8C3F      		cpi r24,lo8(-4)
+ 546 022a 01F4      		brne .L36
+ 123:main.c        ****     }
+ 548               	.LM35:
+ 549 022c 86EF      		ldi r24,lo8(-10)
+ 550 022e 90E0      		ldi r25,0
+ 551 0230 00C0      		rjmp .L41
+ 552               	.L26:
+ 123:main.c        ****     }
+ 554               	.LM36:
+ 555 0232 40E0      		ldi r20,0
+ 556 0234 50E0      		ldi r21,0
+ 557 0236 BE01      		movw r22,r28
+ 558 0238 6F5F      		subi r22,-1
+ 559 023a 7F4F      		sbci r23,-1
+ 560 023c 8091 0000 		lds r24,xRoleta+2
+ 561 0240 9091 0000 		lds r25,xRoleta+2+1
+ 562 0244 0E94 0000 		call xQueueCRSend
+ 563 0248 8093 0000 		sts xResult.2181,r24
+ 564               	.L36:
+ 123:main.c        ****     }
+ 566               	.LM37:
+ 567 024c 8091 0000 		lds r24,xResult.2181
+ 568 0250 8B3F      		cpi r24,lo8(-5)
+ 569 0252 01F0      		breq .+2
+ 570 0254 00C0      		rjmp .L24
+ 123:main.c        ****     }
+ 572               	.LM38:
+ 573 0256 87EF      		ldi r24,lo8(-9)
+ 574 0258 90E0      		ldi r25,0
+ 575               	.L41:
+ 576 025a F801      		movw r30,r16
+ 577 025c 918F      		std Z+25,r25
+ 578 025e 808F      		std Z+24,r24
+ 579 0260 00C0      		rjmp .L20
+ 580               	.L27:
+ 123:main.c        ****     }
+ 582               	.LM39:
+ 583 0262 81E0      		ldi r24,lo8(1)
+ 584 0264 8093 0000 		sts xResult.2181,r24
+ 585               	.LBE3:
+ 125:main.c        ****   crEND();
+ 587               	.LM40:
+ 588 0268 00C0      		rjmp .L24
+ 589               	.L20:
+ 590               	/* epilogue start */
+ 127:main.c        **** 
+ 592               	.LM41:
+ 593 026a 0F90      		pop __tmp_reg__
+ 594 026c 0F90      		pop __tmp_reg__
+ 595 026e DF91      		pop r29
+ 596 0270 CF91      		pop r28
+ 597 0272 1F91      		pop r17
+ 598 0274 0F91      		pop r16
+ 599 0276 0895      		ret
+ 607               	.Lscope2:
+ 609               		.stabd	78,0,0
+ 610               		.section	.text.startup,"ax",@progbits
+ 612               	.global	main
+ 614               	main:
+ 615               		.stabd	46,0,0
+  86:main.c        **** //prvIncrementResetCount();
+ 617               	.LM42:
+ 618               	.LFBB3:
+ 619 0000 CF93      		push r28
+ 620 0002 DF93      		push r29
+ 621               	/* prologue: function */
+ 622               	/* frame size = 0 */
+ 623               	/* stack size = 2 */
+ 624               	.L__stack_usage = 2
+  89:main.c        ****   xSerialPortInitMinimal(16);
+ 626               	.LM43:
+ 627 0004 0E94 0000 		call hardwareInit
+  90:main.c        **** 
+ 629               	.LM44:
+ 630 0008 80E1      		ldi r24,lo8(16)
+ 631 000a 0E94 0000 		call xSerialPortInitMinimal
+  92:main.c        ****   xRoleta[1] = xQueueCreate(4, 1);
+ 633               	.LM45:
+ 634 000e 61E0      		ldi r22,lo8(1)
+ 635 0010 84E0      		ldi r24,lo8(4)
+ 636 0012 0E94 0000 		call xQueueCreate
+ 637 0016 C0E0      		ldi r28,lo8(xRoleta)
+ 638 0018 D0E0      		ldi r29,hi8(xRoleta)
+ 639 001a 9983      		std Y+1,r25
+ 640 001c 8883      		st Y,r24
+  93:main.c        **** 
+ 642               	.LM46:
+ 643 001e 61E0      		ldi r22,lo8(1)
+ 644 0020 84E0      		ldi r24,lo8(4)
+ 645 0022 0E94 0000 		call xQueueCreate
+ 646 0026 9B83      		std Y+3,r25
+ 647 0028 8A83      		std Y+2,r24
+  95:main.c        ****   xCoRoutineCreate(vKlawisze, 0, 0);
+ 649               	.LM47:
+ 650 002a 40E0      		ldi r20,0
+ 651 002c 60E0      		ldi r22,0
+ 652 002e 80E0      		ldi r24,lo8(gs(vProtocol))
+ 653 0030 90E0      		ldi r25,hi8(gs(vProtocol))
+ 654 0032 0E94 0000 		call xCoRoutineCreate
+  96:main.c        ****   xCoRoutineCreate(vRoleta, 0, 0);
+ 656               	.LM48:
+ 657 0036 40E0      		ldi r20,0
+ 658 0038 60E0      		ldi r22,0
+ 659 003a 80E0      		ldi r24,lo8(gs(vKlawisze))
+ 660 003c 90E0      		ldi r25,hi8(gs(vKlawisze))
+ 661 003e 0E94 0000 		call xCoRoutineCreate
+  97:main.c        ****   xCoRoutineCreate(vRoleta, 0, 1);
+ 663               	.LM49:
+ 664 0042 40E0      		ldi r20,0
+ 665 0044 60E0      		ldi r22,0
+ 666 0046 80E0      		ldi r24,lo8(gs(vRoleta))
+ 667 0048 90E0      		ldi r25,hi8(gs(vRoleta))
+ 668 004a 0E94 0000 		call xCoRoutineCreate
+  98:main.c        **** 
+ 670               	.LM50:
+ 671 004e 41E0      		ldi r20,lo8(1)
+ 672 0050 60E0      		ldi r22,0
+ 673 0052 80E0      		ldi r24,lo8(gs(vRoleta))
+ 674 0054 90E0      		ldi r25,hi8(gs(vRoleta))
+ 675 0056 0E94 0000 		call xCoRoutineCreate
+ 100:main.c        ****   return 0;
+ 677               	.LM51:
+ 678 005a 0E94 0000 		call vTaskStartScheduler
+ 102:main.c        **** /*-----------------------------------------------------------*/
+ 680               	.LM52:
+ 681 005e 80E0      		ldi r24,0
+ 682 0060 90E0      		ldi r25,0
+ 683               	/* epilogue start */
+ 684 0062 DF91      		pop r29
+ 685 0064 CF91      		pop r28
+ 686 0066 0895      		ret
+ 688               	.Lscope3:
+ 690               		.stabd	78,0,0
+ 691               		.text
+ 693               	.global	vApplicationIdleHook
+ 695               	vApplicationIdleHook:
+ 696               		.stabd	46,0,0
+ 167:main.c        **** 
+ 168:main.c        **** void vApplicationIdleHook( void )
+ 169:main.c        **** {
+ 698               	.LM53:
+ 699               	.LFBB4:
+ 700               	/* prologue: function */
+ 701               	/* frame size = 0 */
+ 702               	/* stack size = 0 */
+ 703               	.L__stack_usage = 0
+ 704               	.L46:
+ 170:main.c        ****   for( ;; )
+ 171:main.c        ****   {
+ 172:main.c        ****     vCoRoutineSchedule();
+ 706               	.LM54:
+ 707 0278 0E94 0000 		call vCoRoutineSchedule
+ 173:main.c        ****   }
+ 709               	.LM55:
+ 710 027c 00C0      		rjmp .L46
+ 712               	.Lscope4:
+ 714               		.stabd	78,0,0
+ 715               		.local	xResult.2181
+ 716               		.comm	xResult.2181,1,1
+ 717               		.local	xResult.2196
+ 718               		.comm	xResult.2196,2,1
+ 719               		.local	rozkaz.2194
+ 720               		.comm	rozkaz.2194,2,1
+ 721               		.local	czasAkcji.2195
+ 722               		.comm	czasAkcji.2195,4,1
+ 723               		.comm	xRoleta,4,1
+ 724               	.global	roleta2
+ 725               		.section .bss
+ 728               	roleta2:
+ 729 0000 0000 0000 		.zero	5
+ 729      00
+ 730               	.global	roleta1
+ 733               	roleta1:
+ 734 0005 0000 0000 		.zero	5
+ 734      00
+ 735               	.global	bHelloResp
+ 736               		.data
+ 739               	bHelloResp:
+ 740 0000 5A        		.byte	90
+ 741 0001 00        		.byte	0
+ 742 0002 82        		.byte	-126
+ 743 0003 08        		.byte	8
+ 744 0004 72        		.byte	114
+ 745 0005 00        		.byte	0
+ 746 0006 76        		.byte	118
+ 747 0007 30        		.byte	48
+ 748 0008 2E        		.byte	46
+ 749 0009 35        		.byte	53
+ 750 000a 31        		.byte	49
+ 751 000b 00        		.zero	1
+ 752               		.comm	adres,1,1
+ 758               		.text
+ 760               	.Letext0:
+ 761               		.ident	"GCC: (GNU) 4.9.2"
+ 762               	.global __do_copy_data
+ 763               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 main.c
+     /tmp/ccKfiRID.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccKfiRID.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccKfiRID.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccKfiRID.s:5      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccKfiRID.s:6      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccKfiRID.s:171    .text:0000000000000000 vRoleta
+     /tmp/ccKfiRID.s:720    .bss:000000000000000f czasAkcji.2195
+     /tmp/ccKfiRID.s:718    .bss:000000000000000d rozkaz.2194
+                            *COM*:0000000000000004 xRoleta
+     /tmp/ccKfiRID.s:716    .bss:000000000000000b xResult.2196
+     /tmp/ccKfiRID.s:397    .text:000000000000012e vKlawisze
+                             .bss:000000000000000a xResult.2181
+     /tmp/ccKfiRID.s:733    .bss:0000000000000005 roleta1
+     /tmp/ccKfiRID.s:728    .bss:0000000000000000 roleta2
+     /tmp/ccKfiRID.s:614    .text.startup:0000000000000000 main
+     /tmp/ccKfiRID.s:695    .text:0000000000000278 vApplicationIdleHook
+     /tmp/ccKfiRID.s:739    .data:0000000000000000 bHelloResp
+                            *COM*:0000000000000001 adres
+
+UNDEFINED SYMBOLS
+xQueueCRReceive
+roletawGore
+roletawDol
+roletaStop
+czytKlawiszRol1wDol
+czytKlawiszRol1wGore
+automatStanowKlawiszy
+czytKlawiszRol2wDol
+czytKlawiszRol2wGore
+vCoRoutineAddToDelayedList
+xQueueCRSend
+hardwareInit
+xSerialPortInitMinimal
+xQueueCreate
+vProtocol
+xCoRoutineCreate
+vTaskStartScheduler
+vCoRoutineSchedule
+__do_copy_data
+__do_clear_bss

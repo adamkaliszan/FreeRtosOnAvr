@@ -1,0 +1,277 @@
+   1               		.file	"automat.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   9               		.text
+  10               	.Ltext0:
+ 171               	.global	automatStanowKlawiszy
+ 173               	automatStanowKlawiszy:
+ 174               		.stabd	46,0,0
+   1:automat.c     **** #include "automat.h"
+   2:automat.c     **** 
+   3:automat.c     **** #define T_START       5
+   4:automat.c     **** #define T_START_CONT  40
+   5:automat.c     **** #define T_STOP        5
+   6:automat.c     **** 
+   7:automat.c     **** uint8_t automatStanowKlawiszy(uint8_t klGoraOff, uint8_t klDolOff, t_stan_klawiszy *stan)
+   8:automat.c     **** {
+ 176               	.LM0:
+ 177               	.LFBB1:
+ 178               	/* prologue: function */
+ 179               	/* frame size = 0 */
+ 180               	/* stack size = 0 */
+ 181               	.L__stack_usage = 0
+ 182 0000 FA01      		movw r30,r20
+   9:automat.c     ****   uint8_t wiadomosc = 0;
+  10:automat.c     **** 
+  11:automat.c     ****   if (klGoraOff)
+ 184               	.LM1:
+ 185 0002 8823      		tst r24
+ 186 0004 01F0      		breq .L2
+  12:automat.c     ****   {
+  13:automat.c     ****     if ((stan->czynnosc == w_gore) && (stan->klGora_off == T_STOP))
+ 188               	.LM2:
+ 189 0006 8481      		ldd r24,Z+4
+ 190 0008 9281      		ldd r25,Z+2
+ 191 000a 8330      		cpi r24,lo8(3)
+ 192 000c 01F4      		brne .L21
+ 194               	.LM3:
+ 195 000e 9530      		cpi r25,lo8(5)
+ 196 0010 01F4      		brne .L21
+  14:automat.c     ****     {
+  15:automat.c     ****       stan->czynnosc = bezczynny;
+ 198               	.LM4:
+ 199 0012 1482      		std Z+4,__zero_reg__
+  16:automat.c     ****       wiadomosc = 0x40;
+ 201               	.LM5:
+ 202 0014 80E4      		ldi r24,lo8(64)
+ 203 0016 00C0      		rjmp .L3
+ 204               	.L21:
+   9:automat.c     **** 
+ 206               	.LM6:
+ 207 0018 80E0      		ldi r24,0
+ 208               	.L3:
+  17:automat.c     ****     }
+  18:automat.c     ****     stan->klGora_on = 0;
+ 210               	.LM7:
+ 211 001a 1082      		st Z,__zero_reg__
+  19:automat.c     ****     stan->klGora_off++;
+ 213               	.LM8:
+ 214 001c 9F5F      		subi r25,lo8(-(1))
+ 215 001e 9283      		std Z+2,r25
+ 216 0020 00C0      		rjmp .L4
+ 217               	.L2:
+  20:automat.c     ****   }
+  21:automat.c     ****   else
+  22:automat.c     ****   {
+  23:automat.c     ****     if (stan->klGora_on == T_START)
+ 219               	.LM9:
+ 220 0022 9081      		ld r25,Z
+ 221 0024 9530      		cpi r25,lo8(5)
+ 222 0026 01F4      		brne .L5
+  24:automat.c     ****     {
+  25:automat.c     ****       if (stan->czynnosc != bezczynny)
+ 224               	.LM10:
+ 225 0028 8481      		ldd r24,Z+4
+ 226 002a 8823      		tst r24
+ 227 002c 01F0      		breq .L6
+  26:automat.c     ****       {
+  27:automat.c     ****         stan->czynnosc = bezczynny;
+ 229               	.LM11:
+ 230 002e 1482      		std Z+4,__zero_reg__
+  28:automat.c     ****         wiadomosc = 0x40;
+ 232               	.LM12:
+ 233 0030 80E4      		ldi r24,lo8(64)
+ 234 0032 00C0      		rjmp .L8
+ 235               	.L6:
+  29:automat.c     ****       }
+  30:automat.c     ****       else
+  31:automat.c     ****       {
+  32:automat.c     ****         stan->czynnosc = do_konca_w_gore;
+ 237               	.LM13:
+ 238 0034 81E0      		ldi r24,lo8(1)
+ 239 0036 8483      		std Z+4,r24
+  33:automat.c     ****         wiadomosc = 0xBF;
+ 241               	.LM14:
+ 242 0038 8FEB      		ldi r24,lo8(-65)
+ 243 003a 00C0      		rjmp .L8
+ 244               	.L5:
+  34:automat.c     ****       }
+  35:automat.c     ****     }
+  36:automat.c     ****     if (stan->klGora_on == T_START_CONT)
+ 246               	.LM15:
+ 247 003c 9832      		cpi r25,lo8(40)
+ 248 003e 01F4      		brne .L22
+  37:automat.c     ****     {
+  38:automat.c     ****       stan->czynnosc = w_gore;
+ 250               	.LM16:
+ 251 0040 83E0      		ldi r24,lo8(3)
+ 252 0042 8483      		std Z+4,r24
+ 253               	.L22:
+   9:automat.c     **** 
+ 255               	.LM17:
+ 256 0044 80E0      		ldi r24,0
+ 257               	.L8:
+  39:automat.c     ****     }
+  40:automat.c     ****     stan->klGora_on++;
+ 259               	.LM18:
+ 260 0046 9F5F      		subi r25,lo8(-(1))
+ 261 0048 9083      		st Z,r25
+  41:automat.c     ****     stan->klGora_off = 0;
+ 263               	.LM19:
+ 264 004a 1282      		std Z+2,__zero_reg__
+ 265               	.L4:
+  42:automat.c     ****   }
+  43:automat.c     **** 
+  44:automat.c     ****   if (klDolOff)
+ 267               	.LM20:
+ 268 004c 6623      		tst r22
+ 269 004e 01F0      		breq .L9
+  45:automat.c     ****   {
+  46:automat.c     ****     if ((stan->czynnosc == w_dol) && (stan->klDol_off == T_STOP))
+ 271               	.LM21:
+ 272 0050 2481      		ldd r18,Z+4
+ 273 0052 9381      		ldd r25,Z+3
+ 274 0054 2430      		cpi r18,lo8(4)
+ 275 0056 01F4      		brne .L10
+ 277               	.LM22:
+ 278 0058 9530      		cpi r25,lo8(5)
+ 279 005a 01F4      		brne .L10
+  47:automat.c     ****     {
+  48:automat.c     ****       stan->czynnosc = bezczynny;
+ 281               	.LM23:
+ 282 005c 1482      		std Z+4,__zero_reg__
+  49:automat.c     ****       wiadomosc = 0x40;
+ 284               	.LM24:
+ 285 005e 80E4      		ldi r24,lo8(64)
+ 286               	.L10:
+  50:automat.c     ****     }
+  51:automat.c     ****     stan->klDol_on = 0;
+ 288               	.LM25:
+ 289 0060 1182      		std Z+1,__zero_reg__
+  52:automat.c     ****     stan->klDol_off++;
+ 291               	.LM26:
+ 292 0062 9F5F      		subi r25,lo8(-(1))
+ 293 0064 9383      		std Z+3,r25
+ 294 0066 00C0      		rjmp .L11
+ 295               	.L9:
+  53:automat.c     ****   }
+  54:automat.c     ****   else
+  55:automat.c     ****   {
+  56:automat.c     ****     if (stan->klDol_on == T_START)
+ 297               	.LM27:
+ 298 0068 9181      		ldd r25,Z+1
+ 299 006a 9530      		cpi r25,lo8(5)
+ 300 006c 01F4      		brne .L12
+  57:automat.c     ****     {
+  58:automat.c     ****       if (stan->czynnosc != bezczynny)
+ 302               	.LM28:
+ 303 006e 8481      		ldd r24,Z+4
+ 304 0070 8823      		tst r24
+ 305 0072 01F0      		breq .L13
+  59:automat.c     ****       {
+  60:automat.c     ****         stan->czynnosc = bezczynny;
+ 307               	.LM29:
+ 308 0074 1482      		std Z+4,__zero_reg__
+  61:automat.c     ****         wiadomosc = 0x40;
+ 310               	.LM30:
+ 311 0076 80E4      		ldi r24,lo8(64)
+ 312 0078 00C0      		rjmp .L15
+ 313               	.L13:
+  62:automat.c     ****       }
+  63:automat.c     ****       else
+  64:automat.c     ****       {
+  65:automat.c     ****         stan->czynnosc = do_konca_w_dol;
+ 315               	.LM31:
+ 316 007a 82E0      		ldi r24,lo8(2)
+ 317 007c 8483      		std Z+4,r24
+  66:automat.c     ****         wiadomosc = 0x3F;
+ 319               	.LM32:
+ 320 007e 8FE3      		ldi r24,lo8(63)
+ 321 0080 00C0      		rjmp .L15
+ 322               	.L12:
+  67:automat.c     ****       }
+  68:automat.c     ****     }
+  69:automat.c     ****     if (stan->klDol_on == T_START_CONT)
+ 324               	.LM33:
+ 325 0082 9832      		cpi r25,lo8(40)
+ 326 0084 01F4      		brne .L15
+  70:automat.c     ****     {
+  71:automat.c     ****       stan->czynnosc = w_dol;
+ 328               	.LM34:
+ 329 0086 24E0      		ldi r18,lo8(4)
+ 330 0088 2483      		std Z+4,r18
+ 331               	.L15:
+  72:automat.c     ****     }
+  73:automat.c     ****     stan->klDol_on++;
+ 333               	.LM35:
+ 334 008a 9F5F      		subi r25,lo8(-(1))
+ 335 008c 9183      		std Z+1,r25
+  74:automat.c     ****     stan->klDol_off = 0;
+ 337               	.LM36:
+ 338 008e 1382      		std Z+3,__zero_reg__
+ 339               	.L11:
+  75:automat.c     ****   }
+  76:automat.c     ****   
+  77:automat.c     ****   if (stan->klDol_on == 255)
+ 341               	.LM37:
+ 342 0090 9181      		ldd r25,Z+1
+ 343 0092 9F3F      		cpi r25,lo8(-1)
+ 344 0094 01F4      		brne .L16
+  78:automat.c     **** 	  stan->klDol_on = 254;
+ 346               	.LM38:
+ 347 0096 9EEF      		ldi r25,lo8(-2)
+ 348 0098 9183      		std Z+1,r25
+ 349               	.L16:
+  79:automat.c     ****   if (stan->klGora_on == 255)
+ 351               	.LM39:
+ 352 009a 9081      		ld r25,Z
+ 353 009c 9F3F      		cpi r25,lo8(-1)
+ 354 009e 01F4      		brne .L17
+  80:automat.c     **** 	  stan->klGora_on = 254;
+ 356               	.LM40:
+ 357 00a0 9EEF      		ldi r25,lo8(-2)
+ 358 00a2 9083      		st Z,r25
+ 359               	.L17:
+  81:automat.c     ****   
+  82:automat.c     ****   if (stan->klDol_off == 255)
+ 361               	.LM41:
+ 362 00a4 9381      		ldd r25,Z+3
+ 363 00a6 9F3F      		cpi r25,lo8(-1)
+ 364 00a8 01F4      		brne .L18
+  83:automat.c     **** 	  stan->klDol_off = 254;
+ 366               	.LM42:
+ 367 00aa 9EEF      		ldi r25,lo8(-2)
+ 368 00ac 9383      		std Z+3,r25
+ 369               	.L18:
+  84:automat.c     ****   if (stan->klGora_off == 255)
+ 371               	.LM43:
+ 372 00ae 9281      		ldd r25,Z+2
+ 373 00b0 9F3F      		cpi r25,lo8(-1)
+ 374 00b2 01F4      		brne .L19
+  85:automat.c     **** 	  stan->klGora_off = 254;
+ 376               	.LM44:
+ 377 00b4 9EEF      		ldi r25,lo8(-2)
+ 378 00b6 9283      		std Z+2,r25
+ 379               	.L19:
+  86:automat.c     **** 
+  87:automat.c     ****   return wiadomosc;
+  88:automat.c     **** }
+ 381               	.LM45:
+ 382 00b8 0895      		ret
+ 387               	.Lscope1:
+ 389               		.stabd	78,0,0
+ 391               	.Letext0:
+ 392               		.ident	"GCC: (GNU) 4.9.2"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 automat.c
+     /tmp/ccMWipl3.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccMWipl3.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccMWipl3.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccMWipl3.s:5      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccMWipl3.s:6      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccMWipl3.s:173    .text:0000000000000000 automatStanowKlawiszy
+
+NO UNDEFINED SYMBOLS
