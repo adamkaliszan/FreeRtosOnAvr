@@ -40,6 +40,10 @@ const char cmd_enable[]       PROGMEM = "enable";   const char cmd_help_enable[]
 const char cmd_disable[]      PROGMEM = "disable";  const char cmd_help_disable[]       PROGMEM = "Normal mode";
 const char cmd_configure[]    PROGMEM = "config";   const char cmd_help_configure[]     PROGMEM = "Configuration mode";
 
+
+const char cmd_powerOn[]      PROGMEM = "pon";      const char cmd_help_powerOn[]       PROGMEM = "[1-12] Set power on specified output";
+const char cmd_powerOff[]     PROGMEM = "poff";     const char cmd_help_powerOff[]      PROGMEM = "[1-12] Set power off on specified output";
+
 const char cmd_HC12mode[]     PROGMEM = "hc12mode"; const char cmd_help_HC12mode[]      PROGMEM = "[1-3] Set HC12 operation mode";
 const char cmd_HC12channel[]  PROGMEM = "hc12chan"; const char cmd_help_HC12channel[]   PROGMEM = "[1-100] Set transmission channel for HC12";
 const char cmd_HC12baudrate[] PROGMEM = "hc12baud"; const char cmd_help_HC12baudrate[]  PROGMEM = "[] Set HC12 bandwidth";

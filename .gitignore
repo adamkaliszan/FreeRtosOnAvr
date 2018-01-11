@@ -1,3 +1,6 @@
+firmware.eep
+firmware.lss
+firmware.sym
 # Prerequisites
 *.d
 

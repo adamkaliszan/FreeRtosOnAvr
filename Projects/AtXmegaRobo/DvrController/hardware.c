@@ -24,18 +24,18 @@ void hardwareInit(void)
     /** PORT A
     0 - ACS711 - current sensor
     1 - Voltage divider - power supply voltage sensor
-    2 - Out 7
-    3 - Out 8
-    4 - Out 5
-    5 - Out 6
+    2 - Out 5
+    3 - Out 6
+    4 - Out 7
+    5 - Out 8
     6 - Out 9
     7 - Out 10          **/
     PORTA.DIR=0xFC;
     PORTA.OUT=0x00;
 
     /** PORT B
-    0 - Out 11
-    1 - Out 12
+    0 - Out 12
+    1 - Out 11
     2 - In 1
     3 - In 2           **/
     PORTB.DIR=0x03;
@@ -72,7 +72,7 @@ void hardwareInit(void)
     2 RPI RxD
     3 RPI TxD          **/
     PORTE.DIR=0x0B;
-    PORTE.OUT=0x03;
+    PORTE.OUT=0x00;
 
     /** PORT R
     0 Out 1
@@ -93,35 +93,36 @@ void hardwareInit(void)
     ADCA.CALH = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCACAL1) );
 }
 
-inline void setOut1   (void) { PORTR.OUTSET=0x01; } //R0
-inline void clearOut1 (void) { PORTR.OUTCLR=0x01; }
-inline void setOut2   (void) { PORTR.OUTSET=0x02; } //R1
-inline void clearOut2 (void) { PORTR.OUTCLR=0x02; }
+inline void setOut1   (void) { PORTE.OUTSET=0x01; } //E0
+inline void clearOut1 (void) { PORTE.OUTCLR=0x01; }
+inline void setOut2   (void) { PORTE.OUTSET=0x02; } //E1
+inline void clearOut2 (void) { PORTE.OUTCLR=0x02; }
 
-inline void setOut3   (void) { PORTE.OUTSET=0x01; } //E0
-inline void clearOut3 (void) { PORTE.OUTCLR=0x01; }
-inline void setOut4   (void) { PORTE.OUTSET=0x02; } //E1
-inline void clearOut4 (void) { PORTE.OUTCLR=0x02; }
+inline void setOut3   (void) { PORTR.OUTSET=0x01; } //R0
+inline void clearOut3 (void) { PORTR.OUTCLR=0x01; }
+inline void setOut4   (void) { PORTR.OUTSET=0x02; } //R1
+inline void clearOut4 (void) { PORTR.OUTCLR=0x02; }
 
-inline void setOut5   (void) { PORTA.OUTSET=0x10; } //A4
-inline void clearOut5 (void) { PORTA.OUTCLR=0x10; }
-inline void setOut6   (void) { PORTA.OUTSET=0x20; } //A5
-inline void clearOut6 (void) { PORTA.OUTCLR=0x20; }
+inline void setOut5   (void) { PORTA.OUTSET=0x04; } //A2
+inline void clearOut5 (void) { PORTA.OUTCLR=0x04; }
+inline void setOut6   (void) { PORTA.OUTSET=0x08; } //A3
+inline void clearOut6 (void) { PORTA.OUTCLR=0x08; }
 
-inline void setOut7   (void) { PORTA.OUTSET=0x04; } //A2
-inline void clearOut7 (void) { PORTA.OUTCLR=0x04; }
-inline void setOut8   (void) { PORTA.OUTSET=0x08; } //A3
-inline void clearOut8 (void) { PORTA.OUTCLR=0x08; }
+inline void setOut7   (void) { PORTA.OUTSET=0x10; } //A4
+inline void clearOut7 (void) { PORTA.OUTCLR=0x10; }
+inline void setOut8   (void) { PORTA.OUTSET=0x20; } //A5
+inline void clearOut8 (void) { PORTA.OUTCLR=0x20; }
 
 inline void setOut9   (void) { PORTA.OUTSET=0x40; } //A6
 inline void clearOut9 (void) { PORTA.OUTCLR=0x40; }
 inline void setOut10  (void) { PORTA.OUTSET=0x80; } //A7
 inline void clearOut10(void) { PORTA.OUTCLR=0x80; }
 
-inline void setOut11  (void) { PORTB.OUTSET=0x01; } //B0
-inline void clearOut11(void) { PORTB.OUTCLR=0x01; }
-inline void setOut12  (void) { PORTB.OUTSET=0x02; } //B1
-inline void clearOut12(void) { PORTB.OUTCLR=0x02; }
+inline void setOut11  (void) { PORTB.OUTSET=0x02; } //B1
+inline void clearOut11(void) { PORTB.OUTCLR=0x02; }
+inline void setOut12  (void) { PORTB.OUTSET=0x01; } //B0
+inline void clearOut12(void) { PORTB.OUTCLR=0x01; }
+
 
 void setOut  (uint8_t no)
 {

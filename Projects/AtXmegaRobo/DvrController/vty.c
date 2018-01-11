@@ -46,6 +46,8 @@ static cliExRes_t sendHC12AtCmd(cmdState_t *state, const char cmd[]);
 
 static cliExRes_t sendHC12loopback(cmdState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[]);
 
+static cliExRes_t powerOnFunction           (cmdState_t *state);
+static cliExRes_t powerOffFunction           (cmdState_t *state);
 
 const char okStr[] PROGMEM = "OK\r\n";
 const char nlStr[] PROGMEM = "\r\n";
@@ -75,6 +77,8 @@ const command_t cmdListNormal[] PROGMEM =
   {cmd_hc12rotateLeft,  cmd_help_hc12rotateLeft,  hc12sendRotateLeftFunction},
   {cmd_hc12rotateRight, cmd_help_hc12rotateRight, hc12sendRotateRightFunction},
   {cmd_hc12stop,        cmd_help_hc12stop,        hc12sendStopFunction},
+  {cmd_powerOn,         cmd_help_powerOn,         powerOnFunction},
+  {cmd_powerOff,        cmd_help_powerOff,        powerOffFunction},
   {NULL, NULL, NULL}
 };
 
@@ -96,7 +100,8 @@ const command_t cmdListEnable[] PROGMEM =
   {cmd_sim900on,        cmd_help_sim900on,        sim900OnFunction},
   {cmd_sim900off,       cmd_help_sim900off,       sim900OffFunction},
   {cmd_sim900at,        cmd_help_sim900at,        sim900atMode},
-
+  {cmd_powerOn,         cmd_help_powerOn,         powerOnFunction},
+  {cmd_powerOff,        cmd_help_powerOff,        powerOffFunction},
   {NULL, NULL, NULL}
 };
 
@@ -223,6 +228,33 @@ static cliExRes_t configureModeFunction(cmdState_t *state)
   }
   return ERROR_OPERATION_NOT_ALLOWED;
 }
+
+static cliExRes_t powerOnFunction           (cmdState_t *state)
+{
+  if (state->argc != 1)
+    return ERROR_INFORM;
+
+  uint8_t outNo = cmdlineGetArgInt(1, state);
+  if (outNo > 12 || outNo == 0)
+    return ERROR_INFORM;
+
+  setOut(outNo);
+  return OK_SILENT;
+}
+
+static cliExRes_t powerOffFunction           (cmdState_t *state)
+{
+  if (state->argc != 1)
+    return ERROR_INFORM;
+
+  uint8_t outNo = cmdlineGetArgInt(1, state);
+  if (outNo > 12 || outNo == 0)
+    return ERROR_INFORM;
+
+  clearOut(outNo);
+  return OK_SILENT;
+}
+
 
 static cliExRes_t hc12sendForwardFunction    (cmdState_t *state)
 {
