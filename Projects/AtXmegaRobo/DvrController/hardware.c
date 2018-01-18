@@ -11,13 +11,8 @@
 #ifndef IGNORE_IO_HELPER
 #include "help_iox128a4u.h"
 
-ADC_t ADCA;
-PORT_t PORTA;
-PORT_t PORTB;
-PORT_t PORTC;
-PORT_t PORTD;
-PORT_t PORTE;
-PORT_t PORTR;
+#error "This should be compiled"
+
 
 #endif
 
@@ -97,12 +92,16 @@ void hardwareInit(void)
     PORTR.DIR=0x03;
     PORTR.OUT=0x00;
 
+    //PORT
 
     /// A/C init
 
-    //ADCA.CTRLA     = ADC_ENABLE_bm | ADC_CH0START_bm;        //Włączenie przetwornika AC oraz uruchomienie pomiaru na kanale 0
-    //ADCA.CTRLB     = 0x80;//ADC_LOWIMP_bm;                            //Sprawdzam, czy poprawi się jakość pomiaru
-    ADCA.REFCTRL   = ADC_BANDGAP_bm | ADC_TEMPREF_bm | ADC_REFSEL_INTVCC_gc;          //BANDGAP enable, TempRef enable, Vref = VCC/1.6 V
+    ADCA.CTRLA     = ADC_ENABLE_bm;// | ADC_CH0START_bm | ADC_FLUSH_bm;       //Włączenie przetwornika AC oraz uruchomienie pomiaru na kanale 0
+
+    ADCA.CTRLB     = ADC_IMPMODE_bm; //ADC_CURRLIMIT0_bm | ADC_CURRLIMIT1_bm | ADC_CONMODE_bm
+                 //| ADC_FREERUN_bm | ADC_RESOLUTION0_bm | ADC_RESOLUTION1_bm |
+
+    ADCA.REFCTRL   = ADC_BANDGAP_bm | ADC_TEMPREF_bm | ADC_REFSEL_INT1V_gc;          //BANDGAP enable, TempRef enable, Vref = VCC/1.6 V
     ADCA.EVCTRL    = 0;
     ADCA.PRESCALER = ADC_PRESCALER_DIV256_gc;                  //prescaler 256, f=125kHz
     ADCA.INTFLAGS  = 0x0F;
@@ -110,6 +109,7 @@ void hardwareInit(void)
     ADCA.CALL = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCACAL0) );
     ADCA.CALH = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCACAL1) );
 
+//    ADCA.CTRLA
     //Channel 0: Voltage on demand
     //ADCA.CH0.MUXCTRL = ;
 

@@ -31,14 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ****************************************************************************/
 
-
-#ifndef _AVR_IO_H_
-
-
-
-#ifndef HELPER_AVR_ATXMEGA128A4U_H_INCLUDED
-#define HELPER_AVR_ATXMEGA128A4U_H_INCLUDED
-
 #error "This part of code shouldn't be included"
 
 /* Ungrouped common registers */
@@ -1206,7 +1198,9 @@ ADC - Analog/Digital Converter
 --------------------------------------------------------------------------
 */
 
-/* ADC Channel */
+/**
+ ADC Channel test the comment
+ */
 typedef struct ADC_CH_struct
 {
     register8_t CTRL;  /* Control Register */
@@ -1222,36 +1216,37 @@ typedef struct ADC_CH_struct
 /* Analog-to-Digital Converter */
 typedef struct ADC_struct
 {
-    register8_t CTRLA;  /* Control Register A */
-    register8_t CTRLB;  /* Control Register B */
-    register8_t REFCTRL;  /* Reference Control */
-    register8_t EVCTRL;  /* Event Control */
-    register8_t PRESCALER;  /* Clock Prescaler */
+    register8_t CTRLA;         /*!< Control Register A */
+    register8_t CTRLB;         /**< Control Register B */
+    register8_t REFCTRL;       /** Reference Control  */
+    register8_t EVCTRL;        /** Event Control      */
+    register8_t PRESCALER;     /** Clock Prescaler    */
     register8_t reserved_0x05;
-    register8_t INTFLAGS;  /* Interrupt Flags */
-    register8_t TEMP;  /* Temporary Register */
+    register8_t INTFLAGS;      /** Interrupt Flags    */
+    register8_t TEMP;          /** Temporary Register */
     register8_t reserved_0x08;
     register8_t reserved_0x09;
     register8_t reserved_0x0A;
     register8_t reserved_0x0B;
-    _WORDREGISTER(CAL);  /* Calibration Value */
+    _WORDREGISTER(CAL);        /** Calibration Value  */
     register8_t reserved_0x0E;
     register8_t reserved_0x0F;
-    _WORDREGISTER(CH0RES);  /* Channel 0 Result */
-    _WORDREGISTER(CH1RES);  /* Channel 1 Result */
-    _WORDREGISTER(CH2RES);  /* Channel 2 Result */
-    _WORDREGISTER(CH3RES);  /* Channel 3 Result */
-    _WORDREGISTER(CMP);  /* Compare Value */
+    _WORDREGISTER(CH0RES);     /** Channel 0 Result   */
+    _WORDREGISTER(CH1RES);     /** Channel 1 Result   */
+    _WORDREGISTER(CH2RES);     /** Channel 2 Result   */
+    _WORDREGISTER(CH3RES);     /** Channel 3 Result   */
+    _WORDREGISTER(CMP);        /** Compare Value      */
     register8_t reserved_0x1A;
     register8_t reserved_0x1B;
     register8_t reserved_0x1C;
     register8_t reserved_0x1D;
     register8_t reserved_0x1E;
     register8_t reserved_0x1F;
-    ADC_CH_t CH0;  /* ADC Channel 0 */
-    ADC_CH_t CH1;  /* ADC Channel 1 */
-    ADC_CH_t CH2;  /* ADC Channel 2 */
-    ADC_CH_t CH3;  /* ADC Channel 3 */
+
+    ADC_CH_t CH0;              /** ADC Channel 0      */
+    ADC_CH_t CH1;              /** ADC Channel 1      */
+    ADC_CH_t CH2;              /** ADC Channel 2      */
+    ADC_CH_t CH3;              /** ADC Channel 3      */
 } ADC_t;
 
 /* Positive input multiplexer selection */
@@ -1343,10 +1338,10 @@ typedef enum ADC_CURRLIMIT_enum
 /* Voltage reference selection */
 typedef enum ADC_REFSEL_enum
 {
-    ADC_REFSEL_INT1V_gc = (0x00<<4),  /* Internal 1V */
-    ADC_REFSEL_INTVCC_gc = (0x01<<4),  /* Internal VCC / 1.6 */
-    ADC_REFSEL_AREFA_gc = (0x02<<4),  /* External reference on PORT A */
-    ADC_REFSEL_AREFB_gc = (0x03<<4),  /* External reference on PORT B */
+    ADC_REFSEL_INT1V_gc   = (0x00<<4),  /* Internal 1V */
+    ADC_REFSEL_INTVCC_gc  = (0x01<<4),  /* Internal VCC / 1.6 */
+    ADC_REFSEL_AREFA_gc   = (0x02<<4),  /* External reference on PORT A */
+    ADC_REFSEL_AREFB_gc   = (0x03<<4),  /* External reference on PORT B */
     ADC_REFSEL_INTVCC2_gc = (0x04<<4),  /* Internal VCC / 2 */
 } ADC_REFSEL_t;
 
@@ -1388,17 +1383,17 @@ typedef enum ADC_EVACT_enum
 typedef enum ADC_CH_INTMODE_enum
 {
     ADC_CH_INTMODE_COMPLETE_gc = (0x00<<2),  /* Interrupt on conversion complete */
-    ADC_CH_INTMODE_BELOW_gc = (0x01<<2),  /* Interrupt on result below compare value */
-    ADC_CH_INTMODE_ABOVE_gc = (0x03<<2),  /* Interrupt on result above compare value */
+    ADC_CH_INTMODE_BELOW_gc    = (0x01<<2),  /* Interrupt on result below compare value */
+    ADC_CH_INTMODE_ABOVE_gc    = (0x03<<2),  /* Interrupt on result above compare value */
 } ADC_CH_INTMODE_t;
 
 /* Interrupt level */
 typedef enum ADC_CH_INTLVL_enum
 {
     ADC_CH_INTLVL_OFF_gc = (0x00<<0),  /* Interrupt disabled */
-    ADC_CH_INTLVL_LO_gc = (0x01<<0),  /* Low level */
+    ADC_CH_INTLVL_LO_gc  = (0x01<<0),  /* Low level */
     ADC_CH_INTLVL_MED_gc = (0x02<<0),  /* Medium level */
-    ADC_CH_INTLVL_HI_gc = (0x03<<0),  /* High level */
+    ADC_CH_INTLVL_HI_gc  = (0x03<<0),  /* High level */
 } ADC_CH_INTLVL_t;
 
 /* DMA request selection */
@@ -2867,19 +2862,20 @@ IO Module Instances. Mapped to memory.
 #define DMA    (*(DMA_t *) 0x0100)  /* DMA Controller */
 #define EVSYS    (*(EVSYS_t *) 0x0180)  /* Event System */
 #define NVM    (*(NVM_t *) 0x01C0)  /* Non-volatile Memory Controller */
-#define ADCA    (*(ADC_t *) 0x0200)  /* Analog-to-Digital Converter */
+
+ADC_t ADCA;
 #define DACB    (*(DAC_t *) 0x0320)  /* Digital-to-Analog Converter */
 #define ACA    (*(AC_t *) 0x0380)  /* Analog Comparator */
 #define RTC    (*(RTC_t *) 0x0400)  /* Real-Time Counter */
 #define TWIC    (*(TWI_t *) 0x0480)  /* Two-Wire Interface */
 #define TWIE    (*(TWI_t *) 0x04A0)  /* Two-Wire Interface */
 #define USB    (*(USB_t *) 0x04C0)  /* Universal Serial Bus */
-#define PORTA    (*(PORT_t *) 0x0600)  /* I/O Ports */
-#define PORTB    (*(PORT_t *) 0x0620)  /* I/O Ports */
-#define PORTC    (*(PORT_t *) 0x0640)  /* I/O Ports */
-#define PORTD    (*(PORT_t *) 0x0660)  /* I/O Ports */
-#define PORTE    (*(PORT_t *) 0x0680)  /* I/O Ports */
-#define PORTR    (*(PORT_t *) 0x07E0)  /* I/O Ports */
+PORT_t PORTA;
+PORT_t PORTB;
+PORT_t PORTC;
+PORT_t PORTD;
+PORT_t PORTE;
+PORT_t PORTR;
 #define TCC0    (*(TC0_t *) 0x0800)  /* 16-bit Timer/Counter 0 */
 #define TCC2    (*(TC2_t *) 0x0800)  /* 16-bit Timer/Counter type 2 */
 #define TCC1    (*(TC1_t *) 0x0840)  /* 16-bit Timer/Counter 1 */
@@ -7300,6 +7296,3 @@ IO Module Instances. Mapped to memory.
 #define __AVR_HAVE_PRPF_TC1
 #define __AVR_HAVE_PRPF_TC0
 
-
-#endif
-#endif
