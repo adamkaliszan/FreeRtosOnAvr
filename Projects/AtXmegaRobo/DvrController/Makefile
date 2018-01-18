@@ -143,6 +143,9 @@ $(patsubst %,-I%,$(EXTRAINCDIRS))
 
 CFLAGS += -DF_CPU=32000000UL
 
+CFLAGS += -DIGNORE_IO_HELPER=1
+
+
 # Set a "language standard" compiler flag.
 #   Unremark just one line below to set the language standard to use.
 #   gnu99 = C99 + GNU extensions. See GCC manual for more information.

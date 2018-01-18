@@ -90,6 +90,7 @@
 		</Unit>
 		<Unit filename="hardware.h" />
 		<Unit filename="hardwareConfig.h" />
+		<Unit filename="help_iox128a4u.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
