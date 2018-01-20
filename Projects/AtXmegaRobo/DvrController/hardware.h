@@ -7,7 +7,7 @@
 //#include "hardwareConfig.h"
 //#include "softwareConfig.h"
 
-
+extern volatile int16_t adcResults[];
 
 
 /**
@@ -50,6 +50,13 @@ void clearOut12(void);
 void HC12setAtMode(void);
 void HC12setTransparentMode(void);
 
+
+void readAdcResults(void);
+
+int16_t getVoltagePwrSply(void);
+int16_t getCurrentPwrSply(void);
+int16_t getVoltageInternal(void);
+int16_t getTemperatureInternal(void);
 
 #endif
 

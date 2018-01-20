@@ -71,7 +71,7 @@
 
 #define configUSE_IDLE_HOOK			0 //1
 
-#define configUSE_TICK_HOOK			0 //0
+#define configUSE_TICK_HOOK			1 //0
 
 #define configCPU_CLOCK_HZ			( ( unsigned long ) 32000000 )//2MHz is default value for xmega.//16MHz
 

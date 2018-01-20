@@ -188,10 +188,10 @@ LDFLAGS = $(EXTMEMOPTS),-Map=$(TARGET).map,--cref
 # Additional libraries
 
 # Minimalistic printf version
-LDFLAGS += -Wl,-u,vfprintf
+#LDFLAGS += -Wl,-u,vfprintf
 
 # Floating point printf version (requires -lm below)
-#LDFLAGS += -Wl,-u,vfprintf -lprintf_flt
+LDFLAGS += -Wl,-u,vfprintf -lprintf_flt
 
 # -lm = math library
 LDFLAGS += -lm

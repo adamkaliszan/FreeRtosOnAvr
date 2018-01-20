@@ -18,6 +18,8 @@
 #error "Vty Language not defined"
 #endif
 
+extern volatile int16_t adcResults[];
+
 static cliExRes_t helpFunction           (cmdState_t *state);
 static cliExRes_t statusFunction         (cmdState_t *state);
 static cliExRes_t enableFunction         (cmdState_t *state);
@@ -40,6 +42,10 @@ static cliExRes_t hc12sendStopFunction       (cmdState_t *state);
 static cliExRes_t sim900OnFunction           (cmdState_t *state);
 static cliExRes_t sim900OffFunction          (cmdState_t *state);
 static cliExRes_t sim900atMode               (cmdState_t *state);
+
+static cliExRes_t adcReadVoltagePwrSply      (cmdState_t *state);
+static cliExRes_t adcReadCurrentPwrSply      (cmdState_t *state);
+
 
 static cliExRes_t sendHC12(cmdState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[]);
 static cliExRes_t sendHC12AtCmd(cmdState_t *state, const char cmd[]);
@@ -69,39 +75,43 @@ const const char* const errorStrings[] PROGMEM = {
 
 const command_t cmdListNormal[] PROGMEM =
 {
-  {cmd_help,            cmd_help_help,            helpFunction},
-  {cmd_status,          cmd_help_status,          statusFunction},
-  {cmd_enable,          cmd_help_enable,          enableFunction},
-  {cmd_hc12forward,     cmd_help_hc12forward,     hc12sendForwardFunction},
-  {cmd_hc12backward,    cmd_help_hc12backward,    hc12sendBackwordFunction},
-  {cmd_hc12rotateLeft,  cmd_help_hc12rotateLeft,  hc12sendRotateLeftFunction},
-  {cmd_hc12rotateRight, cmd_help_hc12rotateRight, hc12sendRotateRightFunction},
-  {cmd_hc12stop,        cmd_help_hc12stop,        hc12sendStopFunction},
-  {cmd_powerOn,         cmd_help_powerOn,         powerOnFunction},
-  {cmd_powerOff,        cmd_help_powerOff,        powerOffFunction},
+  {cmd_help,             cmd_help_help,            helpFunction},
+  {cmd_status,           cmd_help_status,          statusFunction},
+  {cmd_enable,           cmd_help_enable,          enableFunction},
+  {cmd_hc12forward,      cmd_help_hc12forward,     hc12sendForwardFunction},
+  {cmd_hc12backward,     cmd_help_hc12backward,    hc12sendBackwordFunction},
+  {cmd_hc12rotateLeft,   cmd_help_hc12rotateLeft,  hc12sendRotateLeftFunction},
+  {cmd_hc12rotateRight,  cmd_help_hc12rotateRight, hc12sendRotateRightFunction},
+  {cmd_hc12stop,         cmd_help_hc12stop,        hc12sendStopFunction},
+  {cmd_powerOn,          cmd_help_powerOn,         powerOnFunction},
+  {cmd_powerOff,         cmd_help_powerOff,        powerOffFunction},
+  {cmd_rdVoltPwrSply,    cmd_help_rdVoltPwrSply,   adcReadVoltagePwrSply},
+  {cmd_rdCurrPwrSply,    cmd_help_rdCurrPwrSply,   adcReadCurrentPwrSply},
   {NULL, NULL, NULL}
 };
 
 const command_t cmdListEnable[] PROGMEM =
 {
-  {cmd_help,        cmd_help_help,        helpFunction},
-  {cmd_status,      cmd_help_status,      statusFunction},
-  {cmd_disable,     cmd_help_disable,     disableFunction},
-  {cmd_configure,   cmd_help_configure,   configureModeFunction},
+  {cmd_help,             cmd_help_help,            helpFunction},
+  {cmd_status,           cmd_help_status,          statusFunction},
+  {cmd_disable,          cmd_help_disable,         disableFunction},
+  {cmd_configure,        cmd_help_configure,       configureModeFunction},
 
-  {cmd_HC12status,      cmd_help_HC12status,      hc12statusFunction},
+  {cmd_HC12status,       cmd_help_HC12status,      hc12statusFunction},
+  {cmd_hc12forward,      cmd_help_hc12forward,     hc12sendForwardFunction},
+  {cmd_hc12backward,     cmd_help_hc12backward,    hc12sendBackwordFunction},
+  {cmd_hc12rotateLeft,   cmd_help_hc12rotateLeft,  hc12sendRotateLeftFunction},
+  {cmd_hc12rotateRight,  cmd_help_hc12rotateRight, hc12sendRotateRightFunction},
+  {cmd_hc12stop,         cmd_help_hc12stop,        hc12sendStopFunction},
 
-  {cmd_hc12forward,     cmd_help_hc12forward,     hc12sendForwardFunction},
-  {cmd_hc12backward,    cmd_help_hc12backward,    hc12sendBackwordFunction},
-  {cmd_hc12rotateLeft,  cmd_help_hc12rotateLeft,  hc12sendRotateLeftFunction},
-  {cmd_hc12rotateRight, cmd_help_hc12rotateRight, hc12sendRotateRightFunction},
-  {cmd_hc12stop,        cmd_help_hc12stop,        hc12sendStopFunction},
+  {cmd_sim900on,         cmd_help_sim900on,        sim900OnFunction},
+  {cmd_sim900off,        cmd_help_sim900off,       sim900OffFunction},
+  {cmd_sim900at,         cmd_help_sim900at,        sim900atMode},
+  {cmd_powerOn,          cmd_help_powerOn,         powerOnFunction},
+  {cmd_powerOff,         cmd_help_powerOff,        powerOffFunction},
 
-  {cmd_sim900on,        cmd_help_sim900on,        sim900OnFunction},
-  {cmd_sim900off,       cmd_help_sim900off,       sim900OffFunction},
-  {cmd_sim900at,        cmd_help_sim900at,        sim900atMode},
-  {cmd_powerOn,         cmd_help_powerOn,         powerOnFunction},
-  {cmd_powerOff,        cmd_help_powerOff,        powerOffFunction},
+  {cmd_rdVoltPwrSply,    cmd_help_rdVoltPwrSply,   adcReadVoltagePwrSply},
+  {cmd_rdCurrPwrSply,    cmd_help_rdCurrPwrSply,   adcReadCurrentPwrSply},
   {NULL, NULL, NULL}
 };
 
@@ -170,11 +180,11 @@ void printStatus(FILE *stream)
 
 
 //  uint16_t res = ADCA.CH0RES;
-  ADCA.CH0.CTRL    = ADC_CH_INPUTMODE_SINGLEENDED_gc;        //Pojedyncze wejście
-  ADCA.CH0.MUXCTRL = ADC_CH_MUXPOS_PIN8_gc;                  //PB0
+/*  ADCA.CH0.CTRL    = ADC_CH_INPUTMODE_SINGLEENDED_gc;        //Pojedyncze wejście
+  ADCA.CH0.MUXCTRL = ADC_CH_MUXPOS_PIN0_gc;                  //PB0
 
   ADCA.CH1.CTRL    = ADC_CH_INPUTMODE_SINGLEENDED_gc;        //Pojedyncze wejście
-  ADCA.CH1.MUXCTRL = ADC_CH_MUXPOS_PIN9_gc;                  //PB0
+  ADCA.CH1.MUXCTRL = ADC_CH_MUXPOS_PIN1_gc;                  //PB0
 
 
   ADCA.CTRLA     = ADC_ENABLE_bm | ADC_CH0START_bm | ADC_CH1START_bm;          //Włączenie przetwornika AC oraz uruchomienie pomiaru na kanale 0
@@ -189,11 +199,38 @@ void printStatus(FILE *stream)
 
 
   ADCA.CTRLA = ADC_ENABLE_bm;
-
   fprintf_P(stream, PSTR("Pwr: %d + %d/128 V\r\n"), res>>7, res&0x7F);
   fprintf_P(stream, PSTR("     %d + %d/32 A\r\n"),  res2>>5, res2&0x1F);
 
+*/
+
   //Print system state
+}
+
+static cliExRes_t adcReadVoltagePwrSply      (cmdState_t *state)
+{
+  int16_t val = adcResults[1];//  getVoltagePwrSply();
+
+  float voltage = val/58.5365;
+  fprintf_P(state->myStdInOut, PSTR("Voltage pwr sply %f\r\n"), voltage);
+
+  val = adcResults[2];//getVoltageInternal();
+  voltage = val/196.0;
+  fprintf_P(state->myStdInOut, PSTR("Voltage internal %f (%d)\r\n"), voltage, val);
+
+  val = adcResults[3];//getTemperatureInternal();
+  //voltage = val/200;
+  fprintf_P(state->myStdInOut, PSTR("Temperature raw %d\r\n"), val);
+
+
+  return OK_SILENT;
+}
+
+static cliExRes_t adcReadCurrentPwrSply      (cmdState_t *state)
+{
+  int16_t val = getCurrentPwrSply();
+  fprintf_P(state->myStdInOut, PSTR("Current %d\r\n"), val);
+  return OK_SILENT;
 }
 
 

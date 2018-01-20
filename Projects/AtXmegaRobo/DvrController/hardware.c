@@ -97,30 +97,104 @@ void hardwareInit(void)
     /// A/C init
 
     ADCA.CTRLA     = ADC_ENABLE_bm;// | ADC_CH0START_bm | ADC_FLUSH_bm;       //Włączenie przetwornika AC oraz uruchomienie pomiaru na kanale 0
-
-    ADCA.CTRLB     = ADC_IMPMODE_bm; //ADC_CURRLIMIT0_bm | ADC_CURRLIMIT1_bm | ADC_CONMODE_bm
+    ADCA.CTRLB     = ADC_CONMODE_bm | ADC_RESOLUTION_12BIT_gc; //ADC_IMPMODE_bm | ADC_CURRLIMIT0_bm | ADC_CURRLIMIT1_bm
                  //| ADC_FREERUN_bm | ADC_RESOLUTION0_bm | ADC_RESOLUTION1_bm |
 
-    ADCA.REFCTRL   = ADC_BANDGAP_bm | ADC_TEMPREF_bm | ADC_REFSEL_INT1V_gc;          //BANDGAP enable, TempRef enable, Vref = VCC/1.6 V
-    ADCA.EVCTRL    = 0;
-    ADCA.PRESCALER = ADC_PRESCALER_DIV256_gc;                  //prescaler 256, f=125kHz
-    ADCA.INTFLAGS  = 0x0F;
+    ADCA.REFCTRL   = ADC_REFSEL_INT1V_gc | ADC_BANDGAP_bm | ADC_TEMPREF_bm;          //BANDGAP enable, TempRef enable, Vref = VCC/1.6 V
+    ADCA.EVCTRL    = 0;           /** Event Control      */
+    ADCA.PRESCALER = ADC_PRESCALER_DIV512_gc;    //prescaler 256, f=125kHz
 
-    ADCA.CALL = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCACAL0) );
-    ADCA.CALH = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCACAL1) );
+    ADCA.CALL = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCACAL0) ); //0x20
+    ADCA.CALH = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCACAL1) ); //0x21
 
-//    ADCA.CTRLA
-    //Channel 0: Voltage on demand
-    //ADCA.CH0.MUXCTRL = ;
+    //Curent sensor ADS 711
+    ADCA.CH0.CTRL = ADC_CH_GAIN_1X_gc | ADC_CH_INPUTMODE_SINGLEENDED_gc;
+    ADCA.CH0.MUXCTRL = ADC_CH_MUXPOS_PIN0_gc; //(Channel<<3);
+    ADCA.CH0.INTCTRL = 0;
+    ADCA.CH0.INTFLAGS = 0;
+    ADCA.CH0.RES = 0;
+    ADCA.CH0.SCAN = 0;
 
-    //Channel 1: Curent in demand
+    //Voltage divider
+    ADCA.CH1.CTRL = ADC_CH_GAIN_1X_gc | ADC_CH_INPUTMODE_SINGLEENDED_gc;
+    ADCA.CH1.MUXCTRL = ADC_CH_MUXPOS_PIN1_gc; //(Channel<<3);
+    ADCA.CH1.INTCTRL = 0;
+    ADCA.CH1.INTFLAGS = 0;
+    ADCA.CH1.RES = 0;
+    ADCA.CH1.SCAN = 0;
 
-    //Channel 3: Voltag cyclic
+    //Internal voltage
+    ADCA.CH2.CTRL = ADC_CH_GAIN_1X_gc | ADC_CH_INPUTMODE_INTERNAL_gc;
+    ADCA.CH2.MUXCTRL = ADC_CH_MUXINT_SCALEDVCC_gc; //(Channel<<3);
+    ADCA.CH2.INTCTRL = 0;
+    ADCA.CH2.INTFLAGS = 0;
+    ADCA.CH2.RES = 0;
+    ADCA.CH2.SCAN = 0;
 
-    //Channel 4: Curent cyclic
+    //Internal temperature sensor
+    ADCA.CH3.CTRL = ADC_CH_GAIN_1X_gc | ADC_CH_INPUTMODE_INTERNAL_gc;
+    ADCA.CH3.MUXCTRL = ADC_CH_MUXINT_TEMP_gc; //(Channel<<3);
+    ADCA.CH3.INTCTRL = 0;
+    ADCA.CH3.INTFLAGS = 0;
+    ADCA.CH3.RES = 0;
+    ADCA.CH3.SCAN = 0;
 
-//    ADCA.
+    uint8_t x =  ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, TEMPSENSE0) );
+    uint8_t y =  ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, TEMPSENSE1) );
 }
+
+void readAdcResults()
+{
+    adcResults[0] = ADCA.CH0RES;
+    adcResults[1] = ADCA.CH1RES;
+    adcResults[2] = ADCA.CH2RES;
+    adcResults[3] = ADCA.CH3RES;
+
+    ADCA.CTRLA |= ADC_ENABLE_bm | ADC_FLUSH_bm | ADC_CH0START_bm| ADC_CH1START_bm| ADC_CH2START_bm| ADC_CH3START_bm;
+}
+
+
+int16_t getCurrentPwrSply()
+{
+//    ADCA.CH0.INTCTRL = 0 ; // No interrupt
+
+///TODO Don't copy yourself
+    for(uint8_t Waste = 0; Waste<2; Waste++)
+    {
+        ADCA.CH0.CTRL |= ADC_CH_START_bm; // Start conversion
+        while ((ADCA.INTFLAGS & ADC_CH0IF_bm)==0) ; // Wait for complete
+        ADCA.INTFLAGS = ADC_CH0IF_bm ;
+    }
+    return ADCA.CH0RES ;
+}
+
+int16_t getVoltagePwrSply()
+{
+    ADCA.CH1.CTRL |= ADC_CH_START_bm; // Start conversion
+    while ((ADCA.INTFLAGS & ADC_CH1IF_bm)==0)
+        ; // Wait for complete
+    ADCA.INTFLAGS = ADC_CH1IF_bm;
+    return ADCA.CH1RES ;
+}
+
+int16_t getVoltageInternal()
+{
+    ADCA.CH2.CTRL |= ADC_CH_START_bm; // Start conversion
+    while ((ADCA.INTFLAGS & ADC_CH2IF_bm)==0)
+        ; // Wait for complete
+    ADCA.INTFLAGS = ADC_CH2IF_bm;
+    return ADCA.CH2RES ;
+}
+
+int16_t getTemperatureInternal()
+{
+    ADCA.CH3.CTRL |= ADC_CH_START_bm; // Start conversion
+    while ((ADCA.INTFLAGS & ADC_CH3IF_bm)==0)
+        ; // Wait for complete
+    ADCA.INTFLAGS = ADC_CH3IF_bm;
+    return ADCA.CH3RES ;
+}
+
 
 inline void setOut1   (void) { PORTE.OUTSET=0x01; } //E0
 inline void clearOut1 (void) { PORTE.OUTCLR=0x01; }

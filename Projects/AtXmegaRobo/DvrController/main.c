@@ -47,6 +47,7 @@
 
 
 uint8_t timer100Hz = 0;
+volatile int16_t adcResults[4] = {10,20,30,40};
 
 xQueueHandle xVtyTx;
 xQueueHandle xVtyRec;
@@ -158,14 +159,14 @@ void vApplicationIdleHook( void )
   }
 }
 
+
 void vApplicationTickHook( void )
 {
-  static uint16_t tickCntr = configTICK_RATE_HZ;
-  if (--tickCntr == 0)
-  {
-    tickCntr = configTICK_RATE_HZ;
-#ifdef USENET
-    arpTimer();
-#endif
-  }
+  readAdcResults();
+  //static uint16_t tickCntr = configTICK_RATE_HZ;
+  //if (--tickCntr == 0)
+  //{
+  //  tickCntr = configTICK_RATE_HZ;
+  //
+  //}
 }
