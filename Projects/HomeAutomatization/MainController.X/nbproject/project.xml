@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>com.microchip.mplab.nbide.embedded.makeproject</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/make-project/1">
+            <name>MainController</name>
+            <creation-uuid>4bab68d8-1a94-435b-a5ac-5753d7013790</creation-uuid>
+            <make-project-type>0</make-project-type>
+            <c-extensions>c</c-extensions>
+            <cpp-extensions/>
+            <header-extensions>h</header-extensions>
+            <asminc-extensions/>
+            <sourceEncoding>UTF-8</sourceEncoding>
+            <make-dep-projects/>
+            <sourceRootList>
+                <sourceRootElem>source</sourceRootElem>
+                <sourceRootElem>../Common</sourceRootElem>
+                <sourceRootElem>../../../FreeRtosCore/Source</sourceRootElem>
+                <sourceRootElem>../../../FreeRtosCore/Source/include</sourceRootElem>
+                <sourceRootElem>../../../FreeRtosCore/portable/GCC/ATMega64</sourceRootElem>
+                <sourceRootElem>../../../FreeRtosCore/portable</sourceRootElem>
+                <sourceRootElem>../../../Lib</sourceRootElem>
+                <sourceRootElem>../../../Lib/include</sourceRootElem>
+                <sourceRootElem>../../../Lib/net</sourceRootElem>
+                <sourceRootElem>../../../Lib/net/include</sourceRootElem>
+            </sourceRootList>
+            <confList>
+                <confElem>
+                    <name>default</name>
+                    <type>2</type>
+                </confElem>
+            </confList>
+            <formatting>
+                <project-formatting-style>false</project-formatting-style>
+            </formatting>
+        </data>
+    </configuration>
+</project>

@@ -1,7 +1,6 @@
 #ifndef RAMDYSK_H
 #define RAMDYSK_H
 
-#include "main.h"
 #include <stdio.h>
 
 #define L_KLASTROW     128

@@ -1,5 +1,6 @@
-#include "ramdysk.h"
 #include <string.h>
+
+#include "ramdysk.h"
 
 #define systemTime() 0; //Dodać w pliku hardware.h funkcje do odczytu czasu systemowego
 

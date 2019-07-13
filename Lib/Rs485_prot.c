@@ -1,6 +1,15 @@
-#include "Rs485_prot.h"
-#include <util/crc16.h>
 #include <stdio.h>
+#include <string.h>
+#include <util/crc16.h>
+
+#include "FreeRTOS.h"
+#include "queue.h"
+
+#include "Rs485_prot.h"
+#include "sensors_task.h"
+
+
+#include "memory_x.h"
 
 #if LANG_EN
 #include "Rs485_prot_en.h"
@@ -11,6 +20,8 @@
 #include "Rs485_prot_pl.h"
 #define PRINT_RS485_DEVICE 1
 #endif
+
+xQueueHandle xRs485Rec;
 
 
 static void    sendPing(uint8_t addr, uint8_t pingLen);
@@ -562,13 +573,13 @@ uint8_t rs485curtainUp(uint8_t deviceAddr, uint8_t curtainNo, uint8_t pos)
   uartRs485SendByte(deviceAddr);
   if (curtainNo == 0)
   {
-    crc = _crc_xmodem_update(crc, rPodniesRolete1);
-    uartRs485SendByte(rPodniesRolete1);
+    crc = _crc_xmodem_update(crc, rRoller1Up);
+    uartRs485SendByte(rRoller1Up);
   }
   else
   {
-    crc = _crc_xmodem_update(crc, rPodniesRolete2);
-    uartRs485SendByte(rPodniesRolete2);
+    crc = _crc_xmodem_update(crc, rRoller2Up);
+    uartRs485SendByte(rRoller2Up);
   }
 
   crc = _crc_xmodem_update(crc, 1);    uartRs485SendByte(1);
@@ -620,8 +631,8 @@ void sendSettings(uint8_t addr, uint8_t value)
   crc = _crc_xmodem_update(crc, addr);
   uartRs485SendByte(addr);
 
-  crc = _crc_xmodem_update(crc, rUstaw);
-  uartRs485SendByte(rUstaw);
+  crc = _crc_xmodem_update(crc, rSet);
+  uartRs485SendByte(rSet);
 
   crc = _crc_xmodem_update(crc, 1);
   uartRs485SendByte(1);
@@ -641,8 +652,8 @@ void saveSettings(uint8_t addr)
   crc = _crc_xmodem_update(crc, addr);
   uartRs485SendByte(addr);
 
-  crc = _crc_xmodem_update(crc, rZapiszUstawienia);
-  uartRs485SendByte(rZapiszUstawienia);
+  crc = _crc_xmodem_update(crc, rSaveSettings);
+  uartRs485SendByte(rSaveSettings);
 
   crc = _crc_xmodem_update(crc, 0);
   uartRs485SendByte(0);
@@ -659,11 +670,11 @@ uint8_t rs485curtainDown(uint8_t deviceAddr, uint8_t curtainNo, uint8_t pos)
   crc = _crc_xmodem_update(crc, deviceAddr);    uartRs485SendByte(deviceAddr);
   if (curtainNo == 0)
   {
-    crc = _crc_xmodem_update(crc, rOpuscRolete1); uartRs485SendByte(rOpuscRolete1);
+    crc = _crc_xmodem_update(crc, rRoller1Down); uartRs485SendByte(rRoller1Down);
   }
   else
   {
-    crc = _crc_xmodem_update(crc, rOpuscRolete2); uartRs485SendByte(rOpuscRolete2);
+    crc = _crc_xmodem_update(crc, rRoller2Down); uartRs485SendByte(rRoller2Down);
   }
 
   crc = _crc_xmodem_update(crc, 1);               uartRs485SendByte(1);

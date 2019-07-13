@@ -563,14 +563,14 @@ char* cmdlineGetArgStr(uint8_t argnum, cmdState_t *state)
 // return argument [argnum] interpreted as a decimal integer
 long cmdlineGetArgInt(uint8_t argnum, cmdState_t *state)
 {
-  char* endptr;
+  const char* endptr;
   return strtol(cmdlineGetArgStr(argnum, state), &endptr, 10);
 }
 
 // return argument [argnum] interpreted as a hex integer
 long cmdlineGetArgHex(uint8_t argnum, cmdState_t *state)
 {
-  char* endptr;
+  const char* endptr;
   return strtol(cmdlineGetArgStr(argnum, state), &endptr, 16);
 }
 

@@ -1,10 +1,12 @@
 #ifndef RS485_PROT_H
 #define RS485_PROT_H
 
+#include <stdint.h>
 #include <stdio.h>
 #include <util/crc16.h>
+
 #include "ramdysk.h"
-#include "protocol1.h"
+#include "protocol_TlvRs485.h"
 #include "softwareConfig.h"
 
 #ifdef LANG_EN
