@@ -58,11 +58,13 @@
         <itemPath>../../../FreeRtosCore/Source/tasks.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Lib" projectFiles="true">
-        <itemPath>../../../Lib/cmdline.c</itemPath>
         <itemPath>../../../Lib/tlvProt.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f4" displayName="LibRtos" projectFiles="true">
         <itemPath>../../../LibRtos/sim900.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f5" displayName="LibXc" projectFiles="true">
+        <itemPath>../../../LibXc/cmdline.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Port" projectFiles="true">
         <itemPath>../../../FreeRtosCore/portable/MemMang/heap_avr.c</itemPath>
@@ -94,6 +96,7 @@
     <Elem>../../../Lib</Elem>
     <Elem>../../../Lib/include</Elem>
     <Elem>../../../LibRtos</Elem>
+    <Elem>../../../LibXc</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -120,7 +123,7 @@
         </archiverTool>
         <loading>
           <useAlternateLoadableFile>false</useAlternateLoadableFile>
-          <parseOnProdLoad>false</parseOnProdLoad>
+          <parseOnProdLoad>true</parseOnProdLoad>
           <alternateLoadableFile></alternateLoadableFile>
         </loading>
         <subordinates>

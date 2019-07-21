@@ -36,10 +36,10 @@
   
 // constants/macros/typdefs
 struct cmdState;
-struct command;
+struct Command;
 enum   cliExecuteResult;
 
-typedef struct command         command_t;
+typedef struct Command         Command_t;
 typedef struct cmdState        cmdState_t;
 typedef enum cliExecuteResult  cliExRes_t;
 
@@ -103,10 +103,10 @@ struct cmdState
   uint8_t  err2;                             /// Additional error info 1
   
   enum cliModeState cliMode;                 /// CLI mode (NORMAL, ENABLED, CONFIGURE)
-  const command_t *cmdList;                  /// Each CLI mode has own command list
+  const Command_t *cmdList;                  /// Each CLI mode has own command list
 };
 
-struct command
+struct Command 
 {
   const char           *commandStr;          /// Command string
   const char           *commandHelpStr;      /// Command help string
@@ -175,7 +175,7 @@ void cmdPrintHelp(cmdState_t *state);
  * @param *commands        - pointer to the command table
  * @param mode             - command line interpreter mode
  */
-void cmdStateConfigure(cmdState_t * state, char *buffPtr, uint16_t bufferTotalSize, FILE *stream, const command_t *commands, enum cliModeState mode);
+void cmdStateConfigure(cmdState_t * state, char *buffPtr, uint16_t bufferTotalSize, FILE *stream, const Command_t *commands, enum cliModeState mode);
 
 //@}
 #endif
