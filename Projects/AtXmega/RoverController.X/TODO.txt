@@ -1,0 +1,4 @@
+1) Modyfikacja bibliotek. Zrezygnować ze wskaźników do funkcji. Zastosować __attribute__(weak)
+2) Dodać możliwość tworzenia buforów cyklicznych, których tablica pamięci umieszczona jest w zewnętrznej pamięci
+3) Dodać obsługę specjalnych koment VTY (odpowiednia interpretacja nowych linii, itd)
+4) Uruchomić sokety

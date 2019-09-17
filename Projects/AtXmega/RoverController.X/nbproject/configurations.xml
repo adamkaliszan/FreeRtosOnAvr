@@ -79,6 +79,7 @@
       <itemPath>tlv.c</itemPath>
       <itemPath>tlv_task.c</itemPath>
       <itemPath>vty.c</itemPath>
+      <itemPath>hc12.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -146,7 +147,7 @@
         <property key="define-macros" value=""/>
         <property key="disable-optimizations" value="false"/>
         <property key="extra-include-directories"
-                  value="./;../../../FreeRtosCore/Source/include;../../../FreeRtosCore;../../../Lib;../../../Lib/include;../../../LibRtos;../../../LibRtos/include;../../../FreeRtosCore/portable/GCC/ATXmega;../../../FreeRtosCore/portable/MemMang;../../../LibRtos;../../../LibRtos/include"/>
+                  value="./;../../../FreeRtosCore/Source/include;../../../FreeRtosCore;../../../Lib;../../../Lib/include;../../../LibRtos;../../../LibRtos/include;../../../FreeRtosCore/portable/GCC/ATXmega;../../../FreeRtosCore/portable/MemMang;../../../LibRtos;../../../LibRtos/include;../../../LibXc"/>
         <property key="favor-optimization-for" value="-speed,+space"/>
         <property key="garbage-collect-data" value="true"/>
         <property key="garbage-collect-functions" value="true"/>
@@ -768,7 +769,8 @@
         <property key="default-char-type" value="true"/>
         <property key="define-macros" value=""/>
         <property key="disable-optimizations" value="false"/>
-        <property key="extra-include-directories" value=""/>
+        <property key="extra-include-directories"
+                  value=".;../../../FreeRtosCore/Source/include;../../../FreeRtosCore/portable/MemMang;../../../Lib/include;../../../LibXc;../../../FreeRtosCore/portable/GCC/ATXmega"/>
         <property key="favor-optimization-for" value="-speed,+space"/>
         <property key="garbage-collect-data" value="true"/>
         <property key="garbage-collect-functions" value="true"/>

@@ -54,9 +54,15 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+/Projects/AtXmega/RoverController.X/build/
+/Projects/AtXmega/RoverController.X/dist/
 /Projects/AtXmega/DvrController.X/build/
 /Projects/AtXmega/DvrController.X/dist/
 /Projects/HomeAutomatization/MainController.X/build/
 /Projects/HomeAutomatization/MainController.X/dist/
 /Projects/HomeAutomatization/ActuatorModule.X/build/
 /Projects/HomeAutomatization/ActuatorModule.X/dist/
+
+Projects/AtXmega/DvrController.X/nbproject/private/
+
+Projects/AtXmega/RoverController.X/nbproject/private/

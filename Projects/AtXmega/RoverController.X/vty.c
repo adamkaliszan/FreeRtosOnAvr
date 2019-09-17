@@ -4,7 +4,11 @@
 #include "configuration.h"
 #include "softwareConfig.h"
 #include "hardware.h"
-#include "../../../LibRtos/include/sim900.h"
+#include "sim900.h"
+
+#include "cmdline.h"
+
+#include "hc12.h"
 
 #if LANG_EN
 #include "vty_en.h"
@@ -18,8 +22,6 @@
 #error "Vty Language not defined"
 #endif
 
-extern volatile int16_t adcResults[];
-
 static cliExRes_t helpFunction           (cmdState_t *state);
 static cliExRes_t statusFunction         (cmdState_t *state);
 static cliExRes_t enableFunction         (cmdState_t *state);
@@ -27,11 +29,21 @@ static cliExRes_t disableFunction        (cmdState_t *state);
 static cliExRes_t configureModeFunction  (cmdState_t *state);
 static cliExRes_t saveConfigFunction     (cmdState_t *state);
 
+static cliExRes_t forwardFunction        (cmdState_t *state);
+static cliExRes_t backwordFunction       (cmdState_t *state);
+static cliExRes_t rotateLeftFunction     (cmdState_t *state);
+static cliExRes_t rotateRightFunction    (cmdState_t *state);
+static cliExRes_t stopFunction           (cmdState_t *state);
+
+static cliExRes_t pwrFunction            (cmdState_t *state);
+
 static cliExRes_t hc12modeFunction       (cmdState_t *state);
 static cliExRes_t hc12channelFunction    (cmdState_t *state);
 static cliExRes_t hc12baudrateFunction   (cmdState_t *state);
 static cliExRes_t hc12powerFunction      (cmdState_t *state);
 static cliExRes_t hc12statusFunction     (cmdState_t *state);
+
+static cliExRes_t pwmSetFreq             (cmdState_t *state);
 
 static cliExRes_t hc12sendForwardFunction    (cmdState_t *state);
 static cliExRes_t hc12sendBackwordFunction   (cmdState_t *state);
@@ -43,22 +55,16 @@ static cliExRes_t sim900OnFunction           (cmdState_t *state);
 static cliExRes_t sim900OffFunction          (cmdState_t *state);
 static cliExRes_t sim900atMode               (cmdState_t *state);
 
-static cliExRes_t adcReadVoltagePwrSply      (cmdState_t *state);
-static cliExRes_t adcReadCurrentPwrSply      (cmdState_t *state);
-
-
 static cliExRes_t sendHC12(cmdState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[]);
 static cliExRes_t sendHC12AtCmd(cmdState_t *state, const char cmd[]);
 
 static cliExRes_t sendHC12loopback(cmdState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[]);
 
-static cliExRes_t powerOnFunction           (cmdState_t *state);
-static cliExRes_t powerOffFunction           (cmdState_t *state);
 
 const char okStr[] PROGMEM = "OK\r\n";
 const char nlStr[] PROGMEM = "\r\n";
 
-const const char* const errorStrings[] PROGMEM = {
+const char* const errorStrings[] PROGMEM = {
   errorOK,
   errorNoFile,
   errorxModemFrameStartTimeout,
@@ -75,43 +81,48 @@ const const char* const errorStrings[] PROGMEM = {
 
 const Command_t cmdListNormal[] PROGMEM =
 {
-  {cmd_help,             cmd_help_help,            helpFunction},
-  {cmd_status,           cmd_help_status,          statusFunction},
-  {cmd_enable,           cmd_help_enable,          enableFunction},
-  {cmd_hc12forward,      cmd_help_hc12forward,     hc12sendForwardFunction},
-  {cmd_hc12backward,     cmd_help_hc12backward,    hc12sendBackwordFunction},
-  {cmd_hc12rotateLeft,   cmd_help_hc12rotateLeft,  hc12sendRotateLeftFunction},
-  {cmd_hc12rotateRight,  cmd_help_hc12rotateRight, hc12sendRotateRightFunction},
-  {cmd_hc12stop,         cmd_help_hc12stop,        hc12sendStopFunction},
-  {cmd_powerOn,          cmd_help_powerOn,         powerOnFunction},
-  {cmd_powerOff,         cmd_help_powerOff,        powerOffFunction},
-  {cmd_rdVoltPwrSply,    cmd_help_rdVoltPwrSply,   adcReadVoltagePwrSply},
-  {cmd_rdCurrPwrSply,    cmd_help_rdCurrPwrSply,   adcReadCurrentPwrSply},
+  {cmd_help,            cmd_help_help,            helpFunction},
+  {cmd_status,          cmd_help_status,          statusFunction},
+  {cmd_enable,          cmd_help_enable,          enableFunction},
+  {cmd_forward,         cmd_help_forward,         forwardFunction},
+  {cmd_backward,        cmd_help_backward,        backwordFunction},
+  {cmd_rotateLeft,      cmd_help_rotateLeft,      rotateLeftFunction},
+  {cmd_rotateRight,     cmd_help_rotateRight,     rotateRightFunction},
+  {cmd_stop,            cmd_help_stop,            stopFunction},
+  {cmd_hc12forward,     cmd_help_hc12forward,     hc12sendForwardFunction},
+  {cmd_hc12backward,    cmd_help_hc12backward,    hc12sendBackwordFunction},
+  {cmd_hc12rotateLeft,  cmd_help_hc12rotateLeft,  hc12sendRotateLeftFunction},
+  {cmd_hc12rotateRight, cmd_help_hc12rotateRight, hc12sendRotateRightFunction},
+  {cmd_hc12stop,        cmd_help_hc12stop,        hc12sendStopFunction},
   {NULL, NULL, NULL}
 };
 
 const Command_t cmdListEnable[] PROGMEM =
 {
-  {cmd_help,             cmd_help_help,            helpFunction},
-  {cmd_status,           cmd_help_status,          statusFunction},
-  {cmd_disable,          cmd_help_disable,         disableFunction},
-  {cmd_configure,        cmd_help_configure,       configureModeFunction},
+  {cmd_help,        cmd_help_help,        helpFunction},
+  {cmd_status,      cmd_help_status,      statusFunction},
+  {cmd_disable,     cmd_help_disable,     disableFunction},
+  {cmd_configure,   cmd_help_configure,   configureModeFunction},
+  {cmd_forward,     cmd_help_forward,     forwardFunction},
+  {cmd_backward,    cmd_help_backward,    backwordFunction},
+  {cmd_rotateLeft,  cmd_help_rotateLeft,  rotateLeftFunction},
+  {cmd_rotateRight, cmd_help_rotateRight, rotateRightFunction},
+  {cmd_stop,        cmd_help_stop,        stopFunction},
 
-  {cmd_HC12status,       cmd_help_HC12status,      hc12statusFunction},
-  {cmd_hc12forward,      cmd_help_hc12forward,     hc12sendForwardFunction},
-  {cmd_hc12backward,     cmd_help_hc12backward,    hc12sendBackwordFunction},
-  {cmd_hc12rotateLeft,   cmd_help_hc12rotateLeft,  hc12sendRotateLeftFunction},
-  {cmd_hc12rotateRight,  cmd_help_hc12rotateRight, hc12sendRotateRightFunction},
-  {cmd_hc12stop,         cmd_help_hc12stop,        hc12sendStopFunction},
+  {cmd_pwr,         cmd_help_pwr,         pwrFunction},
 
-  {cmd_sim900on,         cmd_help_sim900on,        sim900OnFunction},
-  {cmd_sim900off,        cmd_help_sim900off,       sim900OffFunction},
-  {cmd_sim900at,         cmd_help_sim900at,        sim900atMode},
-  {cmd_powerOn,          cmd_help_powerOn,         powerOnFunction},
-  {cmd_powerOff,         cmd_help_powerOff,        powerOffFunction},
+  {cmd_HC12status,      cmd_help_HC12status,      hc12statusFunction},
 
-  {cmd_rdVoltPwrSply,    cmd_help_rdVoltPwrSply,   adcReadVoltagePwrSply},
-  {cmd_rdCurrPwrSply,    cmd_help_rdCurrPwrSply,   adcReadCurrentPwrSply},
+  {cmd_hc12forward,     cmd_help_hc12forward,     hc12sendForwardFunction},
+  {cmd_hc12backward,    cmd_help_hc12backward,    hc12sendBackwordFunction},
+  {cmd_hc12rotateLeft,  cmd_help_hc12rotateLeft,  hc12sendRotateLeftFunction},
+  {cmd_hc12rotateRight, cmd_help_hc12rotateRight, hc12sendRotateRightFunction},
+  {cmd_hc12stop,        cmd_help_hc12stop,        hc12sendStopFunction},
+
+  {cmd_sim900on,        cmd_help_sim900on,        sim900OnFunction},
+  {cmd_sim900off,       cmd_help_sim900off,       sim900OffFunction},
+  {cmd_sim900at,        cmd_help_sim900at,        sim900atMode},
+
   {NULL, NULL, NULL}
 };
 
@@ -128,6 +139,7 @@ const Command_t cmdListConfigure[] PROGMEM =
   {cmd_conf_save,    cmd_help_conf_save,    saveConfigFunction},
   {cmd_enable,       cmd_help_enable,       enableFunction},
   {cmd_disable,      cmd_help_disable,      disableFunction},
+  {cmd_pwm_freq,     cmd_help_pwm_freq,     pwmSetFreq},
   {NULL, NULL, NULL}
 };
 
@@ -136,12 +148,13 @@ void VtyInit(cmdState_t* state, FILE *stream)
   cmdStateConfigure(state, (char *)(xmalloc(CLI_BUF_TOT_LEN)), CLI_BUF_TOT_LEN, stream, &cmdListNormal[0], NR_NORMAL);
 }
 
+
 void printErrorInfo(cmdState_t *state)
 {
-//  if (state->errno != 0)
-//  {
-//    fprintf_P(state->myStdInOut, (const char*)(pgm_read_word(errorStrings + state->errno)), state->err1, state->err2);
-//  }
+  if (state->errno != 0)
+  {
+    fprintf(state->myStdInOut, (const char *)(errorStrings + state->errno), state->err1, state->err2);
+  }
   state->errno = 0;
   state->err1 = 0;
   state->err2 = 0;
@@ -171,6 +184,7 @@ static cliExRes_t disableFunction(cmdState_t *state)
 void printStatus(FILE *stream)
 {
   fprintf_P(stream, PSTR(SYSTEM_NAME" ver "S_VERSION" build: "__DATE__", "__TIME__"\r\n"));
+  fprintf_P(stream, PSTR("PWR status: 4v3 %s, RPI 3v3 %s, RPI 4v3 %s\r\n"), isPwr4v3() ? "On": "Off", isPwr3v3rpi() ? "On": "Off", isPwr4v3rpi() ? "On": "Off");
 
   fprintf_P(stream, PSTR("Hc12 config:\r\n"));
   fprintf_P(stream, PSTR("\tmode    %d\r\n"), confHC12mode);
@@ -180,11 +194,11 @@ void printStatus(FILE *stream)
 
 
 //  uint16_t res = ADCA.CH0RES;
-/*  ADCA.CH0.CTRL    = ADC_CH_INPUTMODE_SINGLEENDED_gc;        //Pojedyncze wejście
-  ADCA.CH0.MUXCTRL = ADC_CH_MUXPOS_PIN0_gc;                  //PB0
+  ADCA.CH0.CTRL    = ADC_CH_INPUTMODE_SINGLEENDED_gc;        //Pojedyncze wejście
+  ADCA.CH0.MUXCTRL = ADC_CH_MUXPOS_PIN8_gc;                  //PB0
 
   ADCA.CH1.CTRL    = ADC_CH_INPUTMODE_SINGLEENDED_gc;        //Pojedyncze wejście
-  ADCA.CH1.MUXCTRL = ADC_CH_MUXPOS_PIN1_gc;                  //PB0
+  ADCA.CH1.MUXCTRL = ADC_CH_MUXPOS_PIN9_gc;                  //PB0
 
 
   ADCA.CTRLA     = ADC_ENABLE_bm | ADC_CH0START_bm | ADC_CH1START_bm;          //Włączenie przetwornika AC oraz uruchomienie pomiaru na kanale 0
@@ -199,38 +213,11 @@ void printStatus(FILE *stream)
 
 
   ADCA.CTRLA = ADC_ENABLE_bm;
+
   fprintf_P(stream, PSTR("Pwr: %d + %d/128 V\r\n"), res>>7, res&0x7F);
   fprintf_P(stream, PSTR("     %d + %d/32 A\r\n"),  res2>>5, res2&0x1F);
 
-*/
-
   //Print system state
-}
-
-static cliExRes_t adcReadVoltagePwrSply      (cmdState_t *state)
-{
-  int16_t val = adcResults[1];//  getVoltagePwrSply();
-
-  float voltage = val/58.5365;
-  fprintf_P(state->myStdInOut, PSTR("Voltage pwr sply %f\r\n"), voltage);
-
-  val = adcResults[2];//getVoltageInternal();
-  voltage = val/196.0;
-  fprintf_P(state->myStdInOut, PSTR("Voltage internal %f (%d)\r\n"), voltage, val);
-
-  val = adcResults[3];//getTemperatureInternal();
-  //voltage = val/200;
-  fprintf_P(state->myStdInOut, PSTR("Temperature raw %d\r\n"), val);
-
-
-  return OK_SILENT;
-}
-
-static cliExRes_t adcReadCurrentPwrSply      (cmdState_t *state)
-{
-  int16_t val = getCurrentPwrSply();
-  fprintf_P(state->myStdInOut, PSTR("Current %d\r\n"), val);
-  return OK_SILENT;
 }
 
 
@@ -266,32 +253,138 @@ static cliExRes_t configureModeFunction(cmdState_t *state)
   return ERROR_OPERATION_NOT_ALLOWED;
 }
 
-static cliExRes_t powerOnFunction           (cmdState_t *state)
-{
-  if (state->argc != 1)
-    return ERROR_INFORM;
 
-  uint8_t outNo = cmdlineGetArgInt(1, state);
-  if (outNo > 12 || outNo == 0)
-    return ERROR_INFORM;
+static cliExRes_t forwardFunction        (cmdState_t *state)
+{/*
+  uint8_t left = 50;
+  uint8_t right = 50;
 
-  setOut(outNo);
+  if (state->argc == 1)
+    left = right = cmdlineGetArgInt(1, state);
+  if (state->argc >=2)
+  {
+    left = cmdlineGetArgInt(1, state);
+    right = cmdlineGetArgInt(2, state);
+  }
+
+  forwardB(left, right);
+*/
+  tlvMsgMoveDta_t dta;
+  dta.duration = 0;
+  dta.pwmLeft  = 50;
+  dta.pwmRight = 50;
+
+  if (state->argc == 1)
+    dta.pwmLeft = dta.pwmRight = cmdlineGetArgInt(1, state);
+  if (state->argc >=2)
+  {
+    dta.pwmLeft = cmdlineGetArgInt(1, state);
+    dta.pwmRight = cmdlineGetArgInt(2, state);
+  }
+  sendHC12loopback(state, 0, FORWARD, sizeof(tlvMsgMoveDta_t), (uint8_t *) &dta);
+
   return OK_SILENT;
 }
 
-static cliExRes_t powerOffFunction           (cmdState_t *state)
+static cliExRes_t backwordFunction       (cmdState_t *state)
 {
-  if (state->argc != 1)
-    return ERROR_INFORM;
+  tlvMsgMoveDta_t dta;
+  dta.duration = 0;
+  dta.pwmLeft  = 50;
+  dta.pwmRight = 50;
 
-  uint8_t outNo = cmdlineGetArgInt(1, state);
-  if (outNo > 12 || outNo == 0)
-    return ERROR_INFORM;
+  if (state->argc == 1)
+    dta.pwmLeft = dta.pwmRight = cmdlineGetArgInt(1, state);
+  if (state->argc >=2)
+  {
+    dta.pwmLeft = cmdlineGetArgInt(1, state);
+    dta.pwmRight = cmdlineGetArgInt(2, state);
+  }
+  sendHC12loopback(state, 0, BACKWORD, sizeof(tlvMsgMoveDta_t), (uint8_t *) &dta);
 
-  clearOut(outNo);
+  return OK_SILENT;
+}
+static cliExRes_t rotateLeftFunction     (cmdState_t *state)
+{
+  tlvMsgMoveDta_t dta;
+  dta.duration = 0;
+  dta.pwmLeft  = 50;
+  dta.pwmRight = 50;
+
+  if (state->argc == 1)
+    dta.pwmLeft = dta.pwmRight = cmdlineGetArgInt(1, state);
+  if (state->argc >=2)
+  {
+    dta.pwmLeft = cmdlineGetArgInt(1, state);
+    dta.pwmRight = cmdlineGetArgInt(2, state);
+  }
+  sendHC12loopback(state, 0, ROTATE_LEFT, sizeof(tlvMsgMoveDta_t), (uint8_t *) &dta);
+
   return OK_SILENT;
 }
 
+static cliExRes_t rotateRightFunction    (cmdState_t *state)
+{
+  tlvMsgMoveDta_t dta;
+  dta.duration = 0;
+  dta.pwmLeft  = 50;
+  dta.pwmRight = 50;
+
+  if (state->argc == 1)
+    dta.pwmLeft = dta.pwmRight = cmdlineGetArgInt(1, state);
+  if (state->argc >=2)
+  {
+    dta.pwmLeft = cmdlineGetArgInt(1, state);
+    dta.pwmRight = cmdlineGetArgInt(2, state);
+  }
+  sendHC12loopback(state, 0, ROTATE_RIGHT, sizeof(tlvMsgMoveDta_t), (uint8_t *) &dta);
+
+  return OK_SILENT;
+}
+
+static cliExRes_t stopFunction           (cmdState_t *state)
+{/*
+  (void) state;
+  offHbridge();
+*/
+  uint8_t dta[1];
+  dta[0] = 0;
+  sendHC12loopback(state, 0, STOP, 1, dta);
+
+  return OK_SILENT;
+}
+
+
+static cliExRes_t pwrFunction           (cmdState_t *state)
+{
+  if (state->argc <2)
+    return ERROR_INFORM;
+
+  uint8_t devNo = cmdlineGetArgInt(1, state);
+  uint8_t devState = cmdlineGetArgInt(2, state);
+
+  if (devState == 0)
+  {
+      switch (devNo)
+      {
+          case 1: pwrOff4v3();     break;
+          case 2: pwrOff3v3rpi();  break;
+          case 3: pwrOff4v3rpi();  break;
+          default:                 break;
+      }
+  }
+  else
+  {
+      switch (devNo)
+      {
+          case 1: pwrOn4v3();      break;
+          case 2: pwrOn3v3rpi();   break;
+          case 3: pwrOn4v3rpi();   break;
+          default:                 break;
+      }
+  }
+  return OK_SILENT;
+}
 
 static cliExRes_t hc12sendForwardFunction    (cmdState_t *state)
 {
@@ -416,7 +509,7 @@ static cliExRes_t sendHC12(cmdState_t *state, uint8_t addr, uint8_t type, uint8_
   return OK_INFORM;
 }
 
-__attribute__((unused)) static cliExRes_t sendHC12loopback(cmdState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[])
+static cliExRes_t sendHC12loopback(cmdState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[])
 {
   (void) state;
   tlvMsg_t msg;
@@ -428,6 +521,18 @@ __attribute__((unused)) static cliExRes_t sendHC12loopback(cmdState_t *state, ui
   tlvCalculateCrcSepDta(&msg, cmdDta);
 
   sendTlvMsgDta(&msg, cmdDta, &hc12FakeStream);
+
+  return OK_INFORM;
+}
+
+static cliExRes_t pwmSetFreq (cmdState_t *state)
+{
+  uint8_t preskaler = cmdlineGetArgInt(1, state);
+  if (preskaler > 7 || preskaler < 4)
+      return ERROR_INFORM;
+
+  TCC0.CTRLA &= 0xF0;
+  TCC0.CTRLA |= preskaler;
 
   return OK_INFORM;
 }
