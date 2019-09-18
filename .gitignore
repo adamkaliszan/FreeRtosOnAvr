@@ -66,3 +66,5 @@ dkms.conf
 Projects/AtXmega/DvrController.X/nbproject/private/
 
 Projects/AtXmega/RoverController.X/nbproject/private/
+
+*.eep

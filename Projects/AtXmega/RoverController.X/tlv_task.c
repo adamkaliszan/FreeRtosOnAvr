@@ -3,8 +3,13 @@
 static void sendHc12CmdVal(const char str[], uint16_t val, FILE *errStr)
 {
     vTaskDelay(25);
+#ifdef USE_XC8
+    fprintf(errStr, str, val);
+    fprintf(&hc12Stream, str, val);
+#else
     fprintf_P(errStr, str, val);
     fprintf_P(&hc12Stream, str, val);
+#endif
     while (xQueueReceive(xHC12Rec, &val, 10) == pdTRUE)
     {
         fputc(val, errStr);
@@ -14,7 +19,7 @@ static void sendHc12CmdVal(const char str[], uint16_t val, FILE *errStr)
 
 void vTaskTLV(void *tlvIntPtr)
 {
-  tlvInterpreter_t *state = (tlvInterpreter_t *)(tlvIntPtr);
+  TlvInterpreter_t *state = (TlvInterpreter_t *)(tlvIntPtr);
 
 
   if (xSemaphoreTake(Hc12semaphore, 10) == pdTRUE)
@@ -55,7 +60,11 @@ void vTaskTLV(void *tlvIntPtr)
     HC12setTransparentMode();
     do
     {
+#ifdef USE_XC8
+      fprintf(state->errStr, "0x%02x ", znak);        
+#else
       fprintf_P(state->errStr, PSTR("0x%02x "), znak);
+#endif
       tlvProcessDta(state, znak);
     }
     while( xQueueReceive(xHC12Rec, &znak, 1) == pdTRUE);

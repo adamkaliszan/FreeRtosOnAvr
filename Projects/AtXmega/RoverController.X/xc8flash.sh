@@ -1,6 +1,6 @@
 #/bin/bash
 
-TARGET=dist/default/production/DvrController.X.production
+TARGET=dist/default/production/RoverController.X.production
 MCU=atxmega128a4u
 
 AVRDUDE=avrdude
@@ -20,6 +20,9 @@ AVRDUDE_READ_FUSES_E="-U efuse:r:$TARGET"".efuse:i"
 
 avr-objcopy -j .eeprom --change-section-lma .eeprom=0 -O ihex $TARGET.elf firmwareFromElf.eep
 avr-objcopy -R .eeprom -O ihex $TARGET.elf firmwareFromElf.hex
+
+echo "Start avr dude"
+echo avrdude -p atxmega128a4u -P usb -c avrispmkII -U flash:w:firmwareFromElf.hex -U eeprom:w:firmwareFromElf.eep
 
 avrdude -p atxmega128a4u -P usb -c avrispmkII -U flash:w:firmwareFromElf.hex -U eeprom:w:firmwareFromElf.eep
 

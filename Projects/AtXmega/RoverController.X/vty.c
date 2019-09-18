@@ -183,6 +183,16 @@ static cliExRes_t disableFunction(cmdState_t *state)
 // ************************** VTY API ***************************************************************************************
 void printStatus(FILE *stream)
 {
+#ifdef USE_XC8
+  fprintf(stream, SYSTEM_NAME" ver "S_VERSION" build: "__DATE__", "__TIME__"\r\n");
+  fprintf(stream, "PWR status: 4v3 %s, RPI 3v3 %s, RPI 4v3 %s\r\n", isPwr4v3() ? "On": "Off", isPwr3v3rpi() ? "On": "Off", isPwr4v3rpi() ? "On": "Off");
+
+  fprintf(stream, "Hc12 config:\r\n");
+  fprintf(stream, "\tmode    %d\r\n", confHC12mode);
+  fprintf(stream, "\tbaud    %d\r\n", confHC12baud);
+  fprintf(stream, "\tchannel %d\r\n", confHC12channel);
+  fprintf(stream, "\tpower   %d\r\n", confHC12power);    
+#else
   fprintf_P(stream, PSTR(SYSTEM_NAME" ver "S_VERSION" build: "__DATE__", "__TIME__"\r\n"));
   fprintf_P(stream, PSTR("PWR status: 4v3 %s, RPI 3v3 %s, RPI 4v3 %s\r\n"), isPwr4v3() ? "On": "Off", isPwr3v3rpi() ? "On": "Off", isPwr4v3rpi() ? "On": "Off");
 
@@ -191,7 +201,7 @@ void printStatus(FILE *stream)
   fprintf_P(stream, PSTR("\tbaud    %d\r\n"), confHC12baud);
   fprintf_P(stream, PSTR("\tchannel %d\r\n"), confHC12channel);
   fprintf_P(stream, PSTR("\tpower   %d\r\n"), confHC12power);
-
+#endif
 
 //  uint16_t res = ADCA.CH0RES;
   ADCA.CH0.CTRL    = ADC_CH_INPUTMODE_SINGLEENDED_gc;        //Pojedyncze wejście
@@ -214,9 +224,13 @@ void printStatus(FILE *stream)
 
   ADCA.CTRLA = ADC_ENABLE_bm;
 
+#ifdef USE_XC8
+  fprintf(stream, "Pwr: %d + %d/128 V\r\n", res>>7, res&0x7F);
+  fprintf(stream, "     %d + %d/32 A\r\n",  res2>>5, res2&0x1F);
+#else
   fprintf_P(stream, PSTR("Pwr: %d + %d/128 V\r\n"), res>>7, res&0x7F);
-  fprintf_P(stream, PSTR("     %d + %d/32 A\r\n"),  res2>>5, res2&0x1F);
-
+  fprintf_P(stream, PSTR("     %d + %d/32 A\r\n"),  res2>>5, res2&0x1F);  
+#endif
   //Print system state
 }
 
@@ -269,7 +283,7 @@ static cliExRes_t forwardFunction        (cmdState_t *state)
 
   forwardB(left, right);
 */
-  tlvMsgMoveDta_t dta;
+  TlvMsgMoveDta_t dta;
   dta.duration = 0;
   dta.pwmLeft  = 50;
   dta.pwmRight = 50;
@@ -281,14 +295,14 @@ static cliExRes_t forwardFunction        (cmdState_t *state)
     dta.pwmLeft = cmdlineGetArgInt(1, state);
     dta.pwmRight = cmdlineGetArgInt(2, state);
   }
-  sendHC12loopback(state, 0, FORWARD, sizeof(tlvMsgMoveDta_t), (uint8_t *) &dta);
+  sendHC12loopback(state, 0, FORWARD, sizeof(TlvMsgMoveDta_t), (uint8_t *) &dta);
 
   return OK_SILENT;
 }
 
 static cliExRes_t backwordFunction       (cmdState_t *state)
 {
-  tlvMsgMoveDta_t dta;
+  TlvMsgMoveDta_t dta;
   dta.duration = 0;
   dta.pwmLeft  = 50;
   dta.pwmRight = 50;
@@ -300,13 +314,13 @@ static cliExRes_t backwordFunction       (cmdState_t *state)
     dta.pwmLeft = cmdlineGetArgInt(1, state);
     dta.pwmRight = cmdlineGetArgInt(2, state);
   }
-  sendHC12loopback(state, 0, BACKWORD, sizeof(tlvMsgMoveDta_t), (uint8_t *) &dta);
+  sendHC12loopback(state, 0, BACKWORD, sizeof(TlvMsgMoveDta_t), (uint8_t *) &dta);
 
   return OK_SILENT;
 }
 static cliExRes_t rotateLeftFunction     (cmdState_t *state)
 {
-  tlvMsgMoveDta_t dta;
+  TlvMsgMoveDta_t dta;
   dta.duration = 0;
   dta.pwmLeft  = 50;
   dta.pwmRight = 50;
@@ -318,14 +332,14 @@ static cliExRes_t rotateLeftFunction     (cmdState_t *state)
     dta.pwmLeft = cmdlineGetArgInt(1, state);
     dta.pwmRight = cmdlineGetArgInt(2, state);
   }
-  sendHC12loopback(state, 0, ROTATE_LEFT, sizeof(tlvMsgMoveDta_t), (uint8_t *) &dta);
+  sendHC12loopback(state, 0, ROTATE_LEFT, sizeof(TlvMsgMoveDta_t), (uint8_t *) &dta);
 
   return OK_SILENT;
 }
 
 static cliExRes_t rotateRightFunction    (cmdState_t *state)
 {
-  tlvMsgMoveDta_t dta;
+  TlvMsgMoveDta_t dta;
   dta.duration = 0;
   dta.pwmLeft  = 50;
   dta.pwmRight = 50;
@@ -337,7 +351,7 @@ static cliExRes_t rotateRightFunction    (cmdState_t *state)
     dta.pwmLeft = cmdlineGetArgInt(1, state);
     dta.pwmRight = cmdlineGetArgInt(2, state);
   }
-  sendHC12loopback(state, 0, ROTATE_RIGHT, sizeof(tlvMsgMoveDta_t), (uint8_t *) &dta);
+  sendHC12loopback(state, 0, ROTATE_RIGHT, sizeof(TlvMsgMoveDta_t), (uint8_t *) &dta);
 
   return OK_SILENT;
 }
@@ -388,7 +402,7 @@ static cliExRes_t pwrFunction           (cmdState_t *state)
 
 static cliExRes_t hc12sendForwardFunction    (cmdState_t *state)
 {
-  tlvMsgMoveDta_t dta;
+  TlvMsgMoveDta_t dta;
   dta.duration = 0;
   dta.pwmLeft  = 50;
   dta.pwmRight = 50;
@@ -400,13 +414,13 @@ static cliExRes_t hc12sendForwardFunction    (cmdState_t *state)
     dta.pwmLeft = cmdlineGetArgInt(1, state);
     dta.pwmRight = cmdlineGetArgInt(2, state);
   }
-  sendHC12(state, 0, FORWARD, sizeof(tlvMsgMoveDta_t), (uint8_t *) &dta);
+  sendHC12(state, 0, FORWARD, sizeof(TlvMsgMoveDta_t), (uint8_t *) &dta);
   return OK_SILENT;
 }
 
 static cliExRes_t hc12sendBackwordFunction   (cmdState_t *state)
 {
-  tlvMsgMoveDta_t dta;
+  TlvMsgMoveDta_t dta;
   dta.duration = 0;
   dta.pwmLeft  = 50;
   dta.pwmRight = 50;
@@ -418,14 +432,14 @@ static cliExRes_t hc12sendBackwordFunction   (cmdState_t *state)
     dta.pwmLeft = cmdlineGetArgInt(1, state);
     dta.pwmRight = cmdlineGetArgInt(2, state);
   }
-  sendHC12(state, 0, BACKWORD, sizeof(tlvMsgMoveDta_t), (uint8_t *) &dta);
+  sendHC12(state, 0, BACKWORD, sizeof(TlvMsgMoveDta_t), (uint8_t *) &dta);
   return OK_SILENT;
 }
 
 
 static cliExRes_t hc12sendRotateLeftFunction    (cmdState_t *state)
 {
-  tlvMsgMoveDta_t dta;
+  TlvMsgMoveDta_t dta;
   dta.duration = 0;
   dta.pwmLeft  = 50;
   dta.pwmRight = 50;
@@ -437,14 +451,14 @@ static cliExRes_t hc12sendRotateLeftFunction    (cmdState_t *state)
     dta.pwmLeft = cmdlineGetArgInt(1, state);
     dta.pwmRight = cmdlineGetArgInt(2, state);
   }
-  sendHC12(state, 0, ROTATE_LEFT, sizeof(tlvMsgMoveDta_t), (uint8_t *) &dta);
+  sendHC12(state, 0, ROTATE_LEFT, sizeof(TlvMsgMoveDta_t), (uint8_t *) &dta);
 
   return OK_SILENT;
 }
 
 static cliExRes_t hc12sendRotateRightFunction    (cmdState_t *state)
 {
-  tlvMsgMoveDta_t dta;
+  TlvMsgMoveDta_t dta;
   dta.duration = 0;
   dta.pwmLeft  = 50;
   dta.pwmRight = 50;
@@ -456,7 +470,7 @@ static cliExRes_t hc12sendRotateRightFunction    (cmdState_t *state)
     dta.pwmLeft = cmdlineGetArgInt(1, state);
     dta.pwmRight = cmdlineGetArgInt(2, state);
   }
-  sendHC12(state, 0, ROTATE_RIGHT, sizeof(tlvMsgMoveDta_t), (uint8_t *) &dta);
+  sendHC12(state, 0, ROTATE_RIGHT, sizeof(TlvMsgMoveDta_t), (uint8_t *) &dta);
 
   return OK_SILENT;
 }
@@ -474,9 +488,13 @@ static cliExRes_t sendHC12AtCmd(cmdState_t *state, const char cmd[])
     vTaskDelay(2);
     HC12setAtMode();
     vTaskDelay(25);
+#ifdef USE_XC8
+    fprintf(state->myStdInOut, cmd, cmdlineGetArgStr(1, state));
+    fprintf(&hc12Stream,       cmd, cmdlineGetArgStr(1, state));
+#else
     fprintf_P(state->myStdInOut, cmd, cmdlineGetArgStr(1, state));
-    fprintf_P(&hc12Stream,       cmd, cmdlineGetArgStr(1, state));
-
+    fprintf_P(&hc12Stream,       cmd, cmdlineGetArgStr(1, state));    
+#endif
     uint8_t val;
     while (xQueueReceive(xHC12Rec, &val, 100) == pdTRUE)
     {
@@ -496,7 +514,7 @@ static cliExRes_t sendHC12AtCmd(cmdState_t *state, const char cmd[])
 static cliExRes_t sendHC12(cmdState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[])
 {
   (void) state;
-  tlvMsg_t msg;
+  TlvMsg_t msg;
   msg.sync = TLV_SYNC;
   msg.address = addr;
   msg.type = type;
@@ -512,7 +530,7 @@ static cliExRes_t sendHC12(cmdState_t *state, uint8_t addr, uint8_t type, uint8_
 static cliExRes_t sendHC12loopback(cmdState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[])
 {
   (void) state;
-  tlvMsg_t msg;
+  TlvMsg_t msg;
   msg.sync = TLV_SYNC;
   msg.address = addr;
   msg.type = type;
@@ -583,7 +601,11 @@ static cliExRes_t sim900OffFunction          (cmdState_t *state)
 static cliExRes_t sim900atMode               (cmdState_t *state)
 {
     uint8_t znak;
+#ifdef USE_XC8
+    fprintf(state->myStdInOut, "Press ^z to exit at mode\r\n");
+#else
     fprintf_P(state->myStdInOut, PSTR("Press ^z to exit at mode\r\n"));
+#endif
     for ( ; ;)
     {
         if (xQueueReceive(xVtyRec, &znak, 0) == pdTRUE)

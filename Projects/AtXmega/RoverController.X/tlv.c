@@ -1,13 +1,13 @@
 #include "tlv.h"
 
-static void tlvForwardFunction(tlvInterpreter_t *tlvInt, tlvMsg_t *myTlvMsg);
-static void tlvBackwordFunction(tlvInterpreter_t *tlvInt, tlvMsg_t *myTlvMsg);
-static void tlvRotateLeftFunction(tlvInterpreter_t *tlvInt, tlvMsg_t *myTlvMsg);
-static void tlvRotateRightFunction(tlvInterpreter_t *tlvInt, tlvMsg_t *myTlvMsg);
-static void tlvStopFunction(tlvInterpreter_t *tlvInt, tlvMsg_t *myTlvMsg);
-static void tlvPingFunction(tlvInterpreter_t *tlvInt, tlvMsg_t *myTlvMsg);
+static void tlvForwardFunction(TlvInterpreter_t *tlvInt, TlvMsg_t *myTlvMsg);
+static void tlvBackwordFunction(TlvInterpreter_t *tlvInt, TlvMsg_t *myTlvMsg);
+static void tlvRotateLeftFunction(TlvInterpreter_t *tlvInt, TlvMsg_t *myTlvMsg);
+static void tlvRotateRightFunction(TlvInterpreter_t *tlvInt, TlvMsg_t *myTlvMsg);
+static void tlvStopFunction(TlvInterpreter_t *tlvInt, TlvMsg_t *myTlvMsg);
+static void tlvPingFunction(TlvInterpreter_t *tlvInt, TlvMsg_t *myTlvMsg);
 
-const tlvCommand_t tlvCmdList[] PROGMEM =
+const TlvCommand_t tlvCmdList[] PROGMEM =
 {
   {FORWARD,       tlvForwardFunction},
   {BACKWORD,      tlvBackwordFunction},
@@ -18,35 +18,35 @@ const tlvCommand_t tlvCmdList[] PROGMEM =
   {0,             NULL}
 };
 
-static void tlvForwardFunction(tlvInterpreter_t *tlvInt, tlvMsg_t *myTlvMsg)
+static void tlvForwardFunction(TlvInterpreter_t *tlvInt, TlvMsg_t *myTlvMsg)
 {
   (void) tlvInt;
-  tlvMsgMove_t *msg = (tlvMsgMove_t *) myTlvMsg;
+  TlvMsgMove_t *msg = (TlvMsgMove_t *) myTlvMsg;
   forwardB(msg->data.pwmLeft, msg->data.pwmRight);
 }
 
-static void tlvBackwordFunction(tlvInterpreter_t *tlvInt, tlvMsg_t *myTlvMsg)
+static void tlvBackwordFunction(TlvInterpreter_t *tlvInt, TlvMsg_t *myTlvMsg)
 {
   (void) tlvInt;
-  tlvMsgMove_t *msg = (tlvMsgMove_t *) myTlvMsg;
+  TlvMsgMove_t *msg = (TlvMsgMove_t *) myTlvMsg;
   backwordB(msg->data.pwmLeft, msg->data.pwmRight);
 }
 
-static void tlvRotateLeftFunction(tlvInterpreter_t *tlvInt, tlvMsg_t *myTlvMsg)
+static void tlvRotateLeftFunction(TlvInterpreter_t *tlvInt, TlvMsg_t *myTlvMsg)
 {
   (void) tlvInt;
-  tlvMsgMove_t *msg = (tlvMsgMove_t *) myTlvMsg;
+  TlvMsgMove_t *msg = (TlvMsgMove_t *) myTlvMsg;
   rotateLeftB(msg->data.pwmLeft, msg->data.pwmRight);
 }
 
-static void tlvRotateRightFunction(tlvInterpreter_t *tlvInt, tlvMsg_t *myTlvMsg)
+static void tlvRotateRightFunction(TlvInterpreter_t *tlvInt, TlvMsg_t *myTlvMsg)
 {
   (void) tlvInt;
-  tlvMsgMove_t *msg = (tlvMsgMove_t *) myTlvMsg;
+  TlvMsgMove_t *msg = (TlvMsgMove_t *) myTlvMsg;
   rotateRightB(msg->data.pwmLeft, msg->data.pwmRight);
 }
 
-static void tlvStopFunction(tlvInterpreter_t *tlvInt, tlvMsg_t *myTlvMsg)
+static void tlvStopFunction(TlvInterpreter_t *tlvInt, TlvMsg_t *myTlvMsg)
 {
   (void) tlvInt;
   (void) myTlvMsg;
@@ -54,7 +54,7 @@ static void tlvStopFunction(tlvInterpreter_t *tlvInt, tlvMsg_t *myTlvMsg)
   offHbridge();
 }
 
-static void tlvPingFunction(tlvInterpreter_t *tlvInt, tlvMsg_t *myTlvMsg)
+static void tlvPingFunction(TlvInterpreter_t *tlvInt, TlvMsg_t *myTlvMsg)
 {
   (void) tlvInt;
   (void) myTlvMsg;

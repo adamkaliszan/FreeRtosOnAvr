@@ -13,7 +13,7 @@ typedef enum
   ROTATE_RIGHT = 4,
   STOP         = 6,
   PING         = 7,
-} commandType_t;
+} CommandType_t;
 
 
 
@@ -24,13 +24,13 @@ typedef struct
   uint8_t          duration;
   uint8_t          pwmLeft;
   uint8_t          pwmRight;
-}  tlvMsgMoveDta_t;
+}  TlvMsgMoveDta_t;
 
 typedef struct
 {
-  tlvMsg_t         header;
-  tlvMsgMoveDta_t  data;
-} tlvMsgMove_t;
+  TlvMsg_t         header;
+  TlvMsgMoveDta_t  data;
+} TlvMsgMove_t;
 
 
 

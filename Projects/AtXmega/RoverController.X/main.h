@@ -42,7 +42,7 @@
 #define SYSTEM_NAME "FreeRtos+"
 #define S_VERSION "0.11"
 
-extern const tlvCommand_t tlvCmdList[];
+extern const TlvCommand_t tlvCmdList[];
 
 void my_init_clock (void) __attribute__ ((naked))  __attribute__ ((section (".init0")));
 

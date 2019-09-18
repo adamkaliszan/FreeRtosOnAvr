@@ -60,7 +60,7 @@ xQueueHandle xSIM900Rec;
 xQueueHandle xSIM900Tx;
 
 cmdState_t *CLIStateSerialUsb;
-tlvInterpreter_t *TLVstate;
+TlvInterpreter_t *TLVstate;
 
 FILE usbStream;
 FILE hc12Stream;
@@ -129,7 +129,7 @@ portSHORT main( void )
 
 
   CLIStateSerialUsb  = xmalloc(sizeof(cmdState_t));
-  TLVstate = xmalloc(sizeof(tlvInterpreter_t));
+  TLVstate = xmalloc(sizeof(TlvInterpreter_t));
 
   Hc12semaphore = xSemaphoreCreateMutex();
 
@@ -144,7 +144,7 @@ portSHORT main( void )
 
   xTaskCreate(vTaskVTYusb,    NULL /*"VTY"            */, STACK_SIZE_VTY,         (void *)(CLIStateSerialUsb),            1, &xHandleVTY_USB);
   xTaskCreate(vTaskTLV,       NULL /*"TLV"            */, STACK_SIZE_VTY,         (void *)(TLVstate),                     1, &xHandleTLV);
-  xTaskCreate(vTaskMain,      NULL /*"TLV"            */, STACK_SIZE_VTY,         NULL,                                   1, &xHandleMain);
+//  xTaskCreate(vTaskMain,      NULL /*"TLV"            */, STACK_SIZE_VTY,         NULL,                                   1, &xHandleMain);
 
   vTaskStartScheduler();
 
@@ -160,14 +160,13 @@ void vApplicationIdleHook( void )
   }
 }
 
+
 void vApplicationTickHook( void )
 {
-  static uint16_t tickCntr = configTICK_RATE_HZ;
-  if (--tickCntr == 0)
-  {
-    tickCntr = configTICK_RATE_HZ;
-#ifdef USENET
-    arpTimer();
-#endif
-  }
+  //static uint16_t tickCntr = configTICK_RATE_HZ;
+  //if (--tickCntr == 0)
+  //{
+  //  tickCntr = configTICK_RATE_HZ;
+  //
+  //}
 }

@@ -24,11 +24,11 @@
 #endif // TLV_BUF_LEN
 
 
-struct tlvInterpreter;
+struct TlvInterpreter;
 
-typedef struct tlvInterpreter tlvInterpreter_t;
+typedef struct TlvInterpreter TlvInterpreter_t;
 
-typedef struct tlvMsg
+typedef struct TlvMsg
 {
   uint8_t sync;     // = TLV_SYNC
   uint8_t address;  // Device address
@@ -37,35 +37,34 @@ typedef struct tlvMsg
   uint8_t crcLo;
   uint8_t crcHi;
   uint8_t data[0];
-} tlvMsg_t;
+} TlvMsg_t;
 
 
-typedef struct tlvCommand
+typedef struct TlvCommand
 {
   uint8_t   type;
-  void (*fun)(tlvInterpreter_t *tlvInt, tlvMsg_t *myTlvMsg);
-} tlvCommand_t;
+  void (*fun)(TlvInterpreter_t *tlvInt, TlvMsg_t *myTlvMsg);
+} TlvCommand_t;
 
-struct tlvInterpreter
+struct TlvInterpreter
 {
-  uint8_t            buffer[TLV_BUF_LEN];
-  uint8_t            bufIdx;
-  const tlvCommand_t *commands;
-  uint8_t            noOfCmds;
+  uint8_t             buffer[TLV_BUF_LEN];
+  uint8_t             bufIdx;
+  const TlvCommand_t *commands;
+  uint8_t             noOfCmds;
   FILE               *ioStr;
   FILE               *errStr;
 };
 
-void tlvIinitializeInterpreter(tlvInterpreter_t *tlvInt, FILE *ioStr, FILE *errStr, const tlvCommand_t *commands);
+void tlvIinitializeInterpreter(TlvInterpreter_t *tlvInt, FILE *ioStr, FILE *errStr, const TlvCommand_t *commands);
 
-void tlvCalculateCrc(tlvMsg_t *message);
-void tlvCalculateCrcSepDta(tlvMsg_t *message, const uint8_t dta[]);
+void tlvCalculateCrc(TlvMsg_t *message);
+void tlvCalculateCrcSepDta(TlvMsg_t *message, const uint8_t dta[]);
 
-uint8_t tlvCheckCrc(tlvMsg_t *message);
+uint8_t tlvCheckCrc(TlvMsg_t *message);
 
-void tlvProcessDta(tlvInterpreter_t *tlvInt, uint8_t dta);
-void sendTlvMsg(tlvMsg_t *message, FILE *ostream);
-void sendTlvMsgDta(tlvMsg_t *message, const uint8_t const *msgDta, FILE *ostream);
-
+void tlvProcessDta(TlvInterpreter_t *tlvInt, uint8_t dta);
+void sendTlvMsg(TlvMsg_t *message, FILE *ostream);
+void sendTlvMsgDta(TlvMsg_t *message, const uint8_t const *msgDta, FILE *ostream);
 
 #endif

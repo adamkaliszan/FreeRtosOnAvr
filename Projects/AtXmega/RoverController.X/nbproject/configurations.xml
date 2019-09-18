@@ -144,7 +144,7 @@
         <property key="asmlist" value="true"/>
         <property key="default-bitfield-type" value="true"/>
         <property key="default-char-type" value="true"/>
-        <property key="define-macros" value=""/>
+        <property key="define-macros" value="USE_XC8"/>
         <property key="disable-optimizations" value="false"/>
         <property key="extra-include-directories"
                   value="./;../../../FreeRtosCore/Source/include;../../../FreeRtosCore;../../../Lib;../../../Lib/include;../../../LibRtos;../../../LibRtos/include;../../../FreeRtosCore/portable/GCC/ATXmega;../../../FreeRtosCore/portable/MemMang;../../../LibRtos;../../../LibRtos/include;../../../LibXc"/>

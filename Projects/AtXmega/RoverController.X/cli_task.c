@@ -3,7 +3,11 @@
 void vTaskVTYusb(void *cliStatePtr)
 {
   cmdState_t *state = (cmdState_t *)(cliStatePtr);
+#ifdef USE_XC8
   fprintf_P(state->myStdInOut, PSTR("Restart\r\n"));
+#else
+  fprintf_P(state->myStdInOut, PSTR("Restart\r\n"));
+#endif
   cmdlineInputFunc('\r', state);
 
   char recSymbol;
