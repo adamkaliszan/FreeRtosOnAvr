@@ -27,49 +27,49 @@
 #endif
 
 
-static cliExRes_t helpFunction           (cmdState_t *state);
-static cliExRes_t statusFunction         (cmdState_t *state);
-static cliExRes_t statusEncFunction      (cmdState_t *state);
-static cliExRes_t curtainDownFunction    (cmdState_t *state);
-static cliExRes_t curtainUpFunction      (cmdState_t *state);
-static cliExRes_t rpingFunction          (cmdState_t *state);
-static cliExRes_t pingFunction           (cmdState_t *state);
-static cliExRes_t goXmodemOdbierzFunction(cmdState_t *state);
-static cliExRes_t goXmodemWyslijFunction (cmdState_t *state);
-static cliExRes_t dodajRamPlikFunction   (cmdState_t *state);
-static cliExRes_t eraseRamFileFunction   (cmdState_t *state);
-static cliExRes_t flashExModuleFunction  (cmdState_t *state);
-static cliExRes_t writeRamFileFunction   (cmdState_t *state);
-static cliExRes_t editRamFileFunction    (cmdState_t *state);
-static cliExRes_t readRamFIleFunction    (cmdState_t *state);
+static CliExRes_t helpFunction           (CmdState_t *state);
+static CliExRes_t statusFunction         (CmdState_t *state);
+static CliExRes_t statusEncFunction      (CmdState_t *state);
+static CliExRes_t curtainDownFunction    (CmdState_t *state);
+static CliExRes_t curtainUpFunction      (CmdState_t *state);
+static CliExRes_t rpingFunction          (CmdState_t *state);
+static CliExRes_t pingFunction           (CmdState_t *state);
+static CliExRes_t goXmodemOdbierzFunction(CmdState_t *state);
+static CliExRes_t goXmodemWyslijFunction (CmdState_t *state);
+static CliExRes_t dodajRamPlikFunction   (CmdState_t *state);
+static CliExRes_t eraseRamFileFunction   (CmdState_t *state);
+static CliExRes_t flashExModuleFunction  (CmdState_t *state);
+static CliExRes_t writeRamFileFunction   (CmdState_t *state);
+static CliExRes_t editRamFileFunction    (CmdState_t *state);
+static CliExRes_t readRamFIleFunction    (CmdState_t *state);
 
-static cliExRes_t ustawPortExtAFunction  (cmdState_t *state);
-static cliExRes_t ustawPortExtBFunction  (cmdState_t *state);
-static cliExRes_t ustawPortRezystor      (cmdState_t *state);
+static CliExRes_t ustawPortExtAFunction  (CmdState_t *state);
+static CliExRes_t ustawPortExtBFunction  (CmdState_t *state);
+static CliExRes_t ustawPortRezystor      (CmdState_t *state);
 
-static cliExRes_t ustawModWykFunction    (cmdState_t *state);
-static cliExRes_t zapiszModWykFunction   (cmdState_t *state);
+static CliExRes_t ustawModWykFunction    (CmdState_t *state);
+static CliExRes_t zapiszModWykFunction   (CmdState_t *state);
 
-static cliExRes_t pokazCzasFunction      (cmdState_t *state);
-static cliExRes_t debugFunction          (cmdState_t *state);
-static cliExRes_t czytajAC_Function      (cmdState_t *state);
+static CliExRes_t pokazCzasFunction      (CmdState_t *state);
+static CliExRes_t debugFunction          (CmdState_t *state);
+static CliExRes_t czytajAC_Function      (CmdState_t *state);
 
-static cliExRes_t enableFunction         (cmdState_t *state);
-static cliExRes_t disableFunction        (cmdState_t *state);
-static cliExRes_t configureModeFunction  (cmdState_t *state);
+static CliExRes_t enableFunction         (CmdState_t *state);
+static CliExRes_t disableFunction        (CmdState_t *state);
+static CliExRes_t configureModeFunction  (CmdState_t *state);
 
-static cliExRes_t setIpFunction(cmdState_t *state);
-static cliExRes_t setIpMaskFunction(cmdState_t *state);
-static cliExRes_t setIpGwFunction(cmdState_t *state);
-static cliExRes_t setUdpFunction(cmdState_t *state);
+static CliExRes_t setIpFunction(CmdState_t *state);
+static CliExRes_t setIpMaskFunction(CmdState_t *state);
+static CliExRes_t setIpGwFunction(CmdState_t *state);
+static CliExRes_t setUdpFunction(CmdState_t *state);
 
-static cliExRes_t setMacAddrFunction     (cmdState_t *state);
-static cliExRes_t setTimeFunction        (cmdState_t *state);
+static CliExRes_t setMacAddrFunction     (CmdState_t *state);
+static CliExRes_t setTimeFunction        (CmdState_t *state);
 
-static cliExRes_t saveConfigFunction     (cmdState_t *state);
+static CliExRes_t saveConfigFunction     (CmdState_t *state);
 
 #ifdef testZewPamiec
-static cliExRes_t testPamZewFunction     (cmdState_t *state);
+static CliExRes_t testPamZewFunction     (CmdState_t *state);
 #endif
 
 struct ramPlikFd    fdVty;  //TODO move it to CLI struct
@@ -94,7 +94,7 @@ const  char * const errorStrings[] PROGMEM = {
   errorOpenFile
 };
 
-const command_t cmdListNormal[] PROGMEM =
+const Command_t cmdListNormal[] PROGMEM =
 {
   {cmd_help,      cmd_help_help,      helpFunction},
   {cmd_status,    cmd_help_status,    statusFunction},
@@ -107,7 +107,7 @@ const command_t cmdListNormal[] PROGMEM =
   {NULL, NULL, NULL}
 };
 
-const command_t cmdListEnable[] PROGMEM =
+const Command_t cmdListEnable[] PROGMEM =
 {
   {cmd_help,      cmd_help_help,      helpFunction},
   {cmd_status,    cmd_help_status,    statusFunction},
@@ -144,7 +144,7 @@ const command_t cmdListEnable[] PROGMEM =
   {NULL, NULL, NULL}
 };
 
-const command_t cmdListConfigure[] PROGMEM =
+const Command_t cmdListConfigure[] PROGMEM =
 {
   {cmd_help,         cmd_help_help,         helpFunction},
   {cmd_status,       cmd_help_status,       statusFunction},
@@ -161,12 +161,12 @@ const command_t cmdListConfigure[] PROGMEM =
   {NULL, NULL, NULL}
 };
 
-void VtyInit(cmdState_t* state, FILE *stream)
+void VtyInit(CmdState_t* state, FILE *stream)
 {
   cmdStateConfigure(state, (char *)(CLI_1_BUF_ADDR), CLI_BUF_TOT_LEN, stream, &cmdListNormal[0], NR_NORMAL);
 }
 
-void printErrorInfo(cmdState_t *state)
+void printErrorInfo(CmdState_t *state)
 {
 //  if (state->errno != 0)
 //  {
@@ -177,7 +177,7 @@ void printErrorInfo(cmdState_t *state)
   state->err2 = 0;
 }
 
-static cliExRes_t enableFunction(cmdState_t *state)
+static CliExRes_t enableFunction(CmdState_t *state)
 {
   if (state->cliMode != RESTRICTED_NORMAL)
   {
@@ -187,7 +187,7 @@ static cliExRes_t enableFunction(cmdState_t *state)
   }
   return ERROR_OPERATION_NOT_ALLOWED;
 }
-static cliExRes_t disableFunction(cmdState_t *state)
+static CliExRes_t disableFunction(CmdState_t *state)
 {
   state->cmdList = cmdListNormal;
   if (state->cliMode != RESTRICTED_NORMAL)
@@ -196,7 +196,7 @@ static cliExRes_t disableFunction(cmdState_t *state)
   }
   return OK_SILENT;
 }
-static cliExRes_t configureModeFunction(cmdState_t *state)
+static CliExRes_t configureModeFunction(CmdState_t *state)
 {
   if (state->cliMode == NR_ENABLE)
   {
@@ -268,7 +268,7 @@ void printStatus(FILE *stream)
 
 // ************************** CLI Functions *********************************************************************************
 
-static cliExRes_t statusFunction(cmdState_t *state)
+static CliExRes_t statusFunction(CmdState_t *state)
 {
   if (state->argc < 1)
   {
@@ -288,13 +288,13 @@ static cliExRes_t statusFunction(cmdState_t *state)
   return OK_SILENT;
 }
 
-static cliExRes_t statusEncFunction(cmdState_t *state)
+static CliExRes_t statusEncFunction(CmdState_t *state)
 {
   nicRegDump(state->myStdInOut);
   return OK_SILENT;
 }
 
-static cliExRes_t pokazCzasFunction(cmdState_t *state)
+static CliExRes_t pokazCzasFunction(CmdState_t *state)
 {
   readTimeDecoded((timeDecoded_t *)(&czasRtc));
   uint8_t godzina = 10*czasRtc.hours.syst24.cDzies + czasRtc.hours.syst24.cJedn;
@@ -304,7 +304,7 @@ static cliExRes_t pokazCzasFunction(cmdState_t *state)
   return OK_SILENT;
 }
 
-static cliExRes_t debugFunction          (cmdState_t *state)
+static CliExRes_t debugFunction          (CmdState_t *state)
 {
   if (state->argc < 2)
     return SYNTAX_ERROR;
@@ -392,7 +392,7 @@ static cliExRes_t debugFunction          (cmdState_t *state)
 }
 
 
-static cliExRes_t setTimeFunction(cmdState_t *state)
+static CliExRes_t setTimeFunction(CmdState_t *state)
 {
   uint8_t godzina =  cmdlineGetArgInt(1, state);
   uint8_t minuta  =  cmdlineGetArgInt(2, state);
@@ -419,7 +419,7 @@ static cliExRes_t setTimeFunction(cmdState_t *state)
   return OK_SILENT;
 }
 
-static cliExRes_t setIpFunction(cmdState_t *state)
+static CliExRes_t setIpFunction(CmdState_t *state)
 {
   if (state->argc < 4)
     return SYNTAX_ERROR;
@@ -433,7 +433,7 @@ static cliExRes_t setIpFunction(cmdState_t *state)
   return OK_SILENT;
 }
 
-static cliExRes_t setUdpFunction(cmdState_t *state)
+static CliExRes_t setUdpFunction(CmdState_t *state)
 {
   if (state->argc < 5)
     return SYNTAX_ERROR;
@@ -456,7 +456,7 @@ static cliExRes_t setUdpFunction(cmdState_t *state)
 }
 
 
-static cliExRes_t setIpMaskFunction(cmdState_t *state)
+static CliExRes_t setIpMaskFunction(CmdState_t *state)
 {
   if (state->argc < 1)
     return SYNTAX_ERROR;
@@ -468,7 +468,7 @@ static cliExRes_t setIpMaskFunction(cmdState_t *state)
 }
 
 
-static cliExRes_t setIpGwFunction(cmdState_t *state)
+static CliExRes_t setIpGwFunction(CmdState_t *state)
 {
   if (state->argc < 4)
     return SYNTAX_ERROR;
@@ -481,7 +481,7 @@ static cliExRes_t setIpGwFunction(cmdState_t *state)
   return OK_SILENT;
 }
 
-static cliExRes_t ustawModWykFunction(cmdState_t *state)
+static CliExRes_t ustawModWykFunction(CmdState_t *state)
 {
   if (state->argc < 2)
     return SYNTAX_ERROR;
@@ -493,7 +493,7 @@ static cliExRes_t ustawModWykFunction(cmdState_t *state)
 
   return OK_SILENT;
 }
-static cliExRes_t zapiszModWykFunction(cmdState_t *state)
+static CliExRes_t zapiszModWykFunction(CmdState_t *state)
 {
   if (state->argc < 1)
     return SYNTAX_ERROR;
@@ -503,7 +503,7 @@ static cliExRes_t zapiszModWykFunction(cmdState_t *state)
   return OK_SILENT;
 }
 
-static cliExRes_t setMacAddrFunction(cmdState_t *state)
+static CliExRes_t setMacAddrFunction(CmdState_t *state)
 {
   if (state->argc < 6)
     return SYNTAX_ERROR;
@@ -518,7 +518,7 @@ static cliExRes_t setMacAddrFunction(cmdState_t *state)
   return OK_SILENT;
 }
 
-static cliExRes_t czytajAC_Function(cmdState_t *state)
+static CliExRes_t czytajAC_Function(CmdState_t *state)
 {
   uint8_t nrWejscia = cmdlineGetArgInt(1, state);
   uint16_t wynik = MCP3008_getSampleSingle(nrWejscia);
@@ -526,13 +526,13 @@ static cliExRes_t czytajAC_Function(cmdState_t *state)
   return OK_SILENT;
 }
 
-static cliExRes_t helpFunction(cmdState_t *state)
+static CliExRes_t helpFunction(CmdState_t *state)
 {
   cmdPrintHelp(state);
   return OK_SILENT;
 }
 
-static cliExRes_t curtainDownFunction(cmdState_t *state)
+static CliExRes_t curtainDownFunction(CmdState_t *state)
 {
   uint8_t nrRolety;
   uint8_t nrSterownika;
@@ -556,7 +556,7 @@ static cliExRes_t curtainDownFunction(cmdState_t *state)
   return ERROR_SILENT;
 }
 
-static cliExRes_t curtainUpFunction(cmdState_t *state)
+static CliExRes_t curtainUpFunction(CmdState_t *state)
 {
   if (state->argc < 2)
     return SYNTAX_ERROR;
@@ -579,7 +579,7 @@ static cliExRes_t curtainUpFunction(cmdState_t *state)
   return ERROR_SILENT;
 }
 
-static cliExRes_t ustawPortExtAFunction(cmdState_t *state)
+static CliExRes_t ustawPortExtAFunction(CmdState_t *state)
 {
   uint8_t wyjscie = cmdlineGetArgInt(1, state);
   MPC23s17SetDirA(0x00, 0);
@@ -587,7 +587,7 @@ static cliExRes_t ustawPortExtAFunction(cmdState_t *state)
   return OK_SILENT;
 }
 
-static cliExRes_t ustawPortExtBFunction(cmdState_t *state)
+static CliExRes_t ustawPortExtBFunction(CmdState_t *state)
 {
   uint8_t wyjscie = cmdlineGetArgInt(1, state);
   MPC23s17SetDirB(0x00, 0);
@@ -595,7 +595,7 @@ static cliExRes_t ustawPortExtBFunction(cmdState_t *state)
   return OK_SILENT;
 }
 
-static cliExRes_t ustawPortRezystor(cmdState_t *state)
+static CliExRes_t ustawPortRezystor(CmdState_t *state)
 {
   if (state->argc < 1)
     return SYNTAX_ERROR;
@@ -607,7 +607,7 @@ static cliExRes_t ustawPortRezystor(cmdState_t *state)
   return OK_SILENT;
 }
 
-static cliExRes_t rpingFunction(cmdState_t *state)
+static CliExRes_t rpingFunction(CmdState_t *state)
 {
   if (state->argc < 1)
     return SYNTAX_ERROR;
@@ -622,7 +622,7 @@ static cliExRes_t rpingFunction(cmdState_t *state)
   return OK_SILENT;
 }
 
-static cliExRes_t pingFunction(cmdState_t *state)
+static CliExRes_t pingFunction(CmdState_t *state)
 {
   if (state->argc < 4)
     return SYNTAX_ERROR;
@@ -638,7 +638,7 @@ static cliExRes_t pingFunction(cmdState_t *state)
 }
 
 
-static cliExRes_t flashExModuleFunction(cmdState_t *state)
+static CliExRes_t flashExModuleFunction(CmdState_t *state)
 {
   if (state->argc != 2)
     return SYNTAX_ERROR;
@@ -672,7 +672,7 @@ static cliExRes_t flashExModuleFunction(cmdState_t *state)
   return OK_SILENT;
 }
 
-static cliExRes_t goXmodemWyslijFunction(cmdState_t *state) // TODO add code in xModem
+static CliExRes_t goXmodemWyslijFunction(CmdState_t *state) // TODO add code in xModem
 {
   fprintf_P(state->myStdInOut, xwyslijStartStr);
   if (ramDyskOtworzPlik(cmdlineGetArgStr(1, state), &fdVty) != 0)
@@ -683,7 +683,7 @@ static cliExRes_t goXmodemWyslijFunction(cmdState_t *state) // TODO add code in 
   return OK_SILENT;
 }
 
-static cliExRes_t goXmodemOdbierzFunction(cmdState_t *state) //TODO move to xmodem
+static CliExRes_t goXmodemOdbierzFunction(CmdState_t *state) //TODO move to xmodem
 {
   fprintf_P(state->myStdInOut, PSTR("Xmodem: rozpoczynanie odbioru\r\n"));
   if (ramDyskOtworzPlik(cmdlineGetArgStr(1, state), &fdVty) != 0)
@@ -870,7 +870,7 @@ static cliExRes_t goXmodemOdbierzFunction(cmdState_t *state) //TODO move to xmod
   return OK_SILENT;
 }
 
-static cliExRes_t eraseRamFileFunction(cmdState_t *state)
+static CliExRes_t eraseRamFileFunction(CmdState_t *state)
 {
   if (ramDyskUsunPlik(cmdlineGetArgStr(1, state)) == 0)
     return OK_INFORM;
@@ -879,7 +879,7 @@ static cliExRes_t eraseRamFileFunction(cmdState_t *state)
   return ERROR_INFORM;
 }
 
-static cliExRes_t dodajRamPlikFunction(cmdState_t *state)
+static CliExRes_t dodajRamPlikFunction(CmdState_t *state)
 {
   if (state->argc != 1)
     return SYNTAX_ERROR;
@@ -892,13 +892,13 @@ static cliExRes_t dodajRamPlikFunction(cmdState_t *state)
   return ERROR_INFORM;
 }
 
-static cliExRes_t writeRamFileFunction(cmdState_t *state)
+static CliExRes_t writeRamFileFunction(CmdState_t *state)
 {
   ramDyskDir(state->myStdInOut);
   return OK_SILENT;
 }
 
-static cliExRes_t editRamFileFunction(cmdState_t *state)
+static CliExRes_t editRamFileFunction(CmdState_t *state)
 {
   if (ramDyskOtworzPlik(cmdlineGetArgStr(1, state), &fdVty) != 0)
   {
@@ -923,7 +923,7 @@ static cliExRes_t editRamFileFunction(cmdState_t *state)
   return OK_SILENT;
 }
 
-static cliExRes_t readRamFIleFunction(cmdState_t *state) //TODO move this code to fat8
+static CliExRes_t readRamFIleFunction(CmdState_t *state) //TODO move this code to fat8
 {
   uint8_t rezultat;
   uint8_t znak = ' ';
@@ -947,7 +947,7 @@ static cliExRes_t readRamFIleFunction(cmdState_t *state) //TODO move this code t
   return OK_SILENT;
 }
 
-static cliExRes_t saveConfigFunction(cmdState_t *state)
+static CliExRes_t saveConfigFunction(CmdState_t *state)
 {
   (void) state;
   saveConfiguration();
@@ -955,7 +955,7 @@ static cliExRes_t saveConfigFunction(cmdState_t *state)
 }
 
 #ifdef testZewPamiec
-static cliExRes_t testPamZewFunction(cmdState_t *state)
+static CliExRes_t testPamZewFunction(CmdState_t *state)
 {
   state = NULL;
   uint8_t *ptr;

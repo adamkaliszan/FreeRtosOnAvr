@@ -1,15 +1,15 @@
 #include "tlv.h"
 
-static void tlvPingFunction(tlvInterpreter_t *tlvInt, tlvMsg_t *myTlvMsg);
+static void tlvPingFunction(TlvInterpreter_t *tlvInt, TlvMsg_t *myTlvMsg);
 
-const tlvCommand_t tlvCmdList[] PROGMEM =
+const TlvCommand_t tlvCmdList[] PROGMEM =
 {
   {PING,          tlvPingFunction},
   {0,             NULL}
 };
 
 
-static void tlvPingFunction(tlvInterpreter_t *tlvInt, tlvMsg_t *myTlvMsg)
+static void tlvPingFunction(TlvInterpreter_t *tlvInt, TlvMsg_t *myTlvMsg)
 {
   (void) tlvInt;
   (void) myTlvMsg;

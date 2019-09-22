@@ -59,12 +59,10 @@
       </logicalFolder>
       <logicalFolder name="f2" displayName="Lib" projectFiles="true">
         <itemPath>../../../Lib/tlvProt.c</itemPath>
+        <itemPath>../../../Lib/cmdline.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f4" displayName="LibRtos" projectFiles="true">
         <itemPath>../../../LibRtos/sim900.c</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f5" displayName="LibXc" projectFiles="true">
-        <itemPath>../../../LibXc/cmdline.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Port" projectFiles="true">
         <itemPath>../../../FreeRtosCore/portable/MemMang/heap_avr.c</itemPath>
@@ -143,7 +141,7 @@
         <property key="asmlist" value="true"/>
         <property key="default-bitfield-type" value="true"/>
         <property key="default-char-type" value="true"/>
-        <property key="define-macros" value=""/>
+        <property key="define-macros" value="USE_XC8"/>
         <property key="disable-optimizations" value="false"/>
         <property key="extra-include-directories"
                   value="./;../../../FreeRtosCore/Source/include;../../../FreeRtosCore;../../../Lib;../../../Lib/include;../../../LibRtos;../../../LibRtos/include;../../../FreeRtosCore/portable/GCC/ATXmega;../../../FreeRtosCore/portable/MemMang;../../../LibRtos;../../../LibRtos/include"/>

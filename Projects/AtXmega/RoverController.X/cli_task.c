@@ -2,7 +2,7 @@
 
 void vTaskVTYusb(void *cliStatePtr)
 {
-  cmdState_t *state = (cmdState_t *)(cliStatePtr);
+  CmdState_t *state = (CmdState_t *)(cliStatePtr);
 #ifdef USE_XC8
   fprintf_P(state->myStdInOut, PSTR("Restart\r\n"));
 #else

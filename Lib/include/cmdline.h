@@ -35,23 +35,23 @@
 
   
 // constants/macros/typdefs
-struct cmdState;
+struct CmdState;
 struct Command;
-enum   cliExecuteResult;
+enum   CliExecuteResult;
 
 typedef struct Command         Command_t;
-typedef struct cmdState        cmdState_t;
-typedef enum cliExecuteResult  cliExRes_t;
+typedef struct CmdState        CmdState_t;
+typedef enum CliExecuteResult  CliExRes_t;
 
-typedef cliExRes_t (*CmdlineFuncPtrType)(cmdState_t *state);
+typedef CliExRes_t (*CmdlineFuncPtrType)(CmdState_t *state);
 
-enum cmdBufferHistory
+enum CmdBufferHistory
 {
   NOT_COPIED   = 0,
   COPIED       = 1
 };
 
-enum cliModeState
+enum CliModeState
 {
   NR_NORMAL,
   NR_ENABLE,
@@ -59,7 +59,7 @@ enum cliModeState
   RESTRICTED_NORMAL
 };
 
-enum cliExecuteResult
+enum CliExecuteResult
 {
   OK_SILENT =0,
   OK_INFORM,
@@ -69,48 +69,48 @@ enum cliExecuteResult
   ERROR_OPERATION_NOT_ALLOWED
 };
 
-enum cliHistoryAction
+enum CliHistoryAction
 {
   CMDLINE_HISTORY_SAVE,
   CMDLINE_HISTORY_PREV,
   CMDLINE_HISTORY_NEXT
 };
 
-struct cmdState
+struct CmdState
 {
-  char *CmdlineBuffer;                       /// CLI buffer.
-  char *CmdlineExcBuffer;                    /// CLI processing buffer.
-  char *CmdlineHistory[CMD_STATE_HISTORY];   /// CLI history. History Size = 3. Sorry for Hardcodding
+  char *cmdlineBuffer;                       ///< CLI buffer.
+  char *cmdlineExcBuffer;                    ///< CLI processing buffer.
+  char *cmdlineHistory[CMD_STATE_HISTORY];   ///< CLI history. History Size = 3. Sorry for Hardcodding
 
-  uint8_t bufferMaxSize;                     /// Total buffer size / CMD_STATE_HISTORY
-  uint8_t CmdlineBufferLength;               /// Number of writen chars in buffer
-  uint8_t CmdlineBufferEditPos;              /// Edit position in the buffer
+  uint8_t bufferMaxSize;                     ///< Total buffer size / CMD_STATE_HISTORY
+  uint8_t cmdlineBufferLength;               ///< Number of writen chars in buffer
+  uint8_t cmdlineBufferEditPos;              ///< Edit position in the buffer
  
-  uint8_t historyWrIdx;                      /// History write index (0 - CMD_STATE_HISTORY-1)   
-  uint8_t historyDepthIdx;                   /// History depth index. Read idx = (historyWrIdx - historyDepthIdx) & CMD_STATE_HISTORY_MASK
-  enum cmdBufferHistory bufferHistoryState;  /// Buffer history state
+  uint8_t historyWrIdx;                      ///< History write index (0 - CMD_STATE_HISTORY-1)   
+  uint8_t historyDepthIdx;                   ///< History depth index. Read idx = (historyWrIdx - historyDepthIdx) & CMD_STATE_HISTORY_MASK
+  enum CmdBufferHistory bufferHistoryState;  ///< Buffer history state
     
-  uint8_t CmdlineInputVT100State;            /// Commandline State TODO add enum type
-  const char* command_str;                   /// Executing command string
-  const char* command_help_str;              /// Executing command help string
-  CmdlineFuncPtrType CmdlineExecFunction;    /// Pointer to the funtion that match to the string writen in buffer
-  uint8_t   argc;                            /// Index of last argument
+  uint8_t cmdlineInputVT100State;            ///< Commandline State TODO add enum type
+  const char* command_str;                   ///< Executing command string
+  const char* command_help_str;              ///< Executing command help string
+  CmdlineFuncPtrType cmdlineExecFunction;    ///< Pointer to the funtion that match to the string writen in buffer
+  uint8_t   argc;                            ///< Index of last argument
   
-  FILE *myStdInOut;                          /// Input / output stream descriptor
+  FILE *myStdInOut;                          ///< Input / output stream descriptor
   
-  uint8_t  errno;                            /// Error number
-  uint16_t err1;                             /// Additional error info 1
-  uint8_t  err2;                             /// Additional error info 1
+  uint8_t  errno;                            ///< Error number
+  uint16_t err1;                             ///< Additional error info 1
+  uint8_t  err2;                             ///< Additional error info 1
   
-  enum cliModeState cliMode;                 /// CLI mode (NORMAL, ENABLED, CONFIGURE)
-  const Command_t *cmdList;                  /// Each CLI mode has own command list
+  enum CliModeState cliMode;                 ///< CLI mode (NORMAL, ENABLED, CONFIGURE)
+  const Command_t *cmdList;                  ///< Each CLI mode has own command list
 };
 
 struct Command 
 {
-  const char           *commandStr;          /// Command string
-  const char           *commandHelpStr;      /// Command help string
-  CmdlineFuncPtrType   commandFun;           /// Command function pointer
+  const char           *commandStr;          ///< Command string
+  const char           *commandHelpStr;      ///< Command help string
+  CmdlineFuncPtrType   commandFun;           ///< Command function pointer
 };
 
 
@@ -121,20 +121,20 @@ struct Command
  * @param c     - new char
  * @param state - cli state
  */
-void cmdlineInputFunc(char c, cmdState_t *state);
+void cmdlineInputFunc(char c, CmdState_t *state);
 
 /**
  * call this function in task
  * @param state - cli state
  */
-void cmdlineMainLoop(cmdState_t *state);
+void cmdlineMainLoop(CmdState_t *state);
 
 /**
  * Get last argument index.
  * @param state - cli state
  * @return last argument index
  */
-uint8_t cmdLineGetLastArgIdx(cmdState_t *state);
+uint8_t cmdLineGetLastArgIdx(CmdState_t *state);
 
 // argument retrieval commands
 /**
@@ -143,7 +143,7 @@ uint8_t cmdLineGetLastArgIdx(cmdState_t *state);
  * @param state  - cli state
  * @return char pointer
  */
-char* cmdlineGetArgStr(uint8_t argnum, cmdState_t *state);
+char* cmdlineGetArgStr(uint8_t argnum, CmdState_t *state);
 
 /**
  * returns the decimal integer interpretation of argument number [argnum]
@@ -151,20 +151,20 @@ char* cmdlineGetArgStr(uint8_t argnum, cmdState_t *state);
  * @param state  - cli state
  * @return long int
  */
-long cmdlineGetArgInt (uint8_t argnum, cmdState_t *state);
+long cmdlineGetArgInt (uint8_t argnum, CmdState_t *state);
 
 /**
  * returns the hex integer interpretation of argument number [argnum]
  * @param argnum - argument no. Number of first arg is 1
  * @param state  - cli state
  */
-long cmdlineGetArgHex (uint8_t argnum, cmdState_t *state);
+long cmdlineGetArgHex (uint8_t argnum, CmdState_t *state);
 
 /**
  * Print all commands available for cmdState and its description
  * @param state - command line interpreter state
  */
-void cmdPrintHelp(cmdState_t *state);
+void cmdPrintHelp(CmdState_t *state);
 
 /**
  * Konfiguruje strukturę do obsługi sesji interpretera poleceń
@@ -175,7 +175,7 @@ void cmdPrintHelp(cmdState_t *state);
  * @param *commands        - pointer to the command table
  * @param mode             - command line interpreter mode
  */
-void cmdStateConfigure(cmdState_t * state, char *buffPtr, uint16_t bufferTotalSize, FILE *stream, const Command_t *commands, enum cliModeState mode);
+void cmdStateConfigure(CmdState_t * state, char *buffPtr, uint16_t bufferTotalSize, FILE *stream, const Command_t *commands, enum CliModeState mode);
 
 //@}
 #endif

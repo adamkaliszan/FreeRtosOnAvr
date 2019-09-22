@@ -184,7 +184,7 @@
         <property key="asmlist" value="true"/>
         <property key="default-bitfield-type" value="true"/>
         <property key="default-char-type" value="true"/>
-        <property key="define-macros" value="F_CPU=14745600UL"/>
+        <property key="define-macros" value="F_CPU=14745600UL;USE_XC8"/>
         <property key="disable-optimizations" value="false"/>
         <property key="extra-include-directories"
                   value="source;../Common;../../../Lib;../../../Lib/include;../../../Lib/net;../../../Lib/net/include;../../../FreeRtosCore/Source;../../../FreeRtosCore/Source/include;../../../FreeRtosCore/portable/GCC/ATMega64;../../../FreeRtosCore/portable/MemMang"/>

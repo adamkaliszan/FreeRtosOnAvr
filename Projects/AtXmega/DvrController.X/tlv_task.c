@@ -14,7 +14,7 @@ static void sendHc12CmdVal(const char str[], uint16_t val, FILE *errStr)
 
 void vTaskTLV(void *tlvIntPtr)
 {
-  tlvInterpreter_t *state = (tlvInterpreter_t *)(tlvIntPtr);
+  TlvInterpreter_t *state = (TlvInterpreter_t *)(tlvIntPtr);
 
 
   if (xSemaphoreTake(Hc12semaphore, 10) == pdTRUE)
@@ -55,7 +55,11 @@ void vTaskTLV(void *tlvIntPtr)
     HC12setTransparentMode();
     do
     {
+#ifdef USE_XC8
+      fprintf(state->errStr, "0x%02x ", znak);        
+#else
       fprintf_P(state->errStr, PSTR("0x%02x "), znak);
+#endif
       tlvProcessDta(state, znak);
     }
     while( xQueueReceive(xHC12Rec, &znak, 1) == pdTRUE);

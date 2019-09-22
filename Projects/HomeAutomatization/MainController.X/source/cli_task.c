@@ -2,7 +2,7 @@
 
 void vTaskVTYusb(void *cliStatePtr)
 {
-  cmdState_t *state = (cmdState_t *)(cliStatePtr);
+  CmdState_t *state = (CmdState_t *)(cliStatePtr);
   fprintf_P(state->myStdInOut, PSTR("Restart\r\n"));
   cmdlineInputFunc('\r', state);
   
@@ -19,7 +19,7 @@ void vTaskVTYusb(void *cliStatePtr)
 
 void vTaskVTYsocket(void *cliStatePtr)
 {
-  cmdState_t *state = (cmdState_t *)(cliStatePtr);
+  CmdState_t *state = (CmdState_t *)(cliStatePtr);
   
   char znak;
   for( ;; )

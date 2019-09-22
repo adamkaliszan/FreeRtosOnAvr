@@ -66,23 +66,23 @@
 
 //! vt100Init() initializes terminal and vt100 library
 ///		Run this init routine once before using any other vt100 function.
-void vt100Init(cmdState_t *state);
+void vt100Init(CmdState_t *state);
 
 //! vt100ClearScreen() clears the terminal screen
-void vt100ClearScreen(cmdState_t *state);
+void vt100ClearScreen(CmdState_t *state);
 
 //! vt100SetAttr() sets the text attributes like BOLD or REVERSE
 ///		Text written to the terminal after this function is called will have
 ///		the desired attribuutes.
-void vt100SetAttr(uint8_t attr, cmdState_t *state);
+void vt100SetAttr(uint8_t attr, CmdState_t *state);
 
 //! vt100SetCursorMode() sets the cursor to visible or invisible
-void vt100SetCursorMode(uint8_t visible, cmdState_t *state);
+void vt100SetCursorMode(uint8_t visible, CmdState_t *state);
 
 //! vt100SetCursorPos() sets the cursor position
 ///		All text which is written to the terminal after a SetCursorPos command
 ///		will begin at the new location of the cursor.
-void vt100SetCursorPos(uint8_t line, uint8_t col, cmdState_t *state);
+void vt100SetCursorPos(uint8_t line, uint8_t col, CmdState_t *state);
 
 #endif
 // 

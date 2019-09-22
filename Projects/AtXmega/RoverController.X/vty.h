@@ -20,8 +20,8 @@
 
 extern xSemaphoreHandle Hc12semaphore;
 
-void VtyInit(cmdState_t *state, FILE *stream);
-void printErrorInfo(cmdState_t *state);
+void VtyInit(CmdState_t *state, FILE *stream);
+void printErrorInfo(CmdState_t *state);
 void printStatus(FILE *stream);
 
 extern FILE hc12Stream;

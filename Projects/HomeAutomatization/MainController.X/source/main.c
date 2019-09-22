@@ -117,8 +117,8 @@ void initExternalMem(void)
 #endif
 }
 
-cmdState_t *CLIStateSerialUsb;
-cmdState_t *CLIStateSerialUdp;
+CmdState_t *CLIStateSerialUsb;
+CmdState_t *CLIStateSerialUdp;
 FILE usbStream;
 FILE udpStream;
 
@@ -132,8 +132,8 @@ portSHORT main( void )
 
 // VTY on serial
   xSerialPortInitMinimal();
-  CLIStateSerialUsb  = xmalloc(sizeof(cmdState_t));
-  CLIStateSerialUdp  = xmalloc(sizeof(cmdState_t));
+  CLIStateSerialUsb  = xmalloc(sizeof(CmdState_t));
+  CLIStateSerialUdp  = xmalloc(sizeof(CmdState_t));
 
 
 //  cmdStateClear(newCmdState);

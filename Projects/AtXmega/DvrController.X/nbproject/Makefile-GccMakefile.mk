@@ -57,17 +57,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=../../../FreeRtosCore/Source/croutine.c ../../../FreeRtosCore/Source/list.c ../../../FreeRtosCore/Source/queue.c ../../../FreeRtosCore/Source/tasks.c ../../../Lib/tlvProt.c ../../../LibRtos/sim900.c ../../../LibXc/cmdline.c ../../../FreeRtosCore/portable/MemMang/heap_avr.c ../../../FreeRtosCore/portable/GCC/ATXmega/port.c cli_task.c configuration.c hardware.c main.c main_task.c serial.c tlv.c tlv_task.c vty.c
+SOURCEFILES_QUOTED_IF_SPACED=../../../FreeRtosCore/Source/croutine.c ../../../FreeRtosCore/Source/list.c ../../../FreeRtosCore/Source/queue.c ../../../FreeRtosCore/Source/tasks.c ../../../Lib/tlvProt.c ../../../LibRtos/sim900.c ../../../FreeRtosCore/portable/MemMang/heap_avr.c ../../../FreeRtosCore/portable/GCC/ATXmega/port.c cli_task.c configuration.c hardware.c main.c main_task.c serial.c tlv.c tlv_task.c vty.c ../../../Lib/cmdline.c
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1326544842/croutine.o ${OBJECTDIR}/_ext/1326544842/list.o ${OBJECTDIR}/_ext/1326544842/queue.o ${OBJECTDIR}/_ext/1326544842/tasks.o ${OBJECTDIR}/_ext/1386490678/tlvProt.o ${OBJECTDIR}/_ext/1044994052/sim900.o ${OBJECTDIR}/_ext/977682625/cmdline.o ${OBJECTDIR}/_ext/1817164221/heap_avr.o ${OBJECTDIR}/_ext/1380831254/port.o ${OBJECTDIR}/cli_task.o ${OBJECTDIR}/configuration.o ${OBJECTDIR}/hardware.o ${OBJECTDIR}/main.o ${OBJECTDIR}/main_task.o ${OBJECTDIR}/serial.o ${OBJECTDIR}/tlv.o ${OBJECTDIR}/tlv_task.o ${OBJECTDIR}/vty.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1326544842/croutine.o.d ${OBJECTDIR}/_ext/1326544842/list.o.d ${OBJECTDIR}/_ext/1326544842/queue.o.d ${OBJECTDIR}/_ext/1326544842/tasks.o.d ${OBJECTDIR}/_ext/1386490678/tlvProt.o.d ${OBJECTDIR}/_ext/1044994052/sim900.o.d ${OBJECTDIR}/_ext/977682625/cmdline.o.d ${OBJECTDIR}/_ext/1817164221/heap_avr.o.d ${OBJECTDIR}/_ext/1380831254/port.o.d ${OBJECTDIR}/cli_task.o.d ${OBJECTDIR}/configuration.o.d ${OBJECTDIR}/hardware.o.d ${OBJECTDIR}/main.o.d ${OBJECTDIR}/main_task.o.d ${OBJECTDIR}/serial.o.d ${OBJECTDIR}/tlv.o.d ${OBJECTDIR}/tlv_task.o.d ${OBJECTDIR}/vty.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1326544842/croutine.o ${OBJECTDIR}/_ext/1326544842/list.o ${OBJECTDIR}/_ext/1326544842/queue.o ${OBJECTDIR}/_ext/1326544842/tasks.o ${OBJECTDIR}/_ext/1386490678/tlvProt.o ${OBJECTDIR}/_ext/1044994052/sim900.o ${OBJECTDIR}/_ext/1817164221/heap_avr.o ${OBJECTDIR}/_ext/1380831254/port.o ${OBJECTDIR}/cli_task.o ${OBJECTDIR}/configuration.o ${OBJECTDIR}/hardware.o ${OBJECTDIR}/main.o ${OBJECTDIR}/main_task.o ${OBJECTDIR}/serial.o ${OBJECTDIR}/tlv.o ${OBJECTDIR}/tlv_task.o ${OBJECTDIR}/vty.o ${OBJECTDIR}/_ext/1386490678/cmdline.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1326544842/croutine.o.d ${OBJECTDIR}/_ext/1326544842/list.o.d ${OBJECTDIR}/_ext/1326544842/queue.o.d ${OBJECTDIR}/_ext/1326544842/tasks.o.d ${OBJECTDIR}/_ext/1386490678/tlvProt.o.d ${OBJECTDIR}/_ext/1044994052/sim900.o.d ${OBJECTDIR}/_ext/1817164221/heap_avr.o.d ${OBJECTDIR}/_ext/1380831254/port.o.d ${OBJECTDIR}/cli_task.o.d ${OBJECTDIR}/configuration.o.d ${OBJECTDIR}/hardware.o.d ${OBJECTDIR}/main.o.d ${OBJECTDIR}/main_task.o.d ${OBJECTDIR}/serial.o.d ${OBJECTDIR}/tlv.o.d ${OBJECTDIR}/tlv_task.o.d ${OBJECTDIR}/vty.o.d ${OBJECTDIR}/_ext/1386490678/cmdline.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/_ext/1326544842/croutine.o ${OBJECTDIR}/_ext/1326544842/list.o ${OBJECTDIR}/_ext/1326544842/queue.o ${OBJECTDIR}/_ext/1326544842/tasks.o ${OBJECTDIR}/_ext/1386490678/tlvProt.o ${OBJECTDIR}/_ext/1044994052/sim900.o ${OBJECTDIR}/_ext/977682625/cmdline.o ${OBJECTDIR}/_ext/1817164221/heap_avr.o ${OBJECTDIR}/_ext/1380831254/port.o ${OBJECTDIR}/cli_task.o ${OBJECTDIR}/configuration.o ${OBJECTDIR}/hardware.o ${OBJECTDIR}/main.o ${OBJECTDIR}/main_task.o ${OBJECTDIR}/serial.o ${OBJECTDIR}/tlv.o ${OBJECTDIR}/tlv_task.o ${OBJECTDIR}/vty.o
+OBJECTFILES=${OBJECTDIR}/_ext/1326544842/croutine.o ${OBJECTDIR}/_ext/1326544842/list.o ${OBJECTDIR}/_ext/1326544842/queue.o ${OBJECTDIR}/_ext/1326544842/tasks.o ${OBJECTDIR}/_ext/1386490678/tlvProt.o ${OBJECTDIR}/_ext/1044994052/sim900.o ${OBJECTDIR}/_ext/1817164221/heap_avr.o ${OBJECTDIR}/_ext/1380831254/port.o ${OBJECTDIR}/cli_task.o ${OBJECTDIR}/configuration.o ${OBJECTDIR}/hardware.o ${OBJECTDIR}/main.o ${OBJECTDIR}/main_task.o ${OBJECTDIR}/serial.o ${OBJECTDIR}/tlv.o ${OBJECTDIR}/tlv_task.o ${OBJECTDIR}/vty.o ${OBJECTDIR}/_ext/1386490678/cmdline.o
 
 # Source Files
-SOURCEFILES=../../../FreeRtosCore/Source/croutine.c ../../../FreeRtosCore/Source/list.c ../../../FreeRtosCore/Source/queue.c ../../../FreeRtosCore/Source/tasks.c ../../../Lib/tlvProt.c ../../../LibRtos/sim900.c ../../../LibXc/cmdline.c ../../../FreeRtosCore/portable/MemMang/heap_avr.c ../../../FreeRtosCore/portable/GCC/ATXmega/port.c cli_task.c configuration.c hardware.c main.c main_task.c serial.c tlv.c tlv_task.c vty.c
+SOURCEFILES=../../../FreeRtosCore/Source/croutine.c ../../../FreeRtosCore/Source/list.c ../../../FreeRtosCore/Source/queue.c ../../../FreeRtosCore/Source/tasks.c ../../../Lib/tlvProt.c ../../../LibRtos/sim900.c ../../../FreeRtosCore/portable/MemMang/heap_avr.c ../../../FreeRtosCore/portable/GCC/ATXmega/port.c cli_task.c configuration.c hardware.c main.c main_task.c serial.c tlv.c tlv_task.c vty.c ../../../Lib/cmdline.c
 
 
 CFLAGS=
@@ -146,12 +146,6 @@ ${OBJECTDIR}/_ext/1044994052/sim900.o: ../../../LibRtos/sim900.c  nbproject/Make
 	@${RM} ${OBJECTDIR}/_ext/1044994052/sim900.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE) -mcpu=$(MP_PROCESSOR_OPTION) -c  -D__DEBUG=1 -g -DDEBUG  -gdwarf-2  -x c -D__$(MP_PROCESSOR_OPTION)__  -mdfp="/opt/microchip/mplabx/v5.20/packs/Microchip/XMEGAA_DFP/2.0.6"  -Wl,--gc-sections -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -funsigned-char -funsigned-bitfields -Wall -DXPRJ_GccMakefile=$(CND_CONF)  $(COMPARISON_BUILD)  -gdwarf-3     -MD -MP -MF "${OBJECTDIR}/_ext/1044994052/sim900.o.d" -MT "${OBJECTDIR}/_ext/1044994052/sim900.o.d" -MT ${OBJECTDIR}/_ext/1044994052/sim900.o -o ${OBJECTDIR}/_ext/1044994052/sim900.o ../../../LibRtos/sim900.c 
 	
-${OBJECTDIR}/_ext/977682625/cmdline.o: ../../../LibXc/cmdline.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/977682625" 
-	@${RM} ${OBJECTDIR}/_ext/977682625/cmdline.o.d 
-	@${RM} ${OBJECTDIR}/_ext/977682625/cmdline.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE) -mcpu=$(MP_PROCESSOR_OPTION) -c  -D__DEBUG=1 -g -DDEBUG  -gdwarf-2  -x c -D__$(MP_PROCESSOR_OPTION)__  -mdfp="/opt/microchip/mplabx/v5.20/packs/Microchip/XMEGAA_DFP/2.0.6"  -Wl,--gc-sections -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -funsigned-char -funsigned-bitfields -Wall -DXPRJ_GccMakefile=$(CND_CONF)  $(COMPARISON_BUILD)  -gdwarf-3     -MD -MP -MF "${OBJECTDIR}/_ext/977682625/cmdline.o.d" -MT "${OBJECTDIR}/_ext/977682625/cmdline.o.d" -MT ${OBJECTDIR}/_ext/977682625/cmdline.o -o ${OBJECTDIR}/_ext/977682625/cmdline.o ../../../LibXc/cmdline.c 
-	
 ${OBJECTDIR}/_ext/1817164221/heap_avr.o: ../../../FreeRtosCore/portable/MemMang/heap_avr.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}/_ext/1817164221" 
 	@${RM} ${OBJECTDIR}/_ext/1817164221/heap_avr.o.d 
@@ -218,6 +212,12 @@ ${OBJECTDIR}/vty.o: vty.c  nbproject/Makefile-${CND_CONF}.mk
 	@${RM} ${OBJECTDIR}/vty.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE) -mcpu=$(MP_PROCESSOR_OPTION) -c  -D__DEBUG=1 -g -DDEBUG  -gdwarf-2  -x c -D__$(MP_PROCESSOR_OPTION)__  -mdfp="/opt/microchip/mplabx/v5.20/packs/Microchip/XMEGAA_DFP/2.0.6"  -Wl,--gc-sections -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -funsigned-char -funsigned-bitfields -Wall -DXPRJ_GccMakefile=$(CND_CONF)  $(COMPARISON_BUILD)  -gdwarf-3     -MD -MP -MF "${OBJECTDIR}/vty.o.d" -MT "${OBJECTDIR}/vty.o.d" -MT ${OBJECTDIR}/vty.o -o ${OBJECTDIR}/vty.o vty.c 
 	
+${OBJECTDIR}/_ext/1386490678/cmdline.o: ../../../Lib/cmdline.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1386490678" 
+	@${RM} ${OBJECTDIR}/_ext/1386490678/cmdline.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1386490678/cmdline.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE) -mcpu=$(MP_PROCESSOR_OPTION) -c  -D__DEBUG=1 -g -DDEBUG  -gdwarf-2  -x c -D__$(MP_PROCESSOR_OPTION)__  -mdfp="/opt/microchip/mplabx/v5.20/packs/Microchip/XMEGAA_DFP/2.0.6"  -Wl,--gc-sections -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -funsigned-char -funsigned-bitfields -Wall -DXPRJ_GccMakefile=$(CND_CONF)  $(COMPARISON_BUILD)  -gdwarf-3     -MD -MP -MF "${OBJECTDIR}/_ext/1386490678/cmdline.o.d" -MT "${OBJECTDIR}/_ext/1386490678/cmdline.o.d" -MT ${OBJECTDIR}/_ext/1386490678/cmdline.o -o ${OBJECTDIR}/_ext/1386490678/cmdline.o ../../../Lib/cmdline.c 
+	
 else
 ${OBJECTDIR}/_ext/1326544842/croutine.o: ../../../FreeRtosCore/Source/croutine.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}/_ext/1326544842" 
@@ -254,12 +254,6 @@ ${OBJECTDIR}/_ext/1044994052/sim900.o: ../../../LibRtos/sim900.c  nbproject/Make
 	@${RM} ${OBJECTDIR}/_ext/1044994052/sim900.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1044994052/sim900.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE) -mcpu=$(MP_PROCESSOR_OPTION) -c  -x c -D__$(MP_PROCESSOR_OPTION)__  -mdfp="/opt/microchip/mplabx/v5.20/packs/Microchip/XMEGAA_DFP/2.0.6"  -Wl,--gc-sections -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -funsigned-char -funsigned-bitfields -Wall -DXPRJ_GccMakefile=$(CND_CONF)  $(COMPARISON_BUILD)  -gdwarf-3     -MD -MP -MF "${OBJECTDIR}/_ext/1044994052/sim900.o.d" -MT "${OBJECTDIR}/_ext/1044994052/sim900.o.d" -MT ${OBJECTDIR}/_ext/1044994052/sim900.o -o ${OBJECTDIR}/_ext/1044994052/sim900.o ../../../LibRtos/sim900.c 
-	
-${OBJECTDIR}/_ext/977682625/cmdline.o: ../../../LibXc/cmdline.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/977682625" 
-	@${RM} ${OBJECTDIR}/_ext/977682625/cmdline.o.d 
-	@${RM} ${OBJECTDIR}/_ext/977682625/cmdline.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE) -mcpu=$(MP_PROCESSOR_OPTION) -c  -x c -D__$(MP_PROCESSOR_OPTION)__  -mdfp="/opt/microchip/mplabx/v5.20/packs/Microchip/XMEGAA_DFP/2.0.6"  -Wl,--gc-sections -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -funsigned-char -funsigned-bitfields -Wall -DXPRJ_GccMakefile=$(CND_CONF)  $(COMPARISON_BUILD)  -gdwarf-3     -MD -MP -MF "${OBJECTDIR}/_ext/977682625/cmdline.o.d" -MT "${OBJECTDIR}/_ext/977682625/cmdline.o.d" -MT ${OBJECTDIR}/_ext/977682625/cmdline.o -o ${OBJECTDIR}/_ext/977682625/cmdline.o ../../../LibXc/cmdline.c 
 	
 ${OBJECTDIR}/_ext/1817164221/heap_avr.o: ../../../FreeRtosCore/portable/MemMang/heap_avr.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}/_ext/1817164221" 
@@ -326,6 +320,12 @@ ${OBJECTDIR}/vty.o: vty.c  nbproject/Makefile-${CND_CONF}.mk
 	@${RM} ${OBJECTDIR}/vty.o.d 
 	@${RM} ${OBJECTDIR}/vty.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE) -mcpu=$(MP_PROCESSOR_OPTION) -c  -x c -D__$(MP_PROCESSOR_OPTION)__  -mdfp="/opt/microchip/mplabx/v5.20/packs/Microchip/XMEGAA_DFP/2.0.6"  -Wl,--gc-sections -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -funsigned-char -funsigned-bitfields -Wall -DXPRJ_GccMakefile=$(CND_CONF)  $(COMPARISON_BUILD)  -gdwarf-3     -MD -MP -MF "${OBJECTDIR}/vty.o.d" -MT "${OBJECTDIR}/vty.o.d" -MT ${OBJECTDIR}/vty.o -o ${OBJECTDIR}/vty.o vty.c 
+	
+${OBJECTDIR}/_ext/1386490678/cmdline.o: ../../../Lib/cmdline.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1386490678" 
+	@${RM} ${OBJECTDIR}/_ext/1386490678/cmdline.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1386490678/cmdline.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE) -mcpu=$(MP_PROCESSOR_OPTION) -c  -x c -D__$(MP_PROCESSOR_OPTION)__  -mdfp="/opt/microchip/mplabx/v5.20/packs/Microchip/XMEGAA_DFP/2.0.6"  -Wl,--gc-sections -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -funsigned-char -funsigned-bitfields -Wall -DXPRJ_GccMakefile=$(CND_CONF)  $(COMPARISON_BUILD)  -gdwarf-3     -MD -MP -MF "${OBJECTDIR}/_ext/1386490678/cmdline.o.d" -MT "${OBJECTDIR}/_ext/1386490678/cmdline.o.d" -MT ${OBJECTDIR}/_ext/1386490678/cmdline.o -o ${OBJECTDIR}/_ext/1386490678/cmdline.o ../../../Lib/cmdline.c 
 	
 endif
 

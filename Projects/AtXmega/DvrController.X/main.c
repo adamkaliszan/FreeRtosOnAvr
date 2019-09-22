@@ -61,8 +61,8 @@ xQueueHandle xMainRec;
 xQueueHandle xSIM900Rec;
 xQueueHandle xSIM900Tx;
 
-cmdState_t *CLIStateSerialUsb;
-tlvInterpreter_t *TLVstate;
+CmdState_t *CLIStateSerialUsb;
+TlvInterpreter_t *TLVstate;
 
 FILE usbStream;
 FILE hc12Stream;
@@ -103,7 +103,7 @@ void my_init_clock(void)
 
 
 #ifdef USENET
-cmdState_t *CLIStateSerialUdp;
+CmdState_t *CLIStateSerialUdp;
 FILE udpStream;
 #endif
 
@@ -130,8 +130,8 @@ portSHORT main( void )
   xMainRec = xQueueCreate(16, 1);
 
 
-  CLIStateSerialUsb  = xmalloc(sizeof(cmdState_t));
-  TLVstate = xmalloc(sizeof(tlvInterpreter_t));
+  CLIStateSerialUsb  = xmalloc(sizeof(CmdState_t));
+  TLVstate = xmalloc(sizeof(TlvInterpreter_t));
 
   Hc12semaphore = xSemaphoreCreateMutex();
 

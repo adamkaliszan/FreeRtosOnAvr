@@ -43,9 +43,9 @@
 extern nicState_t  nicState;
 extern UdpSocket_t *udpSocket;
 
-void VtyInit(cmdState_t *state, FILE *stream);
+void VtyInit(CmdState_t *state, FILE *stream);
 
-void printErrorInfo(cmdState_t *state);
+void printErrorInfo(CmdState_t *state);
 
 void printStatus(FILE *stream);
 
