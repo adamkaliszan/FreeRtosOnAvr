@@ -4,6 +4,9 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <logicalFolder name="f5" displayName="drvPAL" projectFiles="true">
+        <itemPath>drvPAL/i2cPAL.h</itemPath>
+      </logicalFolder>
       <logicalFolder name="f1" displayName="FreeRTOS" projectFiles="true">
         <itemPath>../../../FreeRtosCore/Source/include/FreeRTOS.h</itemPath>
         <itemPath>../../../FreeRtosCore/Source/include/StackMacros.h</itemPath>
@@ -52,6 +55,9 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <logicalFolder name="f5" displayName="drvPAL" projectFiles="true">
+        <itemPath>drvPAL/i2cPAL.c</itemPath>
+      </logicalFolder>
       <logicalFolder name="f1" displayName="FreeRTOS" projectFiles="true">
         <itemPath>../../../FreeRtosCore/Source/croutine.c</itemPath>
         <itemPath>../../../FreeRtosCore/Source/list.c</itemPath>
@@ -147,7 +153,7 @@
         <property key="define-macros" value="USE_XC8"/>
         <property key="disable-optimizations" value="false"/>
         <property key="extra-include-directories"
-                  value="./;../../../FreeRtosCore/Source/include;../../../FreeRtosCore;../../../Lib;../../../Lib/include;../../../LibRtos;../../../LibRtos/include;../../../FreeRtosCore/portable/GCC/ATXmega;../../../FreeRtosCore/portable/MemMang;../../../LibRtos;../../../LibRtos/include;../../../LibXc"/>
+                  value="./;drvPAL;../../../FreeRtosCore/Source/include;../../../FreeRtosCore;../../../Lib;../../../Lib/include;../../../LibRtos;../../../LibRtos/include;../../../FreeRtosCore/portable/GCC/ATXmega;../../../FreeRtosCore/portable/MemMang;../../../LibRtos;../../../LibRtos/include;../../../LibXc"/>
         <property key="favor-optimization-for" value="-speed,+space"/>
         <property key="garbage-collect-data" value="true"/>
         <property key="garbage-collect-functions" value="true"/>
