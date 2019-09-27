@@ -1,14 +1,16 @@
 #ifndef HARDWARE_H
 #define HARDWARE_H
 
+#include <stdint.h>
+
 #include <avr/io.h>
 //#include <avr/interrupt.h>
 
-//#include "hardwareConfig.h"
+#include "hardwareConfig.h"
 //#include "softwareConfig.h"
 
 
-
+#define F_SYS 32000000
 
 /**
  * Hardware initialize

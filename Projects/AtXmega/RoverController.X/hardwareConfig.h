@@ -1,6 +1,9 @@
 #ifndef HARDWARE_CONFIG_H
 #define HARDWARE_CONFIG_H
 
+
+#define F_SYS 32000000
+
 // --------------------- Configuration I/O module --------------------------------
 
 
