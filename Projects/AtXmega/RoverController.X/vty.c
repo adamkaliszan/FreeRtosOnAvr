@@ -10,6 +10,8 @@
 
 #include "hc12.h"
 
+#include "drvPAL/i2cPAL.h"
+
 #if LANG_EN
 #include "vty_en.h"
 #endif
@@ -55,10 +57,15 @@ static CliExRes_t sim900OnFunction           (CmdState_t *state);
 static CliExRes_t sim900OffFunction          (CmdState_t *state);
 static CliExRes_t sim900atMode               (CmdState_t *state);
 
+static CliExRes_t twiWtiteAndRead            (CmdState_t *state);
+
+
 static CliExRes_t sendHC12(CmdState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[]);
 static CliExRes_t sendHC12AtCmd(CmdState_t *state, const char cmd[]);
 
 static CliExRes_t sendHC12loopback(CmdState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[]);
+
+
 
 
 const char okStr[] PROGMEM = "OK\r\n";
@@ -94,6 +101,7 @@ const Command_t cmdListNormal[] PROGMEM =
   {cmd_hc12rotateLeft,  cmd_help_hc12rotateLeft,  hc12sendRotateLeftFunction},
   {cmd_hc12rotateRight, cmd_help_hc12rotateRight, hc12sendRotateRightFunction},
   {cmd_hc12stop,        cmd_help_hc12stop,        hc12sendStopFunction},
+  {cmd_twiWriteAndRead, cmd_help_twiWriteAndStop, twiWtiteAndRead},
   {NULL, NULL, NULL}
 };
 
@@ -542,6 +550,35 @@ static CliExRes_t sendHC12loopback(CmdState_t *state, uint8_t addr, uint8_t type
 
   return OK_INFORM;
 }
+
+
+static CliExRes_t twiWtiteAndRead(CmdState_t *state)
+{
+    uint8_t result;
+    uint8_t tmpDta[8];
+    
+    
+  uint8_t address = cmdlineGetArgInt(1, state);
+  uint8_t rdDtaLen = cmdlineGetArgInt(2, state);
+  uint8_t wrDtaLen = hexStrToDataN(tmpDta, (uint8_t *) cmdlineGetArgStr(3, state), 8);
+
+  result = TWI_MasterWriteRead(&hardwarePAL.twiSensors, address, tmpDta, wrDtaLen, rdDtaLen);
+  
+  if (result)
+  {
+      fprintf(state->myStdInOut, "Result: ");
+      vTaskDelay(100);
+      for(result = 0; result < rdDtaLen; result++)
+      {
+          fprintf(state->myStdInOut, "0x%02x ", hardwarePAL.twiSensors.readData[result]);
+      }
+      fprintf(state->myStdInOut, "\n");
+      
+      return OK_INFORM;    
+  }
+  return ERROR_INFORM;
+}
+
 
 static CliExRes_t pwmSetFreq (CmdState_t *state)
 {

@@ -63,6 +63,8 @@ const char cmd_hc12rotateLeft[]   PROGMEM = "hrl";       const char cmd_help_hc1
 const char cmd_hc12rotateRight[]  PROGMEM = "hrr";       const char cmd_help_hc12rotateRight[]   PROGMEM = "{left PW} {right PW} rotate right";
 const char cmd_hc12stop[]         PROGMEM = "hstop";     const char cmd_help_hc12stop[]          PROGMEM = "Disable H-bridges";
 
+const char cmd_twiWriteAndRead[]  PROGMEM = "twiwr";     const char cmd_help_twiWriteAndStop[]   PROGMEM = "[ADDR] [Rd dta len] [data HEX str]";
+
 const char cmd_sim900on[]         PROGMEM = "son";       const char cmd_help_sim900on[]          PROGMEM = "Sim 900 power on";
 const char cmd_sim900off[]        PROGMEM = "soff";      const char cmd_help_sim900off[]         PROGMEM = "Sim 900 power off";
 const char cmd_sim900at[]         PROGMEM = "sat";       const char cmd_help_sim900at[]          PROGMEM = "Foreword Sim 900 port";

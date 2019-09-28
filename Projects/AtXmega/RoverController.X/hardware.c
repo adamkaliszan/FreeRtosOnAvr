@@ -1,6 +1,14 @@
 #include "hardware.h"
 #include <avr/pgmspace.h>
 #include <stddef.h>
+#include "drvPAL/i2cPAL.h"
+
+
+#define BAUDRATE	100000
+#define TWI_BAUDSETTING TWI_BAUD(F_SYS, BAUDRATE)
+
+HardwarePAL_t hardwarePAL;
+
 
 //xQueueHandle      xSpiRx;             /// Kolejka z odebranymi bajtami z SPI. Blokuje transmisję do czasu zakończenia wysyłania poprzedniego bajtu
 //xQueueHandle      xSpiRxEnc;
@@ -97,6 +105,10 @@ void hardwareInit(void)
 
     ADCA.CALL = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCACAL0) );
     ADCA.CALH = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCACAL1) );
+
+    TWI_MasterInit(&hardwarePAL.twiSensors, &TWIC, TWI_MASTER_INTLVL_LO_gc, TWI_BAUDSETTING);
+
+    TWI_MasterWriteRead(&hardwarePAL.twiSensors, 10, NULL, 1, 1);
 }
 
 void offHbridge()

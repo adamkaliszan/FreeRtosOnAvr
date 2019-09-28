@@ -5,6 +5,7 @@
 
 #include <avr/io.h>
 //#include <avr/interrupt.h>
+#include "drvPAL/i2cPAL.h"
 
 #include "hardwareConfig.h"
 //#include "softwareConfig.h"
@@ -16,8 +17,17 @@
  * Hardware initialize
  */
 
+
+
+typedef struct HardwarePAL
+{
+    TWI_Master_t twiSensors;
+} HardwarePAL_t;
+
 uint8_t ReadCalibrationByte(uint8_t index);
-void hardwareInit(void);
+
+
+void hardwareInit();
 
 void offHbridge(void);
 
@@ -41,6 +51,9 @@ void pwrOff4v3rpi(void);
 uint8_t isPwr4v3(void);
 uint8_t isPwr3v3rpi(void);
 uint8_t isPwr4v3rpi(void);
+
+
+extern HardwarePAL_t hardwarePAL;
 
 #endif
 
