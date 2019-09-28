@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Programming support using avrdude.
+AVRDUDE = avrdude
+AVRDUDE_PROGRAMMER = stk500v2
+AVRDUDE_PROGRAMMER_2 = 4232h
+AVRDUDE_PORT = /dev/avrMultiTool          # Stk500v2 on multi PCB
+
+AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
+#AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
+
+AVRDUDE_FLAGS   = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
+AVRDUDE_FLAGS_2 = -p $(MCU) -C avrdude.conf -c $(AVRDUDE_PROGRAMMER_2)
+
+# Uncomment the following if you want avrdude's erase cycle counter.
+# Note that this counter needs to be initialized first using -Yn,
+# see avrdude manual.
+#AVRDUDE_ERASE += -y
+
+# Uncomment the following if you do /not/ wish a verification to be
+# performed after programming the device.
+#AVRDUDE_FLAGS += -V
+
+# Increase verbosity level.  Please use this when submitting bug
+# reports about avrdude. See <http://savannah.nongnu.org/projects/avrdude> 
+# to submit bug reports.
+#AVRDUDE_FLAGS += -v -v
+
+AVR_DUDE_WRITE_FUSES = -U lfuse:w:0xff:m -U hfuse:w:0xdf:m 
+#-U efuse:w:0xf8:m something is not working with fuse extended. Please enable bootloader manualy.
+
+$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM) $(AVR_DUDE_WRITE_FUSES)

@@ -72,7 +72,7 @@
 
 #include <stdint.h>
 
-#include "hardware.h"
+#include "hardwareConfig.h"
 
 /*! Baud register setting calculation. Formula described in datasheet. */
 #define TWI_BAUD(F_SYS, F_TWI) ((F_SYS / (2 * F_TWI)) - 5)

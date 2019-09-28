@@ -57,6 +57,53 @@ static void cmdlinePrintError         (CmdState_t *state);
 static void cmdHistoryCopy            (CmdState_t *state);
 static void cmdHistoryMove            (CmdState_t *state);
 
+static uint8_t hexToInt(uint8_t hex)
+{
+    if (hex >= '0' && hex <= '9')
+        return hex - '0';
+    
+    if (hex >= 'a' && hex <= 'f')
+        return hex - 'a' + 10;
+
+    if (hex >= 'A' && hex <= 'F')
+        return hex - 'A' + 10;
+
+    return 0;
+}
+
+uint8_t hexStrToDataN(uint8_t *data, const uint8_t *hexStr, uint8_t maxLen)
+{
+    uint8_t result = 0;
+    const uint8_t *srcPntr = hexStr;
+    uint8_t dataA;
+    uint8_t dataB;
+    while (result < maxLen)
+    {
+        if (*srcPntr == '\0')
+            break;
+
+        if (*(srcPntr+1) == '\0')
+            break;
+
+        dataA = *(srcPntr++);
+        
+        if ((dataA == ' ') || (dataA == 'X') || (dataA == 'x'))
+            continue;
+        
+        dataB = *(srcPntr++);
+
+        if ((dataB == ' ') || (dataB == 'X') || (dataB == 'x'))
+            continue;
+
+        *(data++) = (hexToInt(dataA) << 4) + hexToInt(dataB);
+        
+        result++;
+    }
+    
+    return result;
+}
+
+
 
 void cmdStateConfigure(CmdState_t * state, char *buffPtr, uint16_t bufferTotalSize, FILE *stream, const Command_t *commands, enum CliModeState mode)
 {

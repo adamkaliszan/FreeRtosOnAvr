@@ -116,6 +116,17 @@ struct Command
 
 // functions
 
+
+/**
+ * call this function to pass input charaters from the user terminal
+ * @param data   - pointer to the array with results
+ * @param hexStr - pointer to the state array with XED string data
+ * @param maxLen - length of data array
+ * @return number of readed bytes
+ */
+uint8_t hexStrToDataN(uint8_t *data, const uint8_t *hexStr, uint8_t maxLen);
+
+
 /**
  * call this function to pass input charaters from the user terminal
  * @param c     - new char
