@@ -10,8 +10,13 @@
 
 
 /* CLI */
-#define CMD_STATE_HISTORY 4
-#define CMD_STATE_HISTORY_MASK 0x03
+
+#define CLI_STATE_INP_CMD_LEN 64
+
+#define CLI_STATE_HISTORY_LEN 3 * CLI_STATE_INP_CMD_LEN
+
+#define CLI_STATE_MAX_ARGC 6
+
 
 
 #endif

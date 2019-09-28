@@ -48,14 +48,19 @@ const char cmdlineCmdNotFound[]     PROGMEM  = "# nk";
 
 
 // internal commands
-static void cmdlineRepaint            (CmdState_t *state, char *buf);
-static void cmdlineDoHistory          (enum CliHistoryAction action, CmdState_t *state);
-static void cmdlineProcessInputString (CmdState_t *state);
-static void cmdlinePrintPrompt        (CmdState_t *state);
-static void cmdlinePrintError         (CmdState_t *state);
-//static void cmdStateClear             (CmdState_t *state);
-static void cmdHistoryCopy            (CmdState_t *state);
-static void cmdHistoryMove            (CmdState_t *state);
+static void cmdlineRepaint(CliState_t *state, char *buf);
+static void cliHistoryMove(enum CliHistoryAction action, CliState_t *state);
+static void cliInputDataProcess(CliState_t *state);
+static void cliPrintPrompt(CliState_t *state);
+static void cmdlinePrintError(CliState_t *state);
+static void cliHistoryLoad(CliState_t *state);
+static uint8_t cliHistorySave(CliState_t *state);
+
+
+static inline void cliHistoryIncRdPointer(CliState_t *state);
+static inline void cliHistoryDecRdPointer(CliState_t *state);
+
+
 
 static uint8_t hexToInt(uint8_t hex)
 {
@@ -105,24 +110,16 @@ uint8_t hexStrToDataN(uint8_t *data, const uint8_t *hexStr, uint8_t maxLen)
 
 
 
-void cmdStateConfigure(CmdState_t * state, char *buffPtr, uint16_t bufferTotalSize, FILE *stream, const Command_t *commands, enum CliModeState mode)
+void cmdStateConfigure(CliState_t * state, FILE *stream, const Command_t *commands, enum CliModeState mode)
 {
-  memset(state, 0, sizeof(CmdState_t));
-  memset(buffPtr, 0, bufferTotalSize);
+  memset(state, 0, sizeof(CliState_t));
 
-  state->cmdlineBuffer = buffPtr;
-  state->bufferMaxSize    = (uint8_t)(bufferTotalSize / CMD_STATE_HISTORY);
+  state->internalData.cliMode = mode;
+  state->internalData.cmdList = commands;
 
-  state->cliMode = mode;
-  state->cmdList = commands;
-
-  uint8_t i;
-  char *tmpPtr = buffPtr;
-  for (i=0; i < CMD_STATE_HISTORY; i++)
-  {
-    state->cmdlineHistory[i] = tmpPtr;
-    tmpPtr += state->bufferMaxSize;
-  }
+  state->internalData.history.rdPtr = NULL;
+  state->internalData.history.wrPtr = state->internalData.history.data;
+ 
   state->myStdInOut = stream;
 }
 
@@ -139,429 +136,533 @@ void cmdStateConfigure(CmdState_t * state, char *buffPtr, uint16_t bufferTotalSi
   state->CmdlineExecFunction = 0;
 }*/
 
-void cmdlineInputFunc(char c, CmdState_t *state)
+void cmdlineInputFunc(char c, CliState_t *state)
 {
-  uint8_t i;
-  // process the received character
+    uint8_t i;
+    // process the received character
 
-  // VT100 handling
-  // are we processing a VT100 command?
-  if(state->cmdlineInputVT100State == 2)
-  {
-    // we have already received ESC and [
-    // now process the vt100 codeCmdlineExcBuffer
-    switch(c)
+/// VT100 handling
+/// are we processing a VT100 command?
+    if(state->internalData.vty100.cmdlineInputVT100State == 2)
     {
-    case VT100_ARROWUP:
-      cmdlineDoHistory(CMDLINE_HISTORY_PREV, state);
-      break;
-    case VT100_ARROWDOWN:
-      cmdlineDoHistory(CMDLINE_HISTORY_NEXT, state);
-      break;
-    case VT100_ARROWRIGHT:
-      if (state->bufferHistoryState == NOT_COPIED)
-        cmdHistoryCopy(state);
-      // if the edit position less than current string length
-      if(state->cmdlineBufferEditPos < state->cmdlineBufferLength)
-      {
-        // increment the edit position
-        state->cmdlineBufferEditPos++;
-        // move cursor forward one space (no erase)
-        fputc(ASCII_ESC        , state->myStdInOut);
-        fputc('['              , state->myStdInOut);
-        fputc(VT100_ARROWRIGHT , state->myStdInOut);
-      }
-      else
-      {
-        // else, ring the bell
-        fputc(ASCII_BEL        , state->myStdInOut);
-      }
-      break;
-    case VT100_ARROWLEFT:
-      // if the edit position is non-zero
-      if (state->bufferHistoryState == NOT_COPIED)
-        cmdHistoryCopy(state);
+        // we have already received ESC and [. Process the vt100 codeCmdlineExcBuffer
+        switch(c)
+        {
+        case VT100_ARROWUP:
+            cliHistoryMove(CMDLINE_HISTORY_PREV, state);
+            break;
 
-      if(state->cmdlineBufferEditPos)
-      {
-        // decrement the edit position
-        state->cmdlineBufferEditPos--;
-        // move cursor back one space (no erase)
-        fputc(ASCII_BS         , state->myStdInOut);
-      }
-      else
-      {
-        // else, ring the bell
-        fputc(ASCII_BEL        , state->myStdInOut);
-      }
-      break;
-    default:
-      break;
+        case VT100_ARROWDOWN:
+            cliHistoryMove(CMDLINE_HISTORY_NEXT, state);
+            break;
+    
+        case VT100_ARROWRIGHT:
+            if (state->internalData.history.state == CLI_HB_NOT_COPIED)
+                cliHistoryLoad(state);
+/// if the edit position less than current string length
+            if(state->internalData.inputBuffer.editPos < CLI_STATE_INP_CMD_LEN)
+            {
+/// increment the edit position
+                state->internalData.inputBuffer.editPos++;
+/// move cursor forward one space (no erase)
+                fputc(ASCII_ESC        , state->myStdInOut);
+                fputc('['              , state->myStdInOut);
+                fputc(VT100_ARROWRIGHT , state->myStdInOut);
+            }
+            else
+            {
+/// else, ring the bell
+                fputc(ASCII_BEL        , state->myStdInOut);
+            }
+            break;
+
+        case VT100_ARROWLEFT:
+            if (state->internalData.history.state == CLI_HB_NOT_COPIED)
+                cliHistoryLoad(state);
+/// if the edit position is non-zero
+            if(state->internalData.inputBuffer.editPos > 0)
+            {
+/// decrement the edit position
+                state->internalData.inputBuffer.editPos--;
+/// move cursor back one space (no erase)
+                fputc(ASCII_BS         , state->myStdInOut);
+            }
+            else
+            {
+// else, ring the bell
+               fputc(ASCII_BEL        , state->myStdInOut);
+            }
+            break;
+
+        default:
+            break;
+        }
+/// done, reset state
+        state->internalData.vty100.cmdlineInputVT100State = 0;
+        return;
     }
-    // done, reset state
-    state->cmdlineInputVT100State = 0;
-    return;
-  }
-  else if(state->cmdlineInputVT100State == 1)
-  {
-    // we last received [ESC]
-    if(c == '[')
+    else if(state->internalData.vty100.cmdlineInputVT100State == 1)
     {
-      state->cmdlineInputVT100State = 2;
-      return;
-    }
-    else
-      state->cmdlineInputVT100State = 0;
-  }
-  else
-  {
-    // anything else, reset state
-    state->cmdlineInputVT100State = 0;
-  }
-
-  // Regular handling
-  //Protection against buffer Overflow
-  if (state->cmdlineBufferLength == state->bufferMaxSize)
-  {
-    state->cmdlineBufferLength--;
-    for (i=1; i < state->bufferMaxSize; i++)
-    {
-      state->cmdlineBuffer[i-1] = state->cmdlineBuffer[i];
-    }
-  }
-
-  if( (c >= 0x20) && (c < 0x7F) )
-  {
-    if (state->bufferHistoryState == NOT_COPIED)
-      cmdHistoryCopy(state);
-    // character is printable
-    // is this a simple append
-    if(state->cmdlineBufferEditPos == state->cmdlineBufferLength)
-    {
-      // echo character to the output
-      fputc(c                , state->myStdInOut);
-      // add it to the command line buffer
-      state->cmdlineBuffer[state->cmdlineBufferEditPos++] = c;
-      // update buffer length
-      state->cmdlineBufferLength++;
+/// we last received [ESC]
+        if(c == '[')
+        {
+            state->internalData.vty100.cmdlineInputVT100State = 2;
+            return;
+        }
+        else
+            state->internalData.vty100.cmdlineInputVT100State = 0;
     }
     else
     {
-      // edit/cursor position != end of buffer
-      // we're inserting characters at a mid-line edit position
-      // make room at the insert point
-      state->cmdlineBufferLength++;
-      for(i=state->cmdlineBufferLength; i>state->cmdlineBufferEditPos; i--)
-        state->cmdlineBuffer[i] = state->cmdlineBuffer[i-1];
-      // insert character
-      state->cmdlineBuffer[state->cmdlineBufferEditPos++] = c;
-      // repaint
-      cmdlineRepaint(state, state->cmdlineBuffer);
-      // reposition cursor
-      for(i=state->cmdlineBufferEditPos; i<state->cmdlineBufferLength; i++)
-        fputc(ASCII_BS         , state->myStdInOut);
+/// anything else, reset state
+        state->internalData.vty100.cmdlineInputVT100State = 0;
     }
-  }
-  // handle special characters
-  else if(c == ASCII_CR)
-  {
-    if (state->bufferHistoryState == NOT_COPIED)
-      cmdHistoryMove(state);
 
-    // user pressed [ENTER]
-    // echo CR and LF to terminal
+/// Regular handling
+/// Protection against buffer Overflow
+    if (state->internalData.inputBuffer.length == CLI_STATE_INP_CMD_LEN)
+    {
+        state->internalData.inputBuffer.length--;
+        for (i=1; i < state->internalData.inputBuffer.length; i++)
+        {
+            state->internalData.inputBuffer.data[i-1] = state->internalData.inputBuffer.data[i];
+        }
+    }
+
+    if( (c >= 0x20) && (c < 0x7F) )
+    {
+        if (state->internalData.history.state == CLI_HB_NOT_COPIED)
+            cliHistorySave(state);
+// character is printable
+// is this a simple append
+        if(state->internalData.inputBuffer.editPos == state->internalData.inputBuffer.length)
+        {
+/// echo character to the output
+            fputc(c                , state->myStdInOut);
+/// add it to the command line buffer
+            state->internalData.inputBuffer.data[state->internalData.inputBuffer.editPos++] = c;
+/// update buffer length
+            state->internalData.inputBuffer.length++;
+        }
+        else
+        {
+/// edit/cursor position != end of buffer
+/// we're inserting characters at a mid-line edit position
+/// make room at the insert point
+            state->internalData.inputBuffer.length++;
+            for(i = state->internalData.inputBuffer.length; i > state->internalData.inputBuffer.editPos; i--)
+                state->internalData.inputBuffer.data[i] = state->internalData.inputBuffer.data[i-1];
+/// insert character
+            state->internalData.inputBuffer.data[state->internalData.inputBuffer.editPos++] = c;
+/// repaint
+            cmdlineRepaint(state, state->internalData.inputBuffer.data);
+/// reposition cursor
+            for(i=state->internalData.inputBuffer.editPos; i < state->internalData.inputBuffer.length; i++)
+                fputc(ASCII_BS         , state->myStdInOut);
+        }
+    }
+/// handle special characters
+    else if(c == ASCII_CR)
+    {
+        if (state->internalData.history.state == CLI_HB_NOT_COPIED)
+            cliHistorySave(state);
+
+/// user pressed [ENTER]
+/// echo CR and LF to terminal
+        fputc(ASCII_CR         , state->myStdInOut);
+        fputc(ASCII_LF         , state->myStdInOut);
+/// add null termination to command
+        state->internalData.inputBuffer.data[state->internalData.inputBuffer.length++] = 0;
+        state->internalData.inputBuffer.editPos++;
+/// command is complete, process it
+        cliInputDataProcess(state);
+    }
+    else if(c == ASCII_BS)
+    {
+        if(state->internalData.inputBuffer.editPos)
+        {
+/// is this a simple delete (off the end of the line)
+            if(state->internalData.inputBuffer.editPos == state->internalData.inputBuffer.length)
+            {
+/// destructive backspace
+/// echo backspace-space-backspace
+                fputc(ASCII_BS         , state->myStdInOut);
+                fputc(' '              , state->myStdInOut);
+                fputc(ASCII_BS         , state->myStdInOut);
+/// decrement our buffer length and edit position
+                state->internalData.inputBuffer.length--;
+                state->internalData.inputBuffer.editPos--;
+            }
+            else
+            {
+/// edit/cursor position != end of buffer
+/// we're deleting characters at a mid-line edit position
+/// shift characters down, effectively deleting
+                state->internalData.inputBuffer.length--;
+                state->internalData.inputBuffer.editPos--;
+                for(i = state->internalData.inputBuffer.editPos; i < state->internalData.inputBuffer.length; i++)
+                    state->internalData.inputBuffer.data[i] = state->internalData.inputBuffer.data[i+1];
+/// repaint
+                cmdlineRepaint(state, state->internalData.inputBuffer.data);
+/// add space to clear leftover characters
+                fputc(' '              , state->myStdInOut);
+/// reposition cursor
+                for(i = state->internalData.inputBuffer.editPos; i < (state->internalData.inputBuffer.length+1); i++)
+                    fputc(ASCII_BS       , state->myStdInOut);
+            }
+        }
+        else
+        {
+/// else, ring the bell
+            fputc(ASCII_BEL          , state->myStdInOut);
+        }
+    }
+    else if(c == ASCII_DEL)
+    {
+/// not yet handled
+    }
+    else if(c == ASCII_ESC)
+    {
+        state->internalData.vty100.cmdlineInputVT100State = 1;
+    }
+}
+
+void cmdlineRepaint(CliState_t *state, char *buf)
+{
+    uint8_t i;
+
+/// carriage return
     fputc(ASCII_CR         , state->myStdInOut);
-    fputc(ASCII_LF         , state->myStdInOut);
-    // add null termination to command
-    state->cmdlineBuffer[state->cmdlineBufferLength++] = 0;
-    state->cmdlineBufferEditPos++;
-    // command is complete, process it
-    cmdlineProcessInputString(state);
-    // reset buffer
-    state->cmdlineBufferLength = 0;
-    state->cmdlineBufferEditPos = 0;
-  }
-  else if(c == ASCII_BS)
-  {
-    if(state->cmdlineBufferEditPos)
+/// print fresh prompt
+    cliPrintPrompt(state);
+/// print the new command line buffer
+    i = state->internalData.inputBuffer.length;
+    while(i--)
+        fputc(*buf++         , state->myStdInOut);
+
+    i = CLI_STATE_INP_CMD_LEN - state->internalData.inputBuffer.length;
+    while (i--)
+        fputc(' ', state->myStdInOut);
+
+    i = CLI_STATE_INP_CMD_LEN - state->internalData.inputBuffer.length;
+    while (i--)
+        fputc(ASCII_BS,  state->myStdInOut);
+}
+
+void cliHistoryMove(enum CliHistoryAction action, CliState_t *state)
+{
+#if CLI_STATE_HISTORY_LEN <= 256
+    uint8_t cntr = 0;
+#else
+    uint16_t cntr = 0;
+#endif
+    
+    void (*funMove)(CliState_t *state) = (action == CMDLINE_HISTORY_PREV) ? 
+        cliHistoryDecRdPointer : cliHistoryIncRdPointer;
+    
+    while (*state->internalData.history.rdPtr != '\0')
     {
-      // is this a simple delete (off the end of the line)
-      if(state->cmdlineBufferEditPos == state->cmdlineBufferLength)
-      {
-        // destructive backspace
-        // echo backspace-space-backspace
-        fputc(ASCII_BS         , state->myStdInOut);
-        fputc(' '              , state->myStdInOut);
-        fputc(ASCII_BS         , state->myStdInOut);
-        // decrement our buffer length and edit position
-        state->cmdlineBufferLength--;
-        state->cmdlineBufferEditPos--;
-      }
-      else
-      {
-        // edit/cursor position != end of buffer
-        // we're deleting characters at a mid-line edit position
-        // shift characters down, effectively deleting
-        state->cmdlineBufferLength--;
-        state->cmdlineBufferEditPos--;
-        for(i=state->cmdlineBufferEditPos; i<state->cmdlineBufferLength; i++)
-          state->cmdlineBuffer[i] = state->cmdlineBuffer[i+1];
-        // repaint
-        cmdlineRepaint(state, state->cmdlineBuffer);
-        // add space to clear leftover characters
-        fputc(' '              , state->myStdInOut);
-        // reposition cursor
-        for(i=state->cmdlineBufferEditPos; i<(state->cmdlineBufferLength+1); i++)
-          fputc(ASCII_BS       , state->myStdInOut);
-      }
+        funMove(state);
+        cntr++;
+        if (cntr > CLI_STATE_HISTORY_LEN)
+            return;
+    }
+        
+    while (*state->internalData.history.rdPtr == '\0')
+    {
+        funMove(state);
+        cntr++;
+        if (cntr > CLI_STATE_HISTORY_LEN)
+            return;
+    }
+    
+    cliHistoryLoad(state);
+}
+
+void cliInputDataProcess(CliState_t *state)
+{
+    uint8_t i=0;
+
+    while( !((state->internalData.inputBuffer.data[i] == ' ')             // find the end of the command (excluding arguments)
+    || (state->internalData.inputBuffer.data[i] == 0)) )                  // find first whitespace character in CmdlineBuffer
+        i++;                                                              // i determines the cammand length
+
+    if(!i)                                                                // command was null or empty
+    {
+        cliPrintPrompt(state);                                        // output a new prompt
+        return;
+    }
+
+
+#if USE_XC8
+    const Command_t *tmpPtr = state->internalData.cmdList;                // Set list of commands. The list depends of the cli mode
+#else
+    Command_t  tmp;                                                     // We need to create this object. We can't directly
+    const Command_t *tmpPtr = &tmp;                                     // Set list of commands. The list depends of the cli mode
+#endif
+    
+    do                                                                    // search command list for match with entered command
+    {
+#if USE_XC8
+        if( !strncmp(state->internalData.inputBuffer.data, tmpPtr->commandStr, i) )      // user-entered command matched a command in the list
+        {
+            memcpy(&state->internalData.cmd, tmpPtr, sizeof(Command_t));
+#else
+        memcpy_P(&tmp, tmpPtr, sizeof(Command_t));                          // read from flash. We need to copy it before.    
+        if( !strncmp(state->internalData.inputBuffer.data, tmp.commandStr, i) )      // user-entered command matched a command in the list
+        {                                                                 //
+            memcpy(&state->internalData.cmd, &tmp, sizeof(Command_t));
+#endif
+            if (state->internalData.cmd.maxArgC == 0)
+                state->internalData.cmd.maxArgC = CLI_STATE_MAX_ARGC;
+            cliHistorySave(state);                  // save command in history
+            return;
+#if USE_XC8
+        }
+        tmpPtr++;                                                         // Next command
+    }
+    while (tmpPtr->commandStr != NULL);                                     // Last command on the list is NULL. It is required !!!
+#else
+        }
+    }
+    while (tmp.commandStr != NULL);                                         // Last command on the list is NULL. It is required !!!    
+#endif
+  // if we did not get a match
+    cmdlinePrintError(state);                                           // output an error message
+    cliPrintPrompt(state);                                          // output a new prompt
+}
+
+
+static void cliInputDataParse(CliState_t *state)
+{
+    char *data = state->internalData.inputBuffer.data;
+    
+    state->argv[0] = data;
+    state->argc = 1;
+    
+    while (*data != '\0')
+    {
+        if (*data != ' ')
+            continue;
+        
+        *data = '\0';
+        data++;
+        
+        if (*data == '\0')
+            break;
+        
+        state->argv[state->argc] = data;        
+        state->argc++;
+
+        if ((state->argc == CLI_STATE_MAX_ARGC) || state->argc == state->internalData.cmd.maxArgC)
+            break;
+    }
+}
+
+
+static inline void cliHistoryIncWrPointer(CliState_t *state)
+{
+    state->internalData.history.wrPtr++;
+    if (state->internalData.history.wrPtr >= state->internalData.history.data + CLI_STATE_HISTORY_LEN)
+        state->internalData.history.wrPtr = state->internalData.history.data;    
+}
+
+static inline void cliHistoryDecRdPointer(CliState_t *state)
+{
+    state->internalData.history.rdPtr--;
+    if (state->internalData.history.rdPtr < state->internalData.history.data)
+       state->internalData.history.rdPtr = state->internalData.history.data + CLI_STATE_HISTORY_LEN -1;    
+}
+
+
+static inline void cliHistoryIncRdPointer(CliState_t *state)
+{
+    state->internalData.history.rdPtr++;
+    if (state->internalData.history.rdPtr >= state->internalData.history.data + CLI_STATE_HISTORY_LEN)
+       state->internalData.history.rdPtr = state->internalData.history.data;    
+}
+
+
+static void cliHistoryFreeIsNoSpace(CliState_t *state)
+{
+    char * dst = state->internalData.history.wrPtr;
+
+    if (*state->internalData.history.wrPtr != '\0')    // Check if the previous command need to be overwritten
+    {
+        while (*dst != '\0')
+        {
+            *dst = '\0';
+                dst++;
+            if (dst >= state->internalData.history.data + CLI_STATE_HISTORY_LEN)
+                dst = state->internalData.history.data;
+        }
+    }   
+}
+
+static void cliHistoryDontSave(CliState_t *state)
+{
+    state->internalData.history.rdPtr = NULL;
+}
+
+static uint8_t cliHistorySave(CliState_t *state)
+{
+    uint8_t i;
+    uint8_t result = 0;
+    
+    const char *src;
+    
+    state->internalData.history.rdPtr = state->internalData.history.wrPtr;
+    
+    for (i=0; i<state->argc; i++)
+    {
+        src = state->argv[i];
+        while(*src != '\0')
+        {
+            cliHistoryFreeIsNoSpace(state);
+                
+            *state->internalData.history.wrPtr = *src;
+            cliHistoryIncWrPointer(state);
+            
+            src++;
+            result++;
+        }
+        cliHistoryFreeIsNoSpace(state);
+                
+        *state->internalData.history.wrPtr = (i+1 == state->argc) ? '\0' : ' ';
+        cliHistoryIncWrPointer(state);
+
+        result++;            
+    }    
+    return result;
+}
+
+static void cliHistoryLoad(CliState_t *state)
+{
+    char *dst = state->internalData.inputBuffer.data;
+
+    const char *src;
+    uint8_t i;
+
+    memset(state->internalData.inputBuffer.data, 0, CLI_STATE_INP_CMD_LEN);
+    state->internalData.inputBuffer.length = 0;
+    state->internalData.inputBuffer.editPos = 0;
+    
+    if (state->internalData.history.rdPtr != NULL)
+    {
+
+        state->internalData.history.state = CLI_HB_COPIED;
+        
+        while (*state->internalData.history.rdPtr != '\0')
+        {
+            *dst = *state->internalData.history.rdPtr;
+            cliHistoryIncRdPointer(state);
+            
+            state->internalData.inputBuffer.length++;
+
+            if (state->internalData.inputBuffer.length == CLI_STATE_INP_CMD_LEN)
+            {
+                *dst = '\0';
+                break;
+            }            
+            dst++;
+        } 
     }
     else
+    {  // argv to cmd
+        for (i=0; i<state->argc; i++)
+        {
+            src = state->argv[i];
+            while(*src != '\0')
+            {                
+                *dst = *src;
+                src++;
+                state->internalData.inputBuffer.length++;
+                
+                if (state->internalData.inputBuffer.length == CLI_STATE_INP_CMD_LEN)
+                {
+                    *dst = '\0';
+                    break;
+                }
+                dst++;
+            }
+        }
+        *dst = ((i+1 == state->argc) || (state->internalData.inputBuffer.length == CLI_STATE_INP_CMD_LEN)) ? '\0' : ' ';
+    }         
+}
+
+void cliMainLoop(CliState_t *state)
+{
+    CliExRes_t result;
+    if(state->internalData.cmd.commandFun)                // do we have a command/function to be executed
     {
-      // else, ring the bell
-      fputc(ASCII_BEL          , state->myStdInOut);
-    }
-  }
-  else if(c == ASCII_DEL)
-  {
-    // not yet handled
-  }
-  else if(c == ASCII_ESC)
-  {
-    state->cmdlineInputVT100State = 1;
-  }
-}
+        cliInputDataParse(state);
+      
+        result = state->internalData.cmd.commandFun(state); // run it
 
-void cmdlineRepaint(CmdState_t *state, char *buf)
-{
-  uint8_t i;
-
-  // carriage return
-  fputc(ASCII_CR         , state->myStdInOut);
-  // print fresh prompt
-  cmdlinePrintPrompt(state);
-  // print the new command line buffer
-  i = state->cmdlineBufferLength;
-  while(i--)
-    fputc(*buf++         , state->myStdInOut);
-  i = state->bufferMaxSize - state->cmdlineBufferLength;
-  while (i--)
-    fputc(' ', state->myStdInOut);
-  i = state->bufferMaxSize - state->cmdlineBufferLength;
-  while (i--)
-    fputc(ASCII_BS,  state->myStdInOut);
-}
-
-void cmdHistoryCopy(CmdState_t *state)
-{
-  if (state->historyDepthIdx != 0)
-  {
-    uint8_t historyReadIdx = (state->historyWrIdx - state->historyDepthIdx) & CMD_STATE_HISTORY_MASK;
-    memset(state->cmdlineBuffer, 0, state->bufferMaxSize);
-    strcpy(state->cmdlineBuffer, state->cmdlineHistory[historyReadIdx]);
-  }
-
-  state->historyDepthIdx = 0;
-  state->bufferHistoryState = COPIED;
-}
-
-void cmdHistoryMove(CmdState_t *state)
-{
-  uint8_t i=state->historyDepthIdx;
-
-  if (state->historyDepthIdx != 0)
-  {
-    state->cmdlineBuffer = state->cmdlineHistory[(state->historyWrIdx-i) & CMD_STATE_HISTORY_MASK];
-    for ( ; i<CMD_STATE_HISTORY; i++)
-    {
-      state->cmdlineHistory[(state->historyWrIdx-i) & CMD_STATE_HISTORY_MASK] = state->cmdlineHistory[(state->historyWrIdx-i-1) & CMD_STATE_HISTORY_MASK];
-    }
-  }
-  state->cmdlineHistory[state->historyWrIdx] = state->cmdlineBuffer;
-
-  state->historyDepthIdx = 0;
-  state->bufferHistoryState = COPIED;
-}
-
-void cmdlineDoHistory(enum CliHistoryAction action, CmdState_t *state)
-{
-  uint8_t historyReadIdx;
-  switch(action)
-  {
-  case CMDLINE_HISTORY_SAVE:
-    // copy CmdlineBuffer to history if not null string
-    state->cmdlineBufferLength  = 0;
-    state->cmdlineBufferEditPos = 0;
-    state->bufferHistoryState   = NOT_COPIED;
-
-    if( strlen(state->cmdlineBuffer) )
-    {
-      state->historyWrIdx++;
-      state->historyWrIdx &= CMD_STATE_HISTORY_MASK;
-
-      state->cmdlineBuffer = state->cmdlineHistory[state->historyWrIdx];
-    }
-    break;
-  case CMDLINE_HISTORY_PREV:
-    if (state->historyDepthIdx == CMD_STATE_HISTORY - 1)
-      break;                                               //We are on the end of the history list
-
-    historyReadIdx = (state->historyWrIdx - state->historyDepthIdx - 1) & CMD_STATE_HISTORY_MASK;
-
-    if (state->cmdlineHistory[historyReadIdx][0] == 0)
-      break;
-
-    state->historyDepthIdx++;
-    state->historyDepthIdx &= CMD_STATE_HISTORY_MASK;
-
-    // set the buffer position to the end of the line
-    state->cmdlineBufferLength = strlen(state->cmdlineHistory[historyReadIdx]);
-    state->cmdlineBufferEditPos = state->cmdlineBufferLength;
-
-    state->bufferHistoryState = NOT_COPIED;
-
-    // "re-paint" line
-    cmdlineRepaint(state, state->cmdlineHistory[historyReadIdx]);
-
-    break;
-  case CMDLINE_HISTORY_NEXT:
-    if (state->historyDepthIdx == 0)
-      break;                                               //We are on the begining of the history list
-
-    state->historyDepthIdx --;
-    historyReadIdx = (state->historyWrIdx - state->historyDepthIdx) & CMD_STATE_HISTORY_MASK;
-
-    // set the buffer position to the end of the line
-    state->cmdlineBufferLength = strlen(state->cmdlineHistory[historyReadIdx]);
-    state->cmdlineBufferEditPos = state->cmdlineBufferLength;
-
-    state->bufferHistoryState = NOT_COPIED;
-
-    // "re-paint" line
-    cmdlineRepaint(state, state->cmdlineHistory[historyReadIdx]);
-    break;
-  }
-}
-
-void cmdlineProcessInputString(CmdState_t *state)
-{
-  uint8_t i=0;
-  state->cmdlineExcBuffer = state->cmdlineBuffer;                     // We will use exec buffer later to read the arguments
-
-  while( !((state->cmdlineExcBuffer[i] == ' ')                        // find the end of the command (excluding arguments)
-    || (state->cmdlineExcBuffer[i] == 0)) )                           // find first whitespace character in CmdlineBuffer
-    i++;                                                              // i determines the cammand length
-
-  if(!i)                                                              // command was null or empty
-  {
-    cmdlinePrintPrompt(state);                                        // output a new prompt
-    return;
-  }
-
+        switch(result)
+        {
+        case OK_INFORM:
+            cliHistorySave(state);
 #if USE_XC8
-
-  const Command_t *tmpPtr = state->cmdList;                           // Set list of commands. The list depends of the cli mode
-  
-  do                                                                  // search command list for match with entered command
-  {
-    if( !strncmp(state->cmdlineExcBuffer, tmpPtr->commandStr, i) )      // user-entered command matched a command in the list
-    {                                                                 //
-      state->cmdlineExecFunction = tmpPtr->commandFun;                    // set function pointer
-      state->command_str         = tmpPtr->commandStr;
-      state->command_help_str    = tmpPtr->commandHelpStr;
-      cmdlineDoHistory(CMDLINE_HISTORY_SAVE, state);                  // save command in history
-      return;
-    }
-    tmpPtr++;                                                         // Next command
-  }
-  while (tmpPtr->commandStr != NULL);                                     // Last command on the list is NULL. It is required !!!
+            fprintf(state->myStdInOut, "OK\r\n");
 #else
-  const Command_t *tmpPtr = state->cmdList;                           // Set list of commands. The list depends of the cli mode
-  Command_t  tmp;                                                     // We need to create this object. We can't directly
-  memcpy_P(&tmp, tmpPtr, sizeof(Command_t));                          // read from flash. We need to copy it before.
-
-  do                                                                  // search command list for match with entered command
-  {
-    if( !strncmp_P(state->CmdlineExcBuffer, tmp.commandStr, i) )      // user-entered command matched a command in the list
-    {                                                                 //
-      state->cmdlineExecFunction = tmp.commandFun;                    // set function pointer
-      state->command_str         = tmp.commandStr;
-      state->command_help_str    = tmp.commandHelpStr;
-      cmdlineDoHistory(CMDLINE_HISTORY_SAVE, state);                  // save command in history
-      return;
-    }
-    tmpPtr++;                                                         // Next command
-    memcpy_P(&tmp, tmpPtr, sizeof(Command_t));                        // Copy this command from flash to ram
-  }
-  while (tmp.commandStr != NULL); 
-
+            fprintf_P(state->myStdInOut, PSTR("OK\r\n"));
 #endif
+            break;
+            
+        case SYNTAX_ERROR:
+            cliHistoryDontSave(state);
+#if USE_XC8
+            fprintf(state->myStdInOut, "Syntax Error. Use: ");
+            fprintf(state->myStdInOut, state->internalData.cmd.commandStr);
+            fprintf(state->myStdInOut, " ");
+            fprintf(state->myStdInOut, state->internalData.cmd.commandHelpStr);
+            fprintf(state->myStdInOut, "\r\n");
+#else
+            fprintf_P(state->myStdInOut, PSTR("Syntax Error. Use: "));
+            fprintf_P(state->myStdInOut, state->command_str);
+            fprintf_P(state->myStdInOut, PSTR(" "));
+            fprintf_P(state->myStdInOut, state->command_help_str);
+            fprintf_P(state->myStdInOut, PSTR("\r\n"));
+#endif
+            break;
+            
+        case ERROR_INFORM:
+            cliHistoryDontSave(state);
+#if USE_XC8
+            fprintf(state->myStdInOut, "Operation failed\r\n");
+#else
+            fprintf_P(state->myStdInOut, PSTR("Operation failed\r\n"));
+#endif
+            break;
+            
+        case ERROR_OPERATION_NOT_ALLOWED:
+            cliHistoryDontSave(state);
+#if USE_XC8
+            fprintf(state->myStdInOut, "Operation not allowed\r\n");
+#else
+            fprintf_P(state->myStdInOut, PSTR("Operation not allowed\r\n"));
+#endif
+            break;
 
-  // if we did not get a match
-  cmdlinePrintError(state);                                           // output an error message
-  cmdlinePrintPrompt(state);                                          // output a new prompt
+        default:
+            cliHistoryDontSave(state);
+            break;
+        }
+/// reset
+        state->internalData.cmd.commandFun     = NULL;
+        state->internalData.cmd.commandStr     = NULL;
+        state->internalData.cmd.commandHelpStr = NULL;
+/// output new prompt
+        cliPrintPrompt(state);                  
+    }
 }
 
-void cmdlineMainLoop(CmdState_t *state)
-{
-  CliExRes_t result;
-  if(state->cmdlineExecFunction)                // do we have a command/function to be executed
-  {
-    state->argc = cmdLineGetLastArgIdx(state);  // get number of arguments
-    result = state->cmdlineExecFunction(state); // run it
-
-    switch(result)
-    {
-      case OK_INFORM:
-#if USE_XC8
-        fprintf(state->myStdInOut, "OK\r\n");
-#else
-	fprintf_P(state->myStdInOut, PSTR("OK\r\n"));
-#endif
-        break;
-      case SYNTAX_ERROR:
-#if USE_XC8
-        fprintf(state->myStdInOut, "Syntax Error. Use: ");
-        fprintf(state->myStdInOut, state->command_str);
-        fprintf(state->myStdInOut, " ");
-        fprintf(state->myStdInOut, state->command_help_str);
-        fprintf(state->myStdInOut, "\r\n");
-#else
-        fprintf_P(state->myStdInOut, PSTR("Syntax Error. Use: "));
-        fprintf_P(state->myStdInOut, state->command_str);
-        fprintf_P(state->myStdInOut, PSTR(" "));
-        fprintf_P(state->myStdInOut, state->command_help_str);
-        fprintf_P(state->myStdInOut, PSTR("\r\n"));
-#endif
-        break;
-      case ERROR_INFORM:
-#if USE_XC8
-        fprintf(state->myStdInOut, "Operation failed\r\n");
-#else
-        fprintf_P(state->myStdInOut, PSTR("Operation failed\r\n"));
-#endif
-        break;
-      case ERROR_OPERATION_NOT_ALLOWED:
-#if USE_XC8
-        fprintf(state->myStdInOut, "Operation not allowed\r\n");
-#else
-        fprintf_P(state->myStdInOut, PSTR("Operation not allowed\r\n"));
-#endif
-        break;
-      default:
-        break;
-    }
-    state->cmdlineExecFunction = NULL;          // reset
-    state->command_str         = NULL;
-    state->command_help_str    = NULL;
-    cmdlinePrintPrompt(state);                  // output new prompt
-  }
-}
-
-void cmdlinePrintPrompt(CmdState_t *state)
+void cliPrintPrompt(CliState_t *state)
 {
   const char* ptr;
   // print a new command prompt
-  switch (state->cliMode)
+  switch (state->internalData.cliMode)
   {
     case NR_NORMAL:
       ptr = cmdlinePromptNormal;
@@ -580,7 +681,7 @@ void cmdlinePrintPrompt(CmdState_t *state)
     fputc(pgm_read_byte(ptr++)    , state->myStdInOut);
 }
 
-void cmdlinePrintError(CmdState_t *state)
+void cmdlinePrintError(CliState_t *state)
 {
 #if USE_XC8
   const char * ptr;
@@ -594,7 +695,7 @@ void cmdlinePrintError(CmdState_t *state)
     fputc(pgm_read_byte(ptr++)    , state->myStdInOut);
 
   // print the offending command
-  ptr = state->cmdlineBuffer;
+  ptr = state->internalData.inputBuffer.data;  //TODO Adam convert '\0' into ' '
   while((*ptr) && (*ptr != ' '))
     fputc(*ptr++    , state->myStdInOut);
 
@@ -619,65 +720,11 @@ void cmdlinePrintError(CmdState_t *state)
 }
 
 
-uint8_t cmdLineGetLastArgIdx(CmdState_t *state)
-{
-  uint8_t result = 0;
-  uint8_t lastWhite = 1;
-  char *str = state->cmdlineExcBuffer;
-  while(*str != 0)
-  {
-    if (*str == ' ')
-    {
-      if (lastWhite == 0)
-        result++;
-      lastWhite = 1;
-    }
-    else
-      lastWhite = 0;
-    str++;
-  }
-  return result;
-}
 
-char* cmdlineGetArgStr(uint8_t argnum, CmdState_t *state)
-{
-  // find the offset of argument number [argnum]
-  uint8_t idx=0;
-  uint8_t arg;
-
-  // find the first non-whitespace character
-  while( (state->cmdlineExcBuffer[idx] != 0) && (state->cmdlineExcBuffer[idx] == ' ')) idx++;
-
-  // we are at the first argument
-  for(arg=0; arg<argnum; arg++)
-  {
-    // find the next whitespace character
-    while( (state->cmdlineExcBuffer[idx] != 0) && (state->cmdlineExcBuffer[idx] != ' ')) idx++;
-    // find the first non-whitespace character
-    while( (state->cmdlineExcBuffer[idx] != 0) && (state->cmdlineExcBuffer[idx] == ' ')) idx++;
-  }
-  // we are at the requested argument or the end of the buffer
-  return &state->cmdlineExcBuffer[idx];
-}
-
-// return argument [argnum] interpreted as a decimal integer
-long cmdlineGetArgInt(uint8_t argnum, CmdState_t *state)
-{
-  const char* endptr;
-  return strtol(cmdlineGetArgStr(argnum, state), &endptr, 10);
-}
-
-// return argument [argnum] interpreted as a hex integer
-long cmdlineGetArgHex(uint8_t argnum, CmdState_t *state)
-{
-  const char* endptr;
-  return strtol(cmdlineGetArgStr(argnum, state), &endptr, 16);
-}
-
-void cmdPrintHelp(CmdState_t *state)
+void cmdPrintHelp(CliState_t *state)
 {
 #if USE_XC8
-  const Command_t *tmpPtr = state->cmdList;
+  const Command_t *tmpPtr = state->internalData.cmdList;
   do
   {
     fprintf(state->myStdInOut, tmpPtr->commandStr);
@@ -690,7 +737,7 @@ void cmdPrintHelp(CmdState_t *state)
   while (tmpPtr->commandFun != NULL);
 #else
   Command_t  tmp;
-  const Command_t *tmpPtr = state->cmdList;
+  const Command_t *tmpPtr = state->internalData.cmdList;
 
   memcpy_P(&tmp, tmpPtr, sizeof(Command_t));
   do

@@ -2,7 +2,7 @@
 
 void vTaskVTYusb(void *cliStatePtr)
 {
-  CmdState_t *state = (CmdState_t *)(cliStatePtr);
+  CliState_t *state = (CliState_t *)(cliStatePtr);
 #ifdef USE_XC8
   fprintf_P(state->myStdInOut, PSTR("Restart\r\n"));
 #else
@@ -16,7 +16,7 @@ void vTaskVTYusb(void *cliStatePtr)
     if( xQueueReceive(xVtyRec, &recSymbol, portMAX_DELAY))
     {
       cmdlineInputFunc((char)recSymbol, state);
-      cmdlineMainLoop(state);
+      cliMainLoop(state);
     }
   }
 }

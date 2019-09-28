@@ -108,7 +108,7 @@ void hardwareInit(void)
 
     TWI_MasterInit(&hardwarePAL.twiSensors, &TWIC, TWI_MASTER_INTLVL_LO_gc, TWI_BAUDSETTING);
 
-    TWI_MasterWriteRead(&hardwarePAL.twiSensors, 10, NULL, 1, 1);
+    //TWI_MasterWriteRead(&hardwarePAL.twiSensors, 10, NULL, 1, 1);
 }
 
 void offHbridge()
