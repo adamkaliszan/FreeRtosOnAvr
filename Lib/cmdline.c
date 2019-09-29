@@ -33,7 +33,8 @@
 #include <avr/pgmspace.h>   // include AVR program memory support
 #endif
 #include <string.h>         // include standard C string functions
-#include <stdlib.h>         // include stdlib for string conversion functions
+#include <stdlib.h>
+#include <avr/pgmspace.h>         // include stdlib for string conversion functions
 
 #include "cmdline.h"        // Configuration
 #include "vt100.h"          // vty100 constans
@@ -48,11 +49,14 @@ const char cmdlineCmdNotFound[]     PROGMEM  = "# nk";
 
 
 // internal commands
-static void cmdlineRepaint(CliState_t *state, char *buf);
+static void cliRepaint(CliState_t *state, char *buf);
 static void cliHistoryMove(enum CliHistoryAction action, CliState_t *state);
+
+static void cliInputDataParse(CliState_t *state);
 static void cliInputDataProcess(CliState_t *state);
+
 static void cliPrintPrompt(CliState_t *state);
-static void cmdlinePrintError(CliState_t *state);
+static void cliPrintCommandNotFound(CliState_t *state);
 static void cliHistoryLoad(CliState_t *state);
 static uint8_t cliHistorySave(CliState_t *state);
 
@@ -255,7 +259,7 @@ void cmdlineInputFunc(char c, CliState_t *state)
 /// insert character
             state->internalData.inputBuffer.data[state->internalData.inputBuffer.editPos++] = c;
 /// repaint
-            cmdlineRepaint(state, state->internalData.inputBuffer.data);
+            cliRepaint(state, state->internalData.inputBuffer.data);
 /// reposition cursor
             for(i=state->internalData.inputBuffer.editPos; i < state->internalData.inputBuffer.length; i++)
                 fputc(ASCII_BS         , state->myStdInOut);
@@ -303,7 +307,7 @@ void cmdlineInputFunc(char c, CliState_t *state)
                 for(i = state->internalData.inputBuffer.editPos; i < state->internalData.inputBuffer.length; i++)
                     state->internalData.inputBuffer.data[i] = state->internalData.inputBuffer.data[i+1];
 /// repaint
-                cmdlineRepaint(state, state->internalData.inputBuffer.data);
+                cliRepaint(state, state->internalData.inputBuffer.data);
 /// add space to clear leftover characters
                 fputc(' '              , state->myStdInOut);
 /// reposition cursor
@@ -327,7 +331,7 @@ void cmdlineInputFunc(char c, CliState_t *state)
     }
 }
 
-void cmdlineRepaint(CliState_t *state, char *buf)
+void cliRepaint(CliState_t *state, char *buf)
 {
     uint8_t i;
 
@@ -381,55 +385,66 @@ void cliHistoryMove(enum CliHistoryAction action, CliState_t *state)
 
 void cliInputDataProcess(CliState_t *state)
 {
-    uint8_t i=0;
-
-    while( !((state->internalData.inputBuffer.data[i] == ' ')             // find the end of the command (excluding arguments)
-    || (state->internalData.inputBuffer.data[i] == 0)) )                  // find first whitespace character in CmdlineBuffer
-        i++;                                                              // i determines the cammand length
-
-    if(!i)                                                                // command was null or empty
-    {
-        cliPrintPrompt(state);                                        // output a new prompt
-        return;
-    }
-
-
-#if USE_XC8
+    uint8_t firstArgLen=0;
     const Command_t *tmpPtr = state->internalData.cmdList;                // Set list of commands. The list depends of the cli mode
-#else
-    Command_t  tmp;                                                     // We need to create this object. We can't directly
-    const Command_t *tmpPtr = &tmp;                                     // Set list of commands. The list depends of the cli mode
-#endif
-    
-    do                                                                    // search command list for match with entered command
+
+    while( !((state->internalData.inputBuffer.data[firstArgLen] == ' ')             // find the end of the command (excluding arguments)
+    || (state->internalData.inputBuffer.data[firstArgLen] == 0)) )                  // find first whitespace character in CmdlineBuffer
+        firstArgLen++;                                                              // i determines the cammand length
+
+    if(firstArgLen > 0)                                                                // command was null or empty
     {
-#if USE_XC8
-        if( !strncmp(state->internalData.inputBuffer.data, tmpPtr->commandStr, i) )      // user-entered command matched a command in the list
+        do                                                                    // search command list for match with entered command
         {
-            memcpy(&state->internalData.cmd, tmpPtr, sizeof(Command_t));
-#else
-        memcpy_P(&tmp, tmpPtr, sizeof(Command_t));                          // read from flash. We need to copy it before.    
-        if( !strncmp(state->internalData.inputBuffer.data, tmp.commandStr, i) )      // user-entered command matched a command in the list
-        {                                                                 //
-            memcpy(&state->internalData.cmd, &tmp, sizeof(Command_t));
-#endif
-            if (state->internalData.cmd.maxArgC == 0)
-                state->internalData.cmd.maxArgC = CLI_STATE_MAX_ARGC;
-            cliHistorySave(state);                  // save command in history
-            return;
 #if USE_XC8
-        }
-        tmpPtr++;                                                         // Next command
-    }
-    while (tmpPtr->commandStr != NULL);                                     // Last command on the list is NULL. It is required !!!
+            if( !strncmp(state->internalData.inputBuffer.data, tmpPtr->commandStr, firstArgLen) )      // user-entered command matched a command in the list
+            {
+                memcpy(&state->internalData.cmd, tmpPtr, sizeof(Command_t));
 #else
-        }
-    }
-    while (tmp.commandStr != NULL);                                         // Last command on the list is NULL. It is required !!!    
+            memcpy_P(&state->internalData.cmd, tmpPtr, sizeof(Command_t));                  // read from flash. We need to copy it before
+            if (state->internalData.cmd.commandStr == NULL)
+                break;
+            if( !strncmp(state->internalData.inputBuffer.data, tmp.commandStr, firstArgLen) )         // user-entered command matched a command in the list
+            {                                                                 //
 #endif
-  // if we did not get a match
-    cmdlinePrintError(state);                                           // output an error message
-    cliPrintPrompt(state);                                          // output a new prompt
+                if (state->internalData.cmd.maxArgC == 0)
+                    state->internalData.cmd.maxArgC = CLI_STATE_MAX_ARGC;
+
+                break;
+#if USE_XC8
+            }
+            tmpPtr++;
+#else
+            }
+            else
+            {
+                memset(&state->internalData.cmd, 0, sizeof(Command_t));
+            }
+#endif
+        }
+#if USE_XC8
+        while (tmpPtr->commandStr != NULL);                                     // Last command on the list is NULL. It is required !!!
+#else
+        while (1);    
+#endif
+    }
+    else
+    {
+        memset(&state->internalData.cmd, 0, sizeof(Command_t));
+    }
+
+    if (state->internalData.cmd.commandFun)
+    {
+        cliInputDataParse(state);    
+    }
+    else
+    {
+        if (firstArgLen > 0)
+            cliPrintCommandNotFound(state);
+        cliPrintPrompt(state);                                          // output a new prompt
+    }
+    state->internalData.inputBuffer.length = 0;
+    state->internalData.inputBuffer.editPos = 0;
 }
 
 
@@ -443,7 +458,10 @@ static void cliInputDataParse(CliState_t *state)
     while (*data != '\0')
     {
         if (*data != ' ')
+        {
+            data++;
             continue;
+        }
         
         *data = '\0';
         data++;
@@ -595,8 +613,6 @@ void cliMainLoop(CliState_t *state)
     CliExRes_t result;
     if(state->internalData.cmd.commandFun)                // do we have a command/function to be executed
     {
-        cliInputDataParse(state);
-      
         result = state->internalData.cmd.commandFun(state); // run it
 
         switch(result)
@@ -681,75 +697,73 @@ void cliPrintPrompt(CliState_t *state)
     fputc(pgm_read_byte(ptr++)    , state->myStdInOut);
 }
 
-void cmdlinePrintError(CliState_t *state)
+void cliPrintCommandNotFound(CliState_t *state)
 {
 #if USE_XC8
-  const char * ptr;
+    const char * ptr;
 #else
-  char * ptr;
+    char * ptr;
 #endif
-  // print a notice header
-  // (uint8_t*) cast used to avoid compiler warning
-  ptr = cmdlineNotice;
-  while(pgm_read_byte(ptr))
-    fputc(pgm_read_byte(ptr++)    , state->myStdInOut);
+// print a notice header
+// (uint8_t*) cast used to avoid compiler warning
+    ptr = cmdlineNotice;
+    while(pgm_read_byte(ptr))
+        fputc(pgm_read_byte(ptr++)    , state->myStdInOut);
 
   // print the offending command
-  ptr = state->internalData.inputBuffer.data;  //TODO Adam convert '\0' into ' '
-  while((*ptr) && (*ptr != ' '))
-    fputc(*ptr++    , state->myStdInOut);
+    ptr = state->internalData.inputBuffer.data;  //TODO Adam convert '\0' into ' '
+    while((*ptr) && (*ptr != ' '))
+        fputc(*ptr++    , state->myStdInOut);
 
-  fputc(':'         , state->myStdInOut);
-  fputc(' '         , state->myStdInOut);
+    fputc(':'         , state->myStdInOut);
+    fputc(' '         , state->myStdInOut);
 
-  // print the not-found message
-  // (uint8_t*) cast used to avoid compiler warning
-  ptr = cmdlineCmdNotFound;
+// print the not-found message
+// (uint8_t*) cast used to avoid compiler warning
+    ptr = cmdlineCmdNotFound;
 #if USE_XC8
-  while(*ptr)
-  {
-    fputc(*ptr    , state->myStdInOut);
-    ptr++;
-  }
+    while(*ptr)
+    {
+        fputc(*ptr    , state->myStdInOut);
+        ptr++;
+    }
 #else
-  while(pgm_read_byte(ptr))
-    fputc(pgm_read_byte(ptr++)    , state->myStdInOut);
+    while(pgm_read_byte(ptr))
+        fputc(pgm_read_byte(ptr++)    , state->myStdInOut);
 #endif
-  fputc('\r'        , state->myStdInOut);
-  fputc('\n'        , state->myStdInOut);
+    fputc('\r'        , state->myStdInOut);
+    fputc('\n'        , state->myStdInOut);
 }
-
-
 
 void cmdPrintHelp(CliState_t *state)
 {
 #if USE_XC8
-  const Command_t *tmpPtr = state->internalData.cmdList;
-  do
-  {
-    fprintf(state->myStdInOut, tmpPtr->commandStr);
-    fprintf(state->myStdInOut, "\t");
-    fprintf(state->myStdInOut, tmpPtr->commandHelpStr);
-    fprintf(state->myStdInOut, "\r\n");
+     const Command_t *tmpPtr = state->internalData.cmdList;
+    do
+    {
+        fprintf(state->myStdInOut, tmpPtr->commandStr);
+        fprintf(state->myStdInOut, "\t");
+        fprintf(state->myStdInOut, tmpPtr->commandHelpStr);
+        fprintf(state->myStdInOut, "\r\n");
 
-    tmpPtr++;
-  }
-  while (tmpPtr->commandFun != NULL);
+        tmpPtr++;
+    }
+    while (tmpPtr->commandFun != NULL);
 #else
-  Command_t  tmp;
-  const Command_t *tmpPtr = state->internalData.cmdList;
+    Command_t  tmp;
+    const Command_t *tmpPtr = state->internalData.cmdList;
 
-  memcpy_P(&tmp, tmpPtr, sizeof(Command_t));
-  do
-  {
-    fprintf_P(state->myStdInOut, tmp.commandStr);
-    fprintf_P(state->myStdInOut, PSTR("\t"));
-    fprintf_P(state->myStdInOut, tmp.commandHelpStr);
-    fprintf_P(state->myStdInOut, PSTR("\r\n"));
-
-    tmpPtr++;
     memcpy_P(&tmp, tmpPtr, sizeof(Command_t));
-  }
-  while (tmp.commandFun != NULL);
+    do
+    {
+        fprintf_P(state->myStdInOut, tmp.commandStr);
+        fprintf_P(state->myStdInOut, PSTR("\t"));
+        fprintf_P(state->myStdInOut, tmp.commandHelpStr);
+        fprintf_P(state->myStdInOut, PSTR("\r\n"));
+
+        tmpPtr++;
+        memcpy_P(&tmp, tmpPtr, sizeof(Command_t));
+    }
+    while (tmp.commandFun != NULL);
 #endif
 }
