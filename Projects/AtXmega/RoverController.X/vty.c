@@ -27,6 +27,7 @@
 #endif
 
 static CliExRes_t helpFunction           (CliState_t *state);
+static CliExRes_t historyFunction        (CliState_t *state);
 static CliExRes_t statusFunction         (CliState_t *state);
 static CliExRes_t enableFunction         (CliState_t *state);
 static CliExRes_t disableFunction        (CliState_t *state);
@@ -91,6 +92,7 @@ const char* const errorStrings[] PROGMEM = {
 const Command_t cmdListNormal[] PROGMEM =
 {
   {cmd_help,            cmd_help_help,            helpFunction},
+  {cmd_history,         cmd_help_history,         historyFunction},
   {cmd_status,          cmd_help_status,          statusFunction},
   {cmd_enable,          cmd_help_enable,          enableFunction},
   {cmd_forward,         cmd_help_forward,         forwardFunction},
@@ -110,6 +112,7 @@ const Command_t cmdListNormal[] PROGMEM =
 const Command_t cmdListEnable[] PROGMEM =
 {
   {cmd_help,        cmd_help_help,        helpFunction},
+  {cmd_history,     cmd_help_history,     historyFunction},
   {cmd_status,      cmd_help_status,      statusFunction},
   {cmd_disable,     cmd_help_disable,     disableFunction},
   {cmd_configure,   cmd_help_configure,   configureModeFunction},
@@ -140,6 +143,7 @@ const Command_t cmdListEnable[] PROGMEM =
 const Command_t cmdListConfigure[] PROGMEM =
 {
   {cmd_help,         cmd_help_help,         helpFunction},
+  {cmd_history,      cmd_help_history,      historyFunction},
   {cmd_status,       cmd_help_status,       statusFunction},
   {cmd_HC12mode,     cmd_help_HC12mode,     hc12modeFunction},
   {cmd_HC12channel,  cmd_help_HC12channel,  hc12channelFunction},
@@ -252,6 +256,12 @@ void printStatus(FILE *stream)
 static CliExRes_t statusFunction(CliState_t *state)
 {
     printStatus(state->myStdInOut);
+    return OK_SILENT;
+}
+
+static CliExRes_t historyFunction(CliState_t *state)
+{
+    cmdPrintHistory(state);
     return OK_SILENT;
 }
 

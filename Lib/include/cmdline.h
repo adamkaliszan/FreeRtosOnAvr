@@ -160,6 +160,9 @@ void cmdlineInputFunc(char c, CliState_t *state);
 void cliMainLoop(CliState_t *state);
 
 
+
+void cmdPrintHistory(CliState_t *state);
+
 /**
  * Print all commands available for cmdState and its description
  * @param state - command line interpreter state

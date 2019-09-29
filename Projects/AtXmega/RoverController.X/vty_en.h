@@ -34,6 +34,7 @@ const char systemRamConfigStr[]        PROGMEM = "System settings:\r\n";
 // *************************** Command Strings *****************************************************
 
 const char cmd_help[]         PROGMEM = "help";     const char cmd_help_help[]          PROGMEM = "Print help string";
+const char cmd_history[]      PROGMEM = "history";  const char cmd_help_history[]       PROGMEM = "Print previous commands";
 const char cmd_status[]       PROGMEM = "status";   const char cmd_help_status[]        PROGMEM = "{filename} Print device status on VTY or write to file";
 
 const char cmd_enable[]       PROGMEM = "enable";   const char cmd_help_enable[]        PROGMEM = "Admin mode";

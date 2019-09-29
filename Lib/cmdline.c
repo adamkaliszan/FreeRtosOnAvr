@@ -618,12 +618,15 @@ void cliMainLoop(CliState_t *state)
         switch(result)
         {
         case OK_INFORM:
-            cliHistorySave(state);
 #if USE_XC8
             fprintf(state->myStdInOut, "OK\r\n");
 #else
             fprintf_P(state->myStdInOut, PSTR("OK\r\n"));
 #endif
+
+        case OK_SILENT:
+            cliHistorySave(state);
+
             break;
             
         case SYNTAX_ERROR:
@@ -733,6 +736,37 @@ void cliPrintCommandNotFound(CliState_t *state)
 #endif
     fputc('\r'        , state->myStdInOut);
     fputc('\n'        , state->myStdInOut);
+}
+
+
+void cmdPrintHistory(CliState_t *state)
+{
+#if USE_XC8
+    fprintf(state->myStdInOut, "History\r\n");
+#else
+    fprintf_P(state->myStdInOut, PSTR("History\r\n"));    
+#endif
+    char *ptr = state->internalData.history.rdPtr;
+    do
+    {
+        if (ptr)
+        {
+            fprintf(state->myStdInOut, "\t%s\r\n", state->internalData.history.rdPtr);
+            cliHistoryDecRdPointer(state);
+        }
+        else
+        {
+#if USE_XC8
+            fprintf(state->myStdInOut, "Not available\r\n");
+#else
+            fprintf_P(state->myStdInOut, PSTR("Not available\r\n"));            
+#endif
+            break;
+        }
+    }
+    while (ptr != state->internalData.history.rdPtr);
+    
+    state->internalData.history.rdPtr = ptr;
 }
 
 void cmdPrintHelp(CliState_t *state)
