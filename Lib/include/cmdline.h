@@ -40,16 +40,10 @@ struct Command;
 enum   CliExecuteResult;
 
 typedef struct Command         Command_t;
-typedef struct CmdState        CmdState_t;
+typedef struct CmdState        CliState_t;
 typedef enum CliExecuteResult  CliExRes_t;
 
-typedef CliExRes_t (*CmdlineFuncPtrType)(CmdState_t *state);
-
-enum CmdBufferHistory
-{
-  NOT_COPIED   = 0,
-  COPIED       = 1
-};
+typedef CliExRes_t (*CmdlineFuncPtrType)(CliState_t *state);
 
 enum CliModeState
 {
@@ -71,39 +65,8 @@ enum CliExecuteResult
 
 enum CliHistoryAction
 {
-  CMDLINE_HISTORY_SAVE,
   CMDLINE_HISTORY_PREV,
   CMDLINE_HISTORY_NEXT
-};
-
-struct CmdState
-{
-  char *cmdlineBuffer;                       ///< CLI buffer.
-  char *cmdlineExcBuffer;                    ///< CLI processing buffer.
-  char *cmdlineHistory[CMD_STATE_HISTORY];   ///< CLI history. History Size = 3. Sorry for Hardcodding
-
-  uint8_t bufferMaxSize;                     ///< Total buffer size / CMD_STATE_HISTORY
-  uint8_t cmdlineBufferLength;               ///< Number of writen chars in buffer
-  uint8_t cmdlineBufferEditPos;              ///< Edit position in the buffer
- 
-  uint8_t historyWrIdx;                      ///< History write index (0 - CMD_STATE_HISTORY-1)   
-  uint8_t historyDepthIdx;                   ///< History depth index. Read idx = (historyWrIdx - historyDepthIdx) & CMD_STATE_HISTORY_MASK
-  enum CmdBufferHistory bufferHistoryState;  ///< Buffer history state
-    
-  uint8_t cmdlineInputVT100State;            ///< Commandline State TODO add enum type
-  const char* command_str;                   ///< Executing command string
-  const char* command_help_str;              ///< Executing command help string
-  CmdlineFuncPtrType cmdlineExecFunction;    ///< Pointer to the funtion that match to the string writen in buffer
-  uint8_t   argc;                            ///< Index of last argument
-  
-  FILE *myStdInOut;                          ///< Input / output stream descriptor
-  
-  uint8_t  errno;                            ///< Error number
-  uint16_t err1;                             ///< Additional error info 1
-  uint8_t  err2;                             ///< Additional error info 1
-  
-  enum CliModeState cliMode;                 ///< CLI mode (NORMAL, ENABLED, CONFIGURE)
-  const Command_t *cmdList;                  ///< Each CLI mode has own command list
 };
 
 struct Command 
@@ -111,7 +74,64 @@ struct Command
   const char           *commandStr;          ///< Command string
   const char           *commandHelpStr;      ///< Command help string
   CmdlineFuncPtrType   commandFun;           ///< Command function pointer
+  uint8_t              maxArgC;
 };
+
+
+enum CLI_HB
+{
+    CLI_HB_NOT_COPIED,                
+    CLI_HB_COPIED
+};
+
+struct CmdState
+{
+    uint8_t   argc;                            ///< Index of last argument
+    const char *argv[CLI_STATE_MAX_ARGC];
+    FILE *myStdInOut;                          ///< Input / output stream descriptor
+
+    struct
+    {
+        uint8_t  errno;                        ///< Error number
+        uint16_t err1;                         ///< Additional error info 1
+        uint8_t  err2;                         ///< Additional error info 1
+    } error;
+    
+    struct
+    {
+        struct
+        {
+            char data [CLI_STATE_HISTORY_LEN];   
+            char *wrPtr;
+            char *rdPtr;
+            
+            enum CLI_HB state;
+            
+        } history;
+      
+        struct
+        {
+            char data [CLI_STATE_INP_CMD_LEN];
+            uint8_t length;               ///< Number of writen chars in buffer
+            uint8_t editPos;              ///< Edit position in the buffer
+        } inputBuffer;
+        
+        struct
+        {
+            uint8_t cmdlineInputVT100State;            ///< Commandline State TODO add enum type
+            
+        } vty100;
+
+        Command_t cmd;
+        
+        enum CliModeState cliMode;                 ///< CLI mode (NORMAL, ENABLED, CONFIGURE)
+
+        const Command_t *cmdList;                  ///< Each CLI mode has own command list
+
+    } internalData;
+  
+};
+
 
 
 // functions
@@ -126,67 +146,34 @@ struct Command
  */
 uint8_t hexStrToDataN(uint8_t *data, const uint8_t *hexStr, uint8_t maxLen);
 
-
 /**
  * call this function to pass input charaters from the user terminal
  * @param c     - new char
  * @param state - cli state
  */
-void cmdlineInputFunc(char c, CmdState_t *state);
+void cmdlineInputFunc(char c, CliState_t *state);
 
 /**
  * call this function in task
  * @param state - cli state
  */
-void cmdlineMainLoop(CmdState_t *state);
+void cliMainLoop(CliState_t *state);
 
-/**
- * Get last argument index.
- * @param state - cli state
- * @return last argument index
- */
-uint8_t cmdLineGetLastArgIdx(CmdState_t *state);
-
-// argument retrieval commands
-/**
- * returns a string pointer to argument number [argnum] on the command line
- * @param argnum - argument no. Number of first arg is 1
- * @param state  - cli state
- * @return char pointer
- */
-char* cmdlineGetArgStr(uint8_t argnum, CmdState_t *state);
-
-/**
- * returns the decimal integer interpretation of argument number [argnum]
- * @param argnum - argument no. Number of first arg is 1
- * @param state  - cli state
- * @return long int
- */
-long cmdlineGetArgInt (uint8_t argnum, CmdState_t *state);
-
-/**
- * returns the hex integer interpretation of argument number [argnum]
- * @param argnum - argument no. Number of first arg is 1
- * @param state  - cli state
- */
-long cmdlineGetArgHex (uint8_t argnum, CmdState_t *state);
 
 /**
  * Print all commands available for cmdState and its description
  * @param state - command line interpreter state
  */
-void cmdPrintHelp(CmdState_t *state);
+void cmdPrintHelp(CliState_t *state);
 
 /**
- * Konfiguruje strukturę do obsługi sesji interpretera poleceń
+ * Prepare the struct with LI state machine. Each instance of CLI has own state
  * @param state            - wskaźnik do struktury ze stanem sesji interpretera poleceń
- * @param buffPtr          - wskaźnik do początku bufora. 1/4 bufora przeznaczona jest na buforowanie polecenia, 3/4 na zapamiętanie 3 ostatnich poleceń
- * @param bufferTotalSize  - długość przydzielonego bufora. Min 32 * CMD_STATE_HISTORY bajtów
  * @param *stream          - input/output stream
  * @param *commands        - pointer to the command table
  * @param mode             - command line interpreter mode
  */
-void cmdStateConfigure(CmdState_t * state, char *buffPtr, uint16_t bufferTotalSize, FILE *stream, const Command_t *commands, enum CliModeState mode);
+void cmdStateConfigure(CliState_t * state, FILE *stream, const Command_t *commands, enum CliModeState mode);
 
 //@}
 #endif

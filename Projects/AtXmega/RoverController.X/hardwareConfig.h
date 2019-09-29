@@ -13,8 +13,6 @@
 // --------------------- Konfiguracja pamięci ------------------------------------
 //
 
-#define CLI_BUF_TOT_LEN              0x000100
-
 #define TLV_BUF_LEN 32
 
 #endif
