@@ -57,12 +57,23 @@ static void cliInputDataProcess(CliState_t *state);
 
 static void cliPrintPrompt(CliState_t *state);
 static void cliPrintCommandNotFound(CliState_t *state);
+
 static void cliHistoryLoad(CliState_t *state);
+
+/**
+ * argc and argv to array.
+ * @param state
+ */
+static void cliUnparse(CliState_t *state);
+
+
 static uint8_t cliHistorySave(CliState_t *state);
 
 
-static inline void cliHistoryIncRdPointer(CliState_t *state);
-static inline void cliHistoryDecRdPointer(CliState_t *state);
+static inline void cliHistoryIncWrPointer(CliState_t *state);
+static inline void cliHistoryIncRdPointerCharacter(CliState_t *state);
+static inline void cliHistoryIncRdPointerItem(CliState_t *state);
+static inline void cliHistoryDecRdPointerItem(CliState_t *state);
 
 
 
@@ -120,9 +131,6 @@ void cmdStateConfigure(CliState_t * state, FILE *stream, const Command_t *comman
 
   state->internalData.cliMode = mode;
   state->internalData.cmdList = commands;
-
-  state->internalData.history.rdPtr = NULL;
-  state->internalData.history.wrPtr = state->internalData.history.data;
  
   state->myStdInOut = stream;
 }
@@ -139,6 +147,17 @@ void cmdStateConfigure(CliState_t * state, FILE *stream, const Command_t *comman
   // initialize executing function
   state->CmdlineExecFunction = 0;
 }*/
+
+#define CLI_ST_NEW_CMD        0x01
+#define CLI_ST_SAVED          0x02
+#define CLI_ST_PARSED         0x04
+
+#define CLI_ST_HIST_LOADED    0x20
+#define CLI_ST_HIST_SUGESTION 0x40
+#define CLI_ST_HIST_ENABLE    0x80
+
+
+
 
 void cmdlineInputFunc(char c, CliState_t *state)
 {
@@ -161,10 +180,7 @@ void cmdlineInputFunc(char c, CliState_t *state)
             break;
     
         case VT100_ARROWRIGHT:
-            if (state->internalData.history.state == CLI_HB_NOT_COPIED)
-                cliHistoryLoad(state);
-/// if the edit position less than current string length
-            if(state->internalData.inputBuffer.editPos < CLI_STATE_INP_CMD_LEN)
+            if(state->internalData.inputBuffer.editPos < state->internalData.inputBuffer.length)
             {
 /// increment the edit position
                 state->internalData.inputBuffer.editPos++;
@@ -181,8 +197,6 @@ void cmdlineInputFunc(char c, CliState_t *state)
             break;
 
         case VT100_ARROWLEFT:
-            if (state->internalData.history.state == CLI_HB_NOT_COPIED)
-                cliHistoryLoad(state);
 /// if the edit position is non-zero
             if(state->internalData.inputBuffer.editPos > 0)
             {
@@ -235,8 +249,6 @@ void cmdlineInputFunc(char c, CliState_t *state)
 
     if( (c >= 0x20) && (c < 0x7F) )
     {
-        if (state->internalData.history.state == CLI_HB_NOT_COPIED)
-            cliHistorySave(state);
 // character is printable
 // is this a simple append
         if(state->internalData.inputBuffer.editPos == state->internalData.inputBuffer.length)
@@ -268,9 +280,6 @@ void cmdlineInputFunc(char c, CliState_t *state)
 /// handle special characters
     else if(c == ASCII_CR)
     {
-        if (state->internalData.history.state == CLI_HB_NOT_COPIED)
-            cliHistorySave(state);
-
 /// user pressed [ENTER]
 /// echo CR and LF to terminal
         fputc(ASCII_CR         , state->myStdInOut);
@@ -361,25 +370,43 @@ void cliHistoryMove(enum CliHistoryAction action, CliState_t *state)
     uint16_t cntr = 0;
 #endif
     
-    void (*funMove)(CliState_t *state) = (action == CMDLINE_HISTORY_PREV) ? 
-        cliHistoryDecRdPointer : cliHistoryIncRdPointer;
-    
-    while (*state->internalData.history.rdPtr != '\0')
+    if (action == CMDLINE_HISTORY_PREV)
     {
-        funMove(state);
-        cntr++;
-        if (cntr > CLI_STATE_HISTORY_LEN)
-            return;
-    }
+        while (state->internalData.history.data[state->internalData.history.rdIdx] != '\0')
+        {
+            cliHistoryDecRdPointerItem(state);
+            cntr++;
+            if (cntr > CLI_STATE_HISTORY_LEN)
+                return;
+        }
+
+        while (state->internalData.history.data[state->internalData.history.rdIdx] == '\0')
+        {
+            cliHistoryDecRdPointerItem(state);
+            cntr++;
+            if (cntr > CLI_STATE_HISTORY_LEN)
+                return;
+        }
         
-    while (*state->internalData.history.rdPtr == '\0')
-    {
-        funMove(state);
-        cntr++;
-        if (cntr > CLI_STATE_HISTORY_LEN)
-            return;
     }
-    
+    else
+    {
+        while (state->internalData.history.data[state->internalData.history.rdIdx] == '\0')
+        {
+            cliHistoryIncWrPointer(state);
+            cntr++;
+            if (cntr > CLI_STATE_HISTORY_LEN)
+                return;
+        }
+
+        while (state->internalData.history.data[state->internalData.history.rdIdx] != '\0')
+        {
+            cliHistoryIncWrPointer(state);
+            cntr++;
+            if (cntr > CLI_STATE_HISTORY_LEN)
+                return;
+        }        
+    }
     cliHistoryLoad(state);
 }
 
@@ -478,58 +505,106 @@ static void cliInputDataParse(CliState_t *state)
 }
 
 
+static inline void cliHistoryIncRdPointerCharacter(CliState_t *state)
+{
+    if (++state->internalData.history.rdIdx >= CLI_STATE_HISTORY_LEN)
+        state->internalData.history.rdIdx = 0;    
+}
+
+static inline void cliHistoryIncRdPointerItem(CliState_t *state)
+{
+    do
+    {
+        if (++state->internalData.history.rdIdx >= CLI_STATE_HISTORY_LEN)
+            state->internalData.history.rdIdx = 0;
+    }
+    while(state->internalData.history.data[state->internalData.history.rdIdx] != '\0');
+
+    do
+    {
+        if (++state->internalData.history.rdIdx >= CLI_STATE_HISTORY_LEN)
+            state->internalData.history.rdIdx = 0;
+    }
+    while(state->internalData.history.data[state->internalData.history.rdIdx] == '\0');
+}
+
+
+static inline void cliHistoryDecRdPointerItem(CliState_t *state)
+{
+#if CLI_STATE_HISTORY_LEN <= 256
+    uint8_t noOfMoves;
+#else
+    uint16_t noOfMoves;    
+#endif
+    noOfMoves = 0;
+    
+    state->internalData.history.rdIdx = (state->internalData.history.rdIdx == 0) ? 
+        state->internalData.history.rdIdx = CLI_STATE_HISTORY_LEN -1 : 
+        state->internalData.history.rdIdx -1;
+   
+    while (state->internalData.history.data[state->internalData.history.rdIdx] == '\0')
+    {
+        noOfMoves++;
+                
+        state->internalData.history.rdIdx = (state->internalData.history.rdIdx == 0) ? 
+            state->internalData.history.rdIdx = CLI_STATE_HISTORY_LEN -1 : 
+            state->internalData.history.rdIdx -1;
+    }
+
+    while (state->internalData.history.data[state->internalData.history.rdIdx] != '\0')
+    {
+        noOfMoves++;
+        state->internalData.history.rdIdx = (state->internalData.history.rdIdx == 0) ? 
+            state->internalData.history.rdIdx = CLI_STATE_HISTORY_LEN -1 : 
+            state->internalData.history.rdIdx -1;
+
+        if (noOfMoves == CLI_STATE_HISTORY_LEN)
+            return; // It should never happen
+    }
+
+    state->internalData.history.rdIdx++;
+    if (state->internalData.history.rdIdx >= CLI_STATE_HISTORY_LEN)
+        state->internalData.history.rdIdx = 0;
+}
+
+
 static inline void cliHistoryIncWrPointer(CliState_t *state)
 {
-    state->internalData.history.wrPtr++;
-    if (state->internalData.history.wrPtr >= state->internalData.history.data + CLI_STATE_HISTORY_LEN)
-        state->internalData.history.wrPtr = state->internalData.history.data;    
-}
-
-static inline void cliHistoryDecRdPointer(CliState_t *state)
-{
-    state->internalData.history.rdPtr--;
-    if (state->internalData.history.rdPtr < state->internalData.history.data)
-       state->internalData.history.rdPtr = state->internalData.history.data + CLI_STATE_HISTORY_LEN -1;    
-}
-
-
-static inline void cliHistoryIncRdPointer(CliState_t *state)
-{
-    state->internalData.history.rdPtr++;
-    if (state->internalData.history.rdPtr >= state->internalData.history.data + CLI_STATE_HISTORY_LEN)
-       state->internalData.history.rdPtr = state->internalData.history.data;    
+    state->internalData.history.wrIdx++;
+    if (state->internalData.history.wrIdx >= CLI_STATE_HISTORY_LEN)
+        state->internalData.history.wrIdx = 0;    
 }
 
 
 static void cliHistoryFreeIsNoSpace(CliState_t *state)
 {
-    char * dst = state->internalData.history.wrPtr;
-
-    if (*state->internalData.history.wrPtr != '\0')    // Check if the previous command need to be overwritten
+#if CLI_STATE_HISTORY_LEN > 255
+    uint16_t tmpIdx = state->internalData.history.wrIdx;
+#else
+    uint8_t tmpIdx = state->internalData.history.wrIdx;    
+#endif
+    while (state->internalData.history.data[tmpIdx] != '\0')    // Check if the previous command need to be overwritten
     {
-        while (*dst != '\0')
-        {
-            *dst = '\0';
-                dst++;
-            if (dst >= state->internalData.history.data + CLI_STATE_HISTORY_LEN)
-                dst = state->internalData.history.data;
-        }
+        state->internalData.history.data[tmpIdx] = '\0';
+        tmpIdx++;
+        if (tmpIdx == CLI_STATE_HISTORY_LEN)
+            tmpIdx = 0;
     }   
 }
 
 static void cliHistoryDontSave(CliState_t *state)
 {
-    state->internalData.history.rdPtr = NULL;
+    state->internalData.state &= ~CLI_ST_SAVED; 
 }
 
 static uint8_t cliHistorySave(CliState_t *state)
 {
     uint8_t i;
     uint8_t result = 0;
+        
+    state->internalData.history.rdIdx = state->internalData.history.wrIdx;
     
     const char *src;
-    
-    state->internalData.history.rdPtr = state->internalData.history.wrPtr;
     
     for (i=0; i<state->argc; i++)
     {
@@ -538,7 +613,7 @@ static uint8_t cliHistorySave(CliState_t *state)
         {
             cliHistoryFreeIsNoSpace(state);
                 
-            *state->internalData.history.wrPtr = *src;
+            state->internalData.history.data[state->internalData.history.wrIdx] = *src;
             cliHistoryIncWrPointer(state);
             
             src++;
@@ -546,7 +621,7 @@ static uint8_t cliHistorySave(CliState_t *state)
         }
         cliHistoryFreeIsNoSpace(state);
                 
-        *state->internalData.history.wrPtr = (i+1 == state->argc) ? '\0' : ' ';
+        state->internalData.history.data[state->internalData.history.wrIdx] = (i+1 == state->argc) ? '\0' : ' ';
         cliHistoryIncWrPointer(state);
 
         result++;            
@@ -558,22 +633,18 @@ static void cliHistoryLoad(CliState_t *state)
 {
     char *dst = state->internalData.inputBuffer.data;
 
-    const char *src;
-    uint8_t i;
-
     memset(state->internalData.inputBuffer.data, 0, CLI_STATE_INP_CMD_LEN);
     state->internalData.inputBuffer.length = 0;
     state->internalData.inputBuffer.editPos = 0;
     
-    if (state->internalData.history.rdPtr != NULL)
+    if ((state->internalData.state & CLI_ST_HIST_ENABLE) != 0)
     {
-
-        state->internalData.history.state = CLI_HB_COPIED;
+        state->internalData.state |= CLI_ST_HIST_LOADED;
         
-        while (*state->internalData.history.rdPtr != '\0')
+        while (state->internalData.history.data[state->internalData.history.rdIdx] != '\0')
         {
-            *dst = *state->internalData.history.rdPtr;
-            cliHistoryIncRdPointer(state);
+            *dst = state->internalData.history.data[state->internalData.history.rdIdx];
+            cliHistoryIncWrPointer(state);
             
             state->internalData.inputBuffer.length++;
 
@@ -585,27 +656,32 @@ static void cliHistoryLoad(CliState_t *state)
             dst++;
         } 
     }
-    else
-    {  // argv to cmd
-        for (i=0; i<state->argc; i++)
-        {
-            src = state->argv[i];
-            while(*src != '\0')
-            {                
-                *dst = *src;
-                src++;
-                state->internalData.inputBuffer.length++;
+}
+
+static void cliUnparse(CliState_t *state)
+{
+    uint8_t i;
+    const char *src;
+    char *dst = state->internalData.inputBuffer.data;
+
+    for (i=0; i<state->argc; i++)
+    {
+        src = state->argv[i];
+        while(*src != '\0')
+        {                
+            *dst = *src;
+            src++;
+            state->internalData.inputBuffer.length++;
                 
-                if (state->internalData.inputBuffer.length == CLI_STATE_INP_CMD_LEN)
-                {
-                    *dst = '\0';
-                    break;
-                }
-                dst++;
+            if (state->internalData.inputBuffer.length == CLI_STATE_INP_CMD_LEN)
+            {
+                *dst = '\0';
+                break;
             }
+            dst++;
         }
-        *dst = ((i+1 == state->argc) || (state->internalData.inputBuffer.length == CLI_STATE_INP_CMD_LEN)) ? '\0' : ' ';
-    }         
+    }
+    *dst = ((i+1 == state->argc) || (state->internalData.inputBuffer.length == CLI_STATE_INP_CMD_LEN)) ? '\0' : ' ';
 }
 
 void cliMainLoop(CliState_t *state)
@@ -741,32 +817,72 @@ void cliPrintCommandNotFound(CliState_t *state)
 
 void cmdPrintHistory(CliState_t *state)
 {
+    
+#if CLI_STATE_HISTORY_LEN <= 256
+//    uint8_t i;
+    uint8_t rdIdxOld;
+    uint8_t cmdOldIdx;
+#else
+//    uint16_t i;
+    uint16_t rdIdxOld;
+    uint16_t cmdOldIdx;
+#endif
+
+    rdIdxOld = state->internalData.history.rdIdx;
+
+    
+/*
 #if USE_XC8
-    fprintf(state->myStdInOut, "History\r\n");
+    uint8_t lastZero = 0;
+    fprintf(state->myStdInOut, "History bufer");
+    for (i=0; i< CLI_STATE_HISTORY_LEN; i++)
+    {
+        if (i %32 == 0)
+            fprintf(state->myStdInOut, "\r\n");
+        if (state->internalData.history.data[i] == '\0')
+        {
+            if (!lastZero)
+                fputc('~', state->myStdInOut);
+            lastZero = 1;
+            continue;
+        }
+        else
+            lastZero = 0;
+        fputc(state->internalData.history.data[i], state->myStdInOut);
+    }
+    fprintf(state->myStdInOut, "\r\nBuffer rd idx = %d\r\n", state->internalData.history.rdIdx);
+    fprintf(state->myStdInOut,    "        wr idx = %d\r\n", state->internalData.history.wrIdx);
 #else
     fprintf_P(state->myStdInOut, PSTR("History\r\n"));    
 #endif
-    char *ptr = state->internalData.history.rdPtr;
+*/
+    int tmp = 0;
     do
     {
-        if (ptr)
+        cmdOldIdx = state->internalData.history.rdIdx;
+//        fprintf(state->myStdInOut, "\t Idx = %d\n", state->internalData.history.rdIdx);
+        fputc('\t', state->myStdInOut);
+        while (state->internalData.history.data[state->internalData.history.rdIdx] != '\0')
         {
-            fprintf(state->myStdInOut, "\t%s\r\n", state->internalData.history.rdPtr);
-            cliHistoryDecRdPointer(state);
+            fputc(state->internalData.history.data[state->internalData.history.rdIdx], state->myStdInOut);
+            cliHistoryIncRdPointerCharacter(state);
+            tmp++;
+            if (tmp >= CLI_STATE_HISTORY_LEN)
+                break;
         }
-        else
-        {
-#if USE_XC8
-            fprintf(state->myStdInOut, "Not available\r\n");
-#else
-            fprintf_P(state->myStdInOut, PSTR("Not available\r\n"));            
-#endif
-            break;
-        }
+        fputc('\r', state->myStdInOut);
+        fputc('\n', state->myStdInOut);
+                 
+        state->internalData.history.rdIdx = cmdOldIdx;
+        cliHistoryDecRdPointerItem(state);
+        
+        tmp++;
+            if (tmp >= CLI_STATE_HISTORY_LEN)
+                break;
     }
-    while (ptr != state->internalData.history.rdPtr);
+    while (rdIdxOld != state->internalData.history.rdIdx);
     
-    state->internalData.history.rdPtr = ptr;
+    state->internalData.history.rdIdx = rdIdxOld;
 }
 
 void cmdPrintHelp(CliState_t *state)

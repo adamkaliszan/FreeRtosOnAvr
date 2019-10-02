@@ -99,21 +99,30 @@ struct CmdState
     
     struct
     {
+        uint8_t state;
+        
         struct
         {
             char data [CLI_STATE_HISTORY_LEN];   
-            char *wrPtr;
-            char *rdPtr;
-            
-            enum CLI_HB state;
-            
+#if CLI_STATE_INP_CMD_LEN < 256
+            uint8_t rdIdx;                ///< Read index
+            uint8_t wrIdx;                ///< Write Index
+#else
+            uint16_t length;              ///< Read index
+            uint16_t editPos;             ///< Write index
+#endif
         } history;
       
         struct
         {
             char data [CLI_STATE_INP_CMD_LEN];
+#if CLI_STATE_INP_CMD_LEN < 256
             uint8_t length;               ///< Number of writen chars in buffer
             uint8_t editPos;              ///< Edit position in the buffer
+#else
+            uint16_t length;              ///< Number of writen chars in buffer
+            uint16_t editPos;             ///< Edit position in the buffer
+#endif
         } inputBuffer;
         
         struct
