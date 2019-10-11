@@ -63,12 +63,6 @@ enum CliExecuteResult
   ERROR_OPERATION_NOT_ALLOWED
 };
 
-enum CliHistoryAction
-{
-  CMDLINE_HISTORY_PREV,
-  CMDLINE_HISTORY_NEXT
-};
-
 struct Command 
 {
   const char           *commandStr;          ///< Command string
@@ -103,7 +97,6 @@ struct CmdState
         
         struct
         {
-            char data [CLI_STATE_HISTORY_LEN];   
 #if CLI_STATE_INP_CMD_LEN < 256
             uint8_t rdIdx;                ///< Read index
             uint8_t wrIdx;                ///< Write Index
@@ -111,6 +104,9 @@ struct CmdState
             uint16_t length;              ///< Read index
             uint16_t editPos;             ///< Write index
 #endif
+            uint8_t depthLength;          ///< Number of commands, that are stored
+            uint8_t depthIdx;             ///< Current cmd idx. 0: last command in history buffer
+            char data [CLI_STATE_HISTORY_LEN];   
         } history;
       
         struct
