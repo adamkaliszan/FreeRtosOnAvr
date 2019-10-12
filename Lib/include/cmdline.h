@@ -71,12 +71,23 @@ struct Command
   uint8_t              maxArgC;
 };
 
+//         +<--<--<-- Ascii char input <--<--<--<--<-- + 
+//         |                                           |
+//         +<- ALL OK <--<--+       +<--<-- KEY UP  <--+
+//         |                |       |                  |
+// EMPTY_INP_BUFFER -> READING_READING_CMD -->-->--> WRONG_CMD
+//         |                  |  A
+//         |                  V  |         
+//         +-->-->-->--> HISTORY_Watching
 
-enum CLI_HB
+
+typedef enum CLI_ST
 {
-    CLI_HB_NOT_COPIED,                
-    CLI_HB_COPIED
-};
+    CLI_ST_EMPTY = 0,
+    CLI_ST_READING_CMD = 1,
+    CLI_ST_WRONG_CMD = 2,
+    CLI_ST_HISTORY = 3
+} CLI_ST_t;
 
 struct CmdState
 {
@@ -93,8 +104,7 @@ struct CmdState
     
     struct
     {
-        uint8_t state;
-        
+        CLI_ST_t state;        
         struct
         {
 #if CLI_STATE_INP_CMD_LEN < 256
@@ -106,7 +116,8 @@ struct CmdState
 #endif
             uint8_t depthLength;          ///< Number of commands, that are stored
             uint8_t depthIdx;             ///< Current cmd idx. 0: last command in history buffer
-            char data [CLI_STATE_HISTORY_LEN];   
+            char data [CLI_STATE_HISTORY_LEN];
+
         } history;
       
         struct
@@ -123,18 +134,14 @@ struct CmdState
         
         struct
         {
-            uint8_t cmdlineInputVT100State;            ///< Commandline State TODO add enum type
-            
+            uint8_t state;            ///< Commandline State TODO add enum type
         } vty100;
 
         Command_t cmd;
         
         enum CliModeState cliMode;                 ///< CLI mode (NORMAL, ENABLED, CONFIGURE)
-
         const Command_t *cmdList;                  ///< Each CLI mode has own command list
-
     } internalData;
-  
 };
 
 

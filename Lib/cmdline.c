@@ -53,12 +53,19 @@ const char cmdlineCmdNotFound[]     PROGMEM  = "# nk";
 // internal commands
 static void cliRepaint(CliState_t *state);
 static void cliHistoryShow(CliState_t *state);
+
+
+# if CLI_STATE_INP_CMD_LEN > 255
+static uint16_t cliHistorySave(CliState_t* state);
+#else
 static uint8_t cliHistorySave(CliState_t* state);
+#endif
 
 
 static void cliHistoryNavigateTop(CliState_t *state);
-static void cliHistoryNavigateYounger(CliState_t *state);
+void cliHistoryNavigateYounger(CliState_t *state);
 static void cliHistoryNavigateOlder(CliState_t *state);
+static void cliHistoryLoad(CliState_t *state);
 
 static void cliInputDataParse(CliState_t *state);
 static void cliInputDataProcess(CliState_t *state);
@@ -75,11 +82,10 @@ static void cliPrintCommandNotFound(CliState_t *state);
 static void cliUnparse(CliState_t *state);
 
 
-static uint8_t cliHistorySave(CliState_t *state);
-
 
 static inline void cliHistoryIncWrPointer(CliState_t *state);
 static inline void cliHistoryIncRdPointerCharacter(CliState_t *state);
+static inline void cliHistoryDecRdPointerCharacter(CliState_t *state);
 static inline void cliHistoryIncRdPointerItem(CliState_t *state);
 static inline void cliHistoryDecRdPointerItem(CliState_t *state);
 
@@ -143,27 +149,7 @@ void cmdStateConfigure(CliState_t * state, FILE *stream, const Command_t *comman
   state->myStdInOut = stream;
 }
 
-/*void cmdStateClear(CmdState_t *state)
-{
-  // reset vt100 processing state
-  state->CmdlineInputVT100State = 0;
 
-  // initialize input buffer
-  state->CmdlineBufferLength = 0;
-  state->CmdlineBufferEditPos = 0;
-
-  // initialize executing function
-  state->CmdlineExecFunction = 0;
-}*/
-
-#define CLI_ST_NEW_CMD        0x01 /* Input buffer has new command */
-#define CLI_ST_PARSED         0x02 /* Input buffer is destroyed, bub can be unparsed */
-#define CLI_ST_SAVED          0x04 /* Input buffer was saved */
-#define CLI_ST_ERROR          0x08 /* Last executed command failed */
-
-#define CLI_ST_HIST_ENABLE    0x10 /* At least one command in history buffer */
-#define CLI_ST_HIST_LASC_CMD  0x20 /* last parsed command is chosen */
-#define CLI_ST_HIST_SHOWED    0x40 /* Current history item is displayed on screen (without destroyunig if input buffer) */
 
 
 
@@ -174,203 +160,135 @@ void cmdlineInputFunc(char c, CliState_t *state)
 
 /// VT100 handling
 /// are we processing a VT100 command?
-    if(state->internalData.vty100.cmdlineInputVT100State == 2)
+    if(state->internalData.vty100.state == 2)
     {
         // we have already received ESC and [. Process the vt100 codeCmdlineExcBuffer
         switch(c)
         {
         case VT100_ARROWUP:
-            fprintf(state->myStdInOut, "CLI Arr Up, state = 0x%02x history (%d/%d)\r\n", state->internalData.state, state->internalData.history.depthIdx, state->internalData.history.depthLength);
-            if (state->internalData.state & CLI_ST_NEW_CMD)
-            { /// Buffer has new command
-                if (state->internalData.state & CLI_ST_HIST_SHOWED)
-                {
-                    if (state->internalData.history.depthIdx+1 < state->internalData.history.depthLength)
-                    {   // We are NOT on the end of history
-                        fprintf(state->myStdInOut, "NavOlder, HistoryShow\r\n");
-                        cliHistoryNavigateOlder(state);
-                        cliHistoryShow(state);
-                        
-                    }
-                    else
-                    {
-                        fprintf(state->myStdInOut, "NavTop, HistoryShow, CLI_ST_HIST_SHOWED = false\r\n");
-                        // we are on the end of history
-                        cliHistoryNavigateTop(state);
-                        state->internalData.state&= ~CLI_ST_HIST_SHOWED;
-                        cliRepaint(state);
-                    }
-                          
-                }
-                else if (state->internalData.history.depthLength > 0)
-                {
-                    fprintf(state->myStdInOut, "NavTop, HistoryShow, CLI_ST_HIST_SHOWED = true\r\n");
-                    cliHistoryNavigateTop(state);
-                    state->internalData.state|= CLI_ST_HIST_SHOWED;
-                    cliHistoryShow(state);
-                }
-            }
-            else
-            { /// Input buffer is empty
-                if (state->internalData.state & CLI_ST_HIST_SHOWED)
-                {
-                    if (state->internalData.history.depthIdx+1 < state->internalData.history.depthLength)
-                    {
-                        fprintf(state->myStdInOut, "NavOlder, HistoryShow\r\n");
-                        cliHistoryNavigateOlder(state);
-                        cliHistoryShow(state);
-                    }
-                    else
-                    {
-                        fprintf(state->myStdInOut, "NavTop, unparse, cliRepaint, CLI_ST_HIST_SHOWED = false\r\n");
-                        cliHistoryNavigateTop(state);
-                        state->internalData.state&= ~CLI_ST_HIST_SHOWED;
-                        cliUnparse(state);
-                        cliRepaint(state);                        
-                    }
-                } 
-                else if (state->internalData.state & CLI_ST_PARSED)
-                {
-                    fprintf(state->myStdInOut, "unparse, cliRepaint, CLI_ST_HIST_SHOWED = true\r\n");
-                    cliUnparse(state);
-                    cliRepaint(state);
-                    state->internalData.state|= CLI_ST_HIST_SHOWED;
-                }
-                else if (state->internalData.history.depthLength > 0)
-                {
-                    fprintf(state->myStdInOut, "NavTop, history Show, CLI_ST_HIST_SHOWED = true\r\n");
-                    cliHistoryNavigateTop(state);
-                    state->internalData.state|= CLI_ST_HIST_SHOWED;
-                    cliHistoryShow(state);
-                }
-            }
-            break;
- 
-        case VT100_ARROWDOWN:
-            fprintf(state->myStdInOut, "CLI Arr Down, state = 0x%02x history (%d/%d)\r\n", state->internalData.state, state->internalData.history.depthIdx, state->internalData.history.depthLength);
-            if (state->internalData.state & CLI_ST_NEW_CMD)
-            { /// Buffer has new command
-                if (state->internalData.state & CLI_ST_HIST_SHOWED)
-                {
-                    if (state->internalData.history.depthIdx > 0)
-                    {   // We are NOT on the end of history
-                        cliHistoryNavigateYounger(state);
-                        cliHistoryShow(state);
-                    }
-                    else
-                    {
-                        // we are on the end of history
-                        cliHistoryNavigateTop(state);
-                        state->internalData.state&= ~CLI_ST_HIST_SHOWED;
-                        cliRepaint(state);
-                    }
-                          
-                }
-                else if (state->internalData.history.depthLength > 0)
-                {
-                    cliHistoryNavigateTop(state);
-                    state->internalData.state|= CLI_ST_HIST_SHOWED;
-                    cliHistoryShow(state);
-                }
-            }
-            else
-            { /// Input buffer is empty
-                if (state->internalData.state & CLI_ST_HIST_SHOWED)
-                {
-                    if (state->internalData.history.depthIdx > 0)
-                    {
-                        cliHistoryNavigateYounger(state);
-                        cliHistoryShow(state);
-                    }
-                    else
-                    {
-                        cliHistoryNavigateTop(state);
-                        state->internalData.state&= ~CLI_ST_HIST_SHOWED;
-                        cliUnparse(state);
-                        cliRepaint(state);                        
-                    }
-                } 
-                else if (state->internalData.state & CLI_ST_PARSED)
-                {
-                    cliUnparse(state);
-                    cliRepaint(state);
-                    state->internalData.state|= CLI_ST_HIST_SHOWED;
-                }
-                else if (state->internalData.history.depthLength > 0)
-                {
-                    cliHistoryNavigateTop(state);
-                    state->internalData.state|= CLI_ST_HIST_SHOWED;
-                    cliHistoryShow(state);
-                }
-            }
- 
-            break;
-    
-        case VT100_ARROWRIGHT:
-            fprintf(state->myStdInOut, "CLI Arr Right, state = 0x%02x\r\n", state->internalData.state);           
-            if (state->internalData.state & CLI_ST_NEW_CMD)
+            //fprintf(state->myStdInOut, "\tCLI Arr Up, state = %d history (%d/%d)\r\n", state->internalData.state, state->internalData.history.depthIdx, state->internalData.history.depthLength);
+            //cliPrintPrompt(state);
+            switch (state->internalData.state)
             {
-                if(state->internalData.inputBuffer.editPos < state->internalData.inputBuffer.length)
+            case CLI_ST_EMPTY:
+            case CLI_ST_READING_CMD:
+                if (state->internalData.history.depthLength > 0)
                 {
-/// increment the edit position
-                    state->internalData.inputBuffer.editPos++;
-/// move cursor forward one space (no erase)
-                    fputc(ASCII_ESC        , state->myStdInOut);
-                    fputc('['              , state->myStdInOut);
-                    fputc(VT100_ARROWRIGHT , state->myStdInOut);
+                    cliHistoryNavigateTop(state);
+                    cliHistoryShow(state);
+                    state->internalData.state = CLI_ST_HISTORY;
+                }
+                break;
+            case CLI_ST_WRONG_CMD:
+                if (state->argc > 0)
+                {
+                    cliUnparse(state);
+                    cliRepaint(state);
+                    state->internalData.state = CLI_ST_READING_CMD;
+                }
+                break;
+            case CLI_ST_HISTORY:
+                if (state->internalData.history.depthIdx + 1 < state->internalData.history.depthLength)
+                {
+                    cliHistoryNavigateOlder(state);
+                    cliHistoryShow(state);
                 }
                 else
                 {
-/// else, ring the bell
-                    fputc(ASCII_BEL        , state->myStdInOut);
+                    state->internalData.state = CLI_ST_READING_CMD;
+                    cliRepaint(state);
                 }
+                break;
+            }
+            break;
+        case VT100_ARROWDOWN:
+            switch (state->internalData.state)
+            {
+            case CLI_ST_EMPTY:
+            case CLI_ST_READING_CMD:
+            case CLI_ST_WRONG_CMD:
+                break;
+            case CLI_ST_HISTORY:
+                if (state->internalData.history.depthIdx == 0)
+                {
+                    state->internalData.state = CLI_ST_READING_CMD;
+                    cliRepaint(state);
+                }
+                else
+                {
+                    cliHistoryNavigateYounger(state);
+                    cliHistoryShow(state);
+                }
+                break;
+            }
+            break;
+    
+        case VT100_ARROWRIGHT:
+            if ((state->internalData.state == CLI_ST_READING_CMD) && (state->internalData.inputBuffer.length > state->internalData.inputBuffer.editPos))
+            {
+                state->internalData.inputBuffer.editPos++;
+                cliRepaint(state);
             }
             else
             {
-                fputc(ASCII_ESC        , state->myStdInOut);
-                fputc('['              , state->myStdInOut);
-                fputc(VT100_ARROWRIGHT , state->myStdInOut);
-                state->internalData.inputBuffer.editPos++;
-            }                
+                fputc(ASCII_BEL        , state->myStdInOut);
+            }
             break;
 
         case VT100_ARROWLEFT:
-/// if the edit position is non-zero
-            if(state->internalData.inputBuffer.editPos > 0)
+            switch (state->internalData.state)
             {
-/// decrement the edit position
-                state->internalData.inputBuffer.editPos--;
-/// move cursor back one space (no erase)
-                fputc(ASCII_BS         , state->myStdInOut);
+            case CLI_ST_EMPTY:
+            case CLI_ST_READING_CMD:
+                break;
+                
+            case CLI_ST_HISTORY:
+                cliHistoryLoad(state);
+                state->internalData.state = CLI_ST_READING_CMD;
+                break;
+                
+            case CLI_ST_WRONG_CMD:
+                cliUnparse(state);
+                state->internalData.state = CLI_ST_READING_CMD;
+                break;
             }
-            else
+            
+            if (state->internalData.state == CLI_ST_READING_CMD)
             {
-// else, ring the bell
-                fputc(ASCII_BEL        , state->myStdInOut);
+                if (state->internalData.inputBuffer.editPos > 0)
+                {
+                    state->internalData.inputBuffer.editPos--;
+                    fputc(ASCII_BS         , state->myStdInOut);
+                }
+                else
+                {
+                    fputc(ASCII_BEL        , state->myStdInOut);
+                }
             }
+            break;
 
         default:
             break;
         }
 /// done, reset state
-        state->internalData.vty100.cmdlineInputVT100State = 0;
+        state->internalData.vty100.state = 0;
         return;
     }
-    else if(state->internalData.vty100.cmdlineInputVT100State == 1)
+    else if(state->internalData.vty100.state == 1)
     {
 /// we last received [ESC]
         if(c == '[')
         {
-            state->internalData.vty100.cmdlineInputVT100State = 2;
+            state->internalData.vty100.state = 2;
             return;
         }
         else
-            state->internalData.vty100.cmdlineInputVT100State = 0;
+            state->internalData.vty100.state = 0;
     }
     else
     {
 /// anything else, reset state
-        state->internalData.vty100.cmdlineInputVT100State = 0;
+        state->internalData.vty100.state = 0;
     }
 
 /// Regular handling
@@ -386,6 +304,25 @@ void cmdlineInputFunc(char c, CliState_t *state)
 
     if( (c >= 0x20) && (c < 0x7F) )
     {
+        switch (state->internalData.state)
+        {
+        case CLI_ST_HISTORY:
+            cliHistoryLoad(state);
+            state->internalData.state = CLI_ST_READING_CMD;
+            break;
+
+        case CLI_ST_WRONG_CMD:
+            state->internalData.state = CLI_ST_EMPTY;
+            state->internalData.inputBuffer.length = 0;
+            state->internalData.inputBuffer.editPos = 0;
+            memset(state->internalData.inputBuffer.data, 0, CLI_STATE_INP_CMD_LEN);
+            break;
+        
+        case CLI_ST_EMPTY:
+        case CLI_ST_READING_CMD:
+            break;
+        }
+        
 // character is printable
 // is this a simple append
         if(state->internalData.inputBuffer.editPos == state->internalData.inputBuffer.length)
@@ -413,16 +350,22 @@ void cmdlineInputFunc(char c, CliState_t *state)
             for(i=state->internalData.inputBuffer.editPos; i < state->internalData.inputBuffer.length; i++)
                 fputc(ASCII_BS         , state->myStdInOut);
         }
+        state->internalData.state = CLI_ST_READING_CMD;
     }
 /// handle special characters
     else if(c == ASCII_CR)
     {
+        if (state->internalData.state == CLI_ST_HISTORY)
+        {
+            cliHistoryLoad(state);
+            state->internalData.state = CLI_ST_READING_CMD;
+        }
 /// user pressed [ENTER]
 /// echo CR and LF to terminal
         fputc(ASCII_CR         , state->myStdInOut);
         fputc(ASCII_LF         , state->myStdInOut);
 /// add null termination to command
-        state->internalData.inputBuffer.data[state->internalData.inputBuffer.length++] = 0;
+        state->internalData.inputBuffer.data[state->internalData.inputBuffer.length++] = '\0';
         state->internalData.inputBuffer.editPos++;
 /// command is complete, process it
         cliInputDataProcess(state);
@@ -469,11 +412,25 @@ void cmdlineInputFunc(char c, CliState_t *state)
     }
     else if(c == ASCII_DEL)
     {
-/// not yet handled
+        for (i = state->internalData.inputBuffer.editPos; i<state->internalData.inputBuffer.length; i++)
+        {
+            state->internalData.inputBuffer.data[i] = state->internalData.inputBuffer.data[i+1];
+            fputc(state->internalData.inputBuffer.data[i], state->myStdInOut);
+        }
+        if (state->internalData.inputBuffer.length > state->internalData.inputBuffer.length)
+        {
+            state->internalData.inputBuffer.length--;
+            fputc(' ', state->myStdInOut);
+            
+            i = state->internalData.inputBuffer.length - state->internalData.inputBuffer.length;
+            while (i>0)
+                fputc(ASCII_BS       , state->myStdInOut);                
+        }
+        //TODO Adam Verify it
     }
     else if(c == ASCII_ESC)
     {
-        state->internalData.vty100.cmdlineInputVT100State = 1;
+        state->internalData.vty100.state = 1;
     }
 }
 
@@ -494,11 +451,11 @@ void cliRepaint(CliState_t *state)
     for (i=0; i < state->internalData.inputBuffer.length; i++)
         fputc(state->internalData.inputBuffer.data[i], state->myStdInOut);
 
-    i = CLI_STATE_INP_CMD_LEN;
+    i = CLI_STATE_INP_CMD_LEN - state->internalData.inputBuffer.length;
     while (i--)
         fputc(' ', state->myStdInOut);
 
-    i = CLI_STATE_INP_CMD_LEN - state->internalData.inputBuffer.length;
+    i = CLI_STATE_INP_CMD_LEN - state->internalData.inputBuffer.editPos;
     while (i--)
         fputc(ASCII_BS,  state->myStdInOut);
 }
@@ -551,51 +508,54 @@ void cliHistoryNavigateOlder(CliState_t *state)
     uint16_t cntr = 0;
 #endif
     
+    state->internalData.history.depthIdx++;
+    if (state->internalData.history.depthIdx >= state->internalData.history.depthLength)
+        state->internalData.history.depthIdx = 0;
+
+    
     while (state->internalData.history.data[state->internalData.history.rdIdx] != '\0')
     {
-        cliHistoryDecRdPointerItem(state);
+        cliHistoryDecRdPointerCharacter(state);
         cntr++;
         if (cntr > CLI_STATE_HISTORY_LEN)
         {
-            fprintf(state->myStdInOut, "cliHistoryNavigateOlder ERROR 1");
+            fprintf(state->myStdInOut, "cliHistoryNavigateOlder ERROR 1 rdIdx = %d\r\n", state->internalData.history.rdIdx);
             return;
         }
     }
 
     while (state->internalData.history.data[state->internalData.history.rdIdx] == '\0')
     {
-        cliHistoryDecRdPointerItem(state);
+        cliHistoryDecRdPointerCharacter(state);
         cntr++;
         if (cntr > CLI_STATE_HISTORY_LEN)
         {
-            fprintf(state->myStdInOut, "cliHistoryNavigateOlder ERROR 2");
+            fprintf(state->myStdInOut, "cliHistoryNavigateOlder ERROR 2\r\n");
             return;
         }
     }
     
     while (state->internalData.history.data[state->internalData.history.rdIdx] != '\0')
     {
-        cliHistoryDecRdPointerItem(state);
+        cliHistoryDecRdPointerCharacter(state);
         cntr++;
         if (cntr > CLI_STATE_HISTORY_LEN)
         {
-            fprintf(state->myStdInOut, "cliHistoryNavigateOlder ERROR 3");
+            fprintf(state->myStdInOut, "cliHistoryNavigateOlder ERROR 3\r\n");
             return;
         }
     }
     cliHistoryIncRdPointerCharacter(state);
-
-    state->internalData.history.depthIdx++;
-    if (state->internalData.history.depthIdx >= state->internalData.history.depthLength)
-        state->internalData.history.depthIdx = 0;
 }
 
 void cliHistoryShow(CliState_t *state)
 {
 #if CLI_STATE_INP_CMD_LEN > 255
     uint16_t cmdLength = 0;    
+    uint16_t tmp = 0;
 #else
     uint8_t cmdLength = 0;
+    uint8_t tmp = 0;
 #endif
     
 #if CLI_STATE_HISTORY_LEN > 255
@@ -603,10 +563,6 @@ void cliHistoryShow(CliState_t *state)
 #else
     uint8_t srcIdx = state->internalData.history.rdIdx;    
 #endif
-    
-    state->internalData.state |= CLI_ST_HIST_SHOWED;
-    
-    
     
     fputc('\r', state->myStdInOut);
     cliPrintPrompt(state);
@@ -617,28 +573,30 @@ void cliHistoryShow(CliState_t *state)
         cmdLength++;
     }
 
-    state->internalData.inputBuffer.editPos = cmdLength;
-
-    while (cmdLength < CLI_STATE_INP_CMD_LEN)
+    tmp = cmdLength;
+    while (tmp < CLI_STATE_INP_CMD_LEN)
     {
         fputc(' ', state->myStdInOut);
-        cmdLength++;
+        tmp++;
     }
-    while (cmdLength > state->internalData.inputBuffer.editPos)
+    
+    while (tmp > cmdLength)
     {
         fputc(ASCII_BS, state->myStdInOut);
-        cmdLength--;
+        tmp--;
     }
 }
 
 
 void cliInputDataProcess(CliState_t *state)
 {
+    cliInputDataParse(state);    
+
+    
     uint8_t firstArgLen=0;
     const Command_t *tmpPtr = state->internalData.cmdList;                // Set list of commands. The list depends of the cli mode
 
-    while( !((state->internalData.inputBuffer.data[firstArgLen] == ' ')             // find the end of the command (excluding arguments)
-    || (state->internalData.inputBuffer.data[firstArgLen] == 0)) )                  // find first whitespace character in CmdlineBuffer
+    while(state->internalData.inputBuffer.data[firstArgLen] != '\0')                  // find first whitespace character in CmdlineBuffer
         firstArgLen++;                                                              // i determines the cammand length
 
     if(firstArgLen > 0)                                                                // command was null or empty
@@ -682,14 +640,17 @@ void cliInputDataProcess(CliState_t *state)
         memset(&state->internalData.cmd, 0, sizeof(Command_t));
     }
 
-    if (state->internalData.cmd.commandFun)
-    {
-        cliInputDataParse(state);    
-    }
-    else
+    if (state->internalData.cmd.commandFun == NULL)   
     {
         if (firstArgLen > 0)
+        {
             cliPrintCommandNotFound(state);
+            state->internalData.state = CLI_ST_WRONG_CMD;
+        }
+        else
+        {
+            state->internalData.state = CLI_ST_EMPTY;
+        }
         cliPrintPrompt(state);                                          // output a new prompt
     }
     state->internalData.inputBuffer.length = 0;
@@ -700,10 +661,16 @@ void cliInputDataProcess(CliState_t *state)
 static void cliInputDataParse(CliState_t *state)
 {
     char *data = state->internalData.inputBuffer.data;
-    
-    state->argv[0] = data;
-    state->argc = 1;
-    
+
+     state->argv[0] = data;
+    if (*data == '\0')
+    {
+        state->argc = 0;
+    }
+    else
+    {
+        state->argc = 1;
+    }
     while (*data != '\0')
     {
         if (*data != ' ')
@@ -731,6 +698,14 @@ static inline void cliHistoryIncRdPointerCharacter(CliState_t *state)
 {
     if (++state->internalData.history.rdIdx >= CLI_STATE_HISTORY_LEN)
         state->internalData.history.rdIdx = 0;    
+}
+
+static inline void cliHistoryDecRdPointerCharacter(CliState_t *state)
+{
+    if (state->internalData.history.rdIdx == 0)
+        state->internalData.history.rdIdx = CLI_STATE_HISTORY_LEN-1;
+    else
+        state->internalData.history.rdIdx--;    
 }
 
 static inline void cliHistoryIncRdPointerItem(CliState_t *state)
@@ -818,13 +793,21 @@ static void cliHistoryFreeIsNoSpace(CliState_t *state)
 
 static void cliHistoryDontSave(CliState_t *state)
 {
-    state->internalData.state &= ~CLI_ST_SAVED; 
+    
 }
 
+# if CLI_STATE_INP_CMD_LEN > 255
+static uint16_t cliHistorySave(CliState_t *state)
+{
+    uint16_t result;
+#else
 static uint8_t cliHistorySave(CliState_t *state)
 {
+    uint8_t result;
+#endif
+    
     uint8_t i;
-    uint8_t result = 0;
+    result = 0;
         
     state->internalData.history.rdIdx = state->internalData.history.wrIdx;
     
@@ -851,39 +834,43 @@ static uint8_t cliHistorySave(CliState_t *state)
         result++;            
     }
     state->internalData.history.depthLength++;
+    
     return result;
 }
 
-#if 0
 static void cliHistoryLoad(CliState_t *state)
 {
-    char *dst = state->internalData.inputBuffer.data;
+# if CLI_STATE_HISTORY_LEN > 255    
+    uint16_t srcIdx;
+#else
+    uint8_t srcIdx;    
+#endif
+#if CLI_STATE_INP_CMD_LEN > 255
+    uint16_t dstIdx;            
+#else
+    uint8_t dstIdx;        
+#endif
+    srcIdx = state->internalData.history.rdIdx;
+    dstIdx = 0;
 
     memset(state->internalData.inputBuffer.data, 0, CLI_STATE_INP_CMD_LEN);
     state->internalData.inputBuffer.length = 0;
     state->internalData.inputBuffer.editPos = 0;
     
-    if ((state->internalData.state & CLI_ST_HIST_ENABLE) != 0)
+       
+    while (state->internalData.history.data[srcIdx] != '\0')
     {
-        state->internalData.state = (CLI_ST_HIST_SHOWED | CLI_ST_HIST_ENABLE);
-        
-        while (state->internalData.history.data[state->internalData.history.rdIdx] != '\0')
-        {
-            *dst = state->internalData.history.data[state->internalData.history.rdIdx];
-            cliHistoryIncWrPointer(state);
-            
-            state->internalData.inputBuffer.length++;
-
-            if (state->internalData.inputBuffer.length == CLI_STATE_INP_CMD_LEN)
-            {
-                *dst = '\0';
-                break;
-            }            
-            dst++;
-        } 
-    }
+        state->internalData.inputBuffer.length++;
+        state->internalData.inputBuffer.editPos++;
+        state->internalData.inputBuffer.data[dstIdx] = state->internalData.history.data[srcIdx];
+        srcIdx++;
+        if (srcIdx == CLI_STATE_HISTORY_LEN)
+            srcIdx = 0;
+        dstIdx++;
+        if (dstIdx == CLI_STATE_INP_CMD_LEN)
+            break;
+    } 
 }
-#endif
 
 static void cliUnparse(CliState_t *state)
 {
@@ -907,10 +894,12 @@ static void cliUnparse(CliState_t *state)
             }
             dst++;
         }
+        *dst = ((i+1 == state->argc) || (state->internalData.inputBuffer.length == CLI_STATE_INP_CMD_LEN)) ? '\0' : ' ';
+        if (state->internalData.inputBuffer.length == CLI_STATE_INP_CMD_LEN)
+            break;
+        dst++;
     }
-    *dst = ((i+1 == state->argc) || (state->internalData.inputBuffer.length == CLI_STATE_INP_CMD_LEN)) ? '\0' : ' ';
-    
-//    state->internalData.
+    state->internalData.inputBuffer.editPos = state->internalData.inputBuffer.length;
 }
 
 void cliMainLoop(CliState_t *state)
