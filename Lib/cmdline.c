@@ -301,8 +301,8 @@ void cmdlineInputFunc(char c, CliState_t *state)
             state->internalData.inputBuffer.data[i-1] = state->internalData.inputBuffer.data[i];
         }
     }
-
-    if( (c >= 0x20) && (c < 0x7F) )
+    
+    if( (c >= 0x20) && (c < 0x7D) )
     {
         switch (state->internalData.state)
         {
@@ -347,7 +347,7 @@ void cmdlineInputFunc(char c, CliState_t *state)
 /// repaint
             cliRepaint(state);
 /// reposition cursor
-            for(i=state->internalData.inputBuffer.editPos; i < state->internalData.inputBuffer.length; i++)
+            for(i=state->internalData.inputBuffer.editPos+1; i < state->internalData.inputBuffer.length; i++)
                 fputc(ASCII_BS         , state->myStdInOut);
         }
         state->internalData.state = CLI_ST_READING_CMD;
@@ -398,10 +398,10 @@ void cmdlineInputFunc(char c, CliState_t *state)
 /// repaint
                 cliRepaint(state);
 /// add space to clear leftover characters
-                fputc(' '              , state->myStdInOut);
+//                fputc(' '              , state->myStdInOut);
 /// reposition cursor
-                for(i = state->internalData.inputBuffer.editPos; i < (state->internalData.inputBuffer.length+1); i++)
-                    fputc(ASCII_BS       , state->myStdInOut);
+//                for(i = state->internalData.inputBuffer.editPos; i < (state->internalData.inputBuffer.length+1); i++)
+//                    fputc(ASCII_BS       , state->myStdInOut);
             }
         }
         else
@@ -410,22 +410,25 @@ void cmdlineInputFunc(char c, CliState_t *state)
             fputc(ASCII_BEL          , state->myStdInOut);
         }
     }
-    else if(c == ASCII_DEL)
+    else if(c == 0x7E)//ASCII_DEL)
     {
         for (i = state->internalData.inputBuffer.editPos; i<state->internalData.inputBuffer.length; i++)
         {
             state->internalData.inputBuffer.data[i] = state->internalData.inputBuffer.data[i+1];
             fputc(state->internalData.inputBuffer.data[i], state->myStdInOut);
         }
-        if (state->internalData.inputBuffer.length > state->internalData.inputBuffer.length)
+        if (state->internalData.inputBuffer.length > state->internalData.inputBuffer.editPos)
         {
+            fputc(' ', state->myStdInOut);            
+            i = state->internalData.inputBuffer.length - state->internalData.inputBuffer.editPos;
             state->internalData.inputBuffer.length--;
-            fputc(' ', state->myStdInOut);
-            
-            i = state->internalData.inputBuffer.length - state->internalData.inputBuffer.length;
             while (i>0)
-                fputc(ASCII_BS       , state->myStdInOut);                
+            {
+                fputc(ASCII_BS       , state->myStdInOut);
+                i--;
+            }                
         }
+        //putc('X'       , state->myStdInOut);                
         //TODO Adam Verify it
     }
     else if(c == ASCII_ESC)
