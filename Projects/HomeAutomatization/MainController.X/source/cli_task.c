@@ -2,7 +2,7 @@
 
 void vTaskVTYusb(void *cliStatePtr)
 {
-  CmdState_t *state = (CmdState_t *)(cliStatePtr);
+  CliState_t *state = (CliState_t *)(cliStatePtr);
   fprintf_P(state->myStdInOut, PSTR("Restart\r\n"));
   cmdlineInputFunc('\r', state);
   
@@ -12,14 +12,14 @@ void vTaskVTYusb(void *cliStatePtr)
     if( xQueueReceive(xVtyRec, &znak, portMAX_DELAY))
     {
       cmdlineInputFunc((char)znak, state);
-      cmdlineMainLoop(state);
+      cliMainLoop(state);
     }  
   }
 }
 
 void vTaskVTYsocket(void *cliStatePtr)
 {
-  CmdState_t *state = (CmdState_t *)(cliStatePtr);
+  CliState_t *state = (CliState_t *)(cliStatePtr);
   
   char znak;
   for( ;; )
@@ -27,6 +27,6 @@ void vTaskVTYsocket(void *cliStatePtr)
     znak = 0;
     znak = fgetc(state->myStdInOut);
     cmdlineInputFunc((char)znak, state);
-    cmdlineMainLoop(state);
+    cliMainLoop(state);
   }
 }

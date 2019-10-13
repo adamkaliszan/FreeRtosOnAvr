@@ -10,11 +10,8 @@
 
 
 /* CLI */
-
 #define CLI_STATE_INP_CMD_LEN 32
-
 #define CLI_STATE_HISTORY_LEN 40
-
 #define CLI_STATE_MAX_ARGC 6
 
 

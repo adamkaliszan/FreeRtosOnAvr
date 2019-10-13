@@ -20,40 +20,40 @@
 
 extern volatile int16_t adcResults[];
 
-static CliExRes_t helpFunction           (CmdState_t *state);
-static CliExRes_t statusFunction         (CmdState_t *state);
-static CliExRes_t enableFunction         (CmdState_t *state);
-static CliExRes_t disableFunction        (CmdState_t *state);
-static CliExRes_t configureModeFunction  (CmdState_t *state);
-static CliExRes_t saveConfigFunction     (CmdState_t *state);
+static CliExRes_t helpFunction           (CliState_t *state);
+static CliExRes_t statusFunction         (CliState_t *state);
+static CliExRes_t enableFunction         (CliState_t *state);
+static CliExRes_t disableFunction        (CliState_t *state);
+static CliExRes_t configureModeFunction  (CliState_t *state);
+static CliExRes_t saveConfigFunction     (CliState_t *state);
 
-static CliExRes_t hc12modeFunction       (CmdState_t *state);
-static CliExRes_t hc12channelFunction    (CmdState_t *state);
-static CliExRes_t hc12baudrateFunction   (CmdState_t *state);
-static CliExRes_t hc12powerFunction      (CmdState_t *state);
-static CliExRes_t hc12statusFunction     (CmdState_t *state);
+static CliExRes_t hc12modeFunction       (CliState_t *state);
+static CliExRes_t hc12channelFunction    (CliState_t *state);
+static CliExRes_t hc12baudrateFunction   (CliState_t *state);
+static CliExRes_t hc12powerFunction      (CliState_t *state);
+static CliExRes_t hc12statusFunction     (CliState_t *state);
 
-static CliExRes_t hc12sendForwardFunction    (CmdState_t *state);
-static CliExRes_t hc12sendBackwordFunction   (CmdState_t *state);
-static CliExRes_t hc12sendRotateLeftFunction (CmdState_t *state);
-static CliExRes_t hc12sendRotateRightFunction(CmdState_t *state);
-static CliExRes_t hc12sendStopFunction       (CmdState_t *state);
+static CliExRes_t hc12sendForwardFunction    (CliState_t *state);
+static CliExRes_t hc12sendBackwordFunction   (CliState_t *state);
+static CliExRes_t hc12sendRotateLeftFunction (CliState_t *state);
+static CliExRes_t hc12sendRotateRightFunction(CliState_t *state);
+static CliExRes_t hc12sendStopFunction       (CliState_t *state);
 
-static CliExRes_t sim900OnFunction           (CmdState_t *state);
-static CliExRes_t sim900OffFunction          (CmdState_t *state);
-static CliExRes_t sim900atMode               (CmdState_t *state);
+static CliExRes_t sim900OnFunction           (CliState_t *state);
+static CliExRes_t sim900OffFunction          (CliState_t *state);
+static CliExRes_t sim900atMode               (CliState_t *state);
 
-static CliExRes_t adcReadVoltagePwrSply      (CmdState_t *state);
-static CliExRes_t adcReadCurrentPwrSply      (CmdState_t *state);
+static CliExRes_t adcReadVoltagePwrSply      (CliState_t *state);
+static CliExRes_t adcReadCurrentPwrSply      (CliState_t *state);
 
 
-static CliExRes_t sendHC12(CmdState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[]);
-static CliExRes_t sendHC12AtCmd(CmdState_t *state, const char cmd[]);
+static CliExRes_t sendHC12(CliState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[]);
+static CliExRes_t sendHC12AtCmd(CliState_t *state, const char cmd[]);
 
-static CliExRes_t sendHC12loopback(CmdState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[]);
+static CliExRes_t sendHC12loopback(CliState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[]);
 
-static CliExRes_t powerOnFunction           (CmdState_t *state);
-static CliExRes_t powerOffFunction           (CmdState_t *state);
+static CliExRes_t powerOnFunction           (CliState_t *state);
+static CliExRes_t powerOffFunction           (CliState_t *state);
 
 const char okStr[] PROGMEM = "OK\r\n";
 const char nlStr[] PROGMEM = "\r\n";
@@ -131,38 +131,38 @@ const Command_t cmdListConfigure[] PROGMEM =
   {NULL, NULL, NULL}
 };
 
-void VtyInit(CmdState_t* state, FILE *stream)
+void VtyInit(CliState_t* state, FILE *stream)
 {
-  cmdStateConfigure(state, (char *)(xmalloc(CLI_BUF_TOT_LEN)), CLI_BUF_TOT_LEN, stream, &cmdListNormal[0], NR_NORMAL);
+  cmdStateConfigure(state, stream, &cmdListNormal[0], NR_NORMAL);
 }
 
-void printErrorInfo(CmdState_t *state)
+void printErrorInfo(CliState_t *state)
 {
 //  if (state->errno != 0)
 //  {
 //    fprintf_P(state->myStdInOut, (const char*)(pgm_read_word(errorStrings + state->errno)), state->err1, state->err2);
 //  }
-  state->errno = 0;
-  state->err1 = 0;
-  state->err2 = 0;
+  state->error.errno = 0;
+  state->error.err1 = 0;
+  state->error.err2 = 0;
 }
 
-static CliExRes_t enableFunction(CmdState_t *state)
+static CliExRes_t enableFunction(CliState_t *state)
 {
-  if (state->cliMode != RESTRICTED_NORMAL)
+  if (state->internalData.cliMode != RESTRICTED_NORMAL)
   {
-    state->cmdList = cmdListEnable;
-    state->cliMode = NR_ENABLE;
+    state->internalData.cmdList = cmdListEnable;
+    state->internalData.cliMode = NR_ENABLE;
     return OK_SILENT;
   }
   return ERROR_OPERATION_NOT_ALLOWED;
 }
-static CliExRes_t disableFunction(CmdState_t *state)
+static CliExRes_t disableFunction(CliState_t *state)
 {
-  state->cmdList = cmdListNormal;
-  if (state->cliMode != RESTRICTED_NORMAL)
+  state->internalData.cmdList = cmdListNormal;
+  if (state->internalData.cliMode != RESTRICTED_NORMAL)
   {
-    state->cliMode = NR_NORMAL;
+    state->internalData.cliMode = NR_NORMAL;
   }
   return OK_SILENT;
 }
@@ -207,7 +207,7 @@ void printStatus(FILE *stream)
   //Print system state
 }
 
-static CliExRes_t adcReadVoltagePwrSply      (CmdState_t *state)
+static CliExRes_t adcReadVoltagePwrSply      (CliState_t *state)
 {
   int16_t val = adcResults[1];//  getVoltagePwrSply();
 
@@ -226,7 +226,7 @@ static CliExRes_t adcReadVoltagePwrSply      (CmdState_t *state)
   return OK_SILENT;
 }
 
-static CliExRes_t adcReadCurrentPwrSply      (CmdState_t *state)
+static CliExRes_t adcReadCurrentPwrSply      (CliState_t *state)
 {
   int16_t val = getCurrentPwrSply();
   fprintf_P(state->myStdInOut, PSTR("Current %d\r\n"), val);
@@ -236,42 +236,42 @@ static CliExRes_t adcReadCurrentPwrSply      (CmdState_t *state)
 
 // ************************** CLI Functions *********************************************************************************
 
-static CliExRes_t statusFunction(CmdState_t *state)
+static CliExRes_t statusFunction(CliState_t *state)
 {
   printStatus(state->myStdInOut);
   return OK_SILENT;
 }
 
-static CliExRes_t helpFunction(CmdState_t *state)
+static CliExRes_t helpFunction(CliState_t *state)
 {
   cmdPrintHelp(state);
   return OK_SILENT;
 }
 
-static CliExRes_t saveConfigFunction(CmdState_t *state)
+static CliExRes_t saveConfigFunction(CliState_t *state)
 {
   (void) state;
   saveConfiguration();
   return OK_SILENT;
 }
 
-static CliExRes_t configureModeFunction(CmdState_t *state)
+static CliExRes_t configureModeFunction(CliState_t *state)
 {
-  if (state->cliMode == NR_ENABLE)
+  if (state->internalData.cliMode == NR_ENABLE)
   {
-    state->cmdList = cmdListConfigure;
-    state->cliMode = NR_CONFIGURE;
+    state->internalData.cmdList = cmdListConfigure;
+    state->internalData.cliMode = NR_CONFIGURE;
     return OK_SILENT;
   }
   return ERROR_OPERATION_NOT_ALLOWED;
 }
 
-static CliExRes_t powerOnFunction           (CmdState_t *state)
+static CliExRes_t powerOnFunction           (CliState_t *state)
 {
-  if (state->argc != 1)
+  if (state->argc < 2)
     return ERROR_INFORM;
 
-  uint8_t outNo = cmdlineGetArgInt(1, state);
+  uint8_t outNo = atoi(state->argv[1]);
   if (outNo > 12 || outNo == 0)
     return ERROR_INFORM;
 
@@ -279,12 +279,12 @@ static CliExRes_t powerOnFunction           (CmdState_t *state)
   return OK_SILENT;
 }
 
-static CliExRes_t powerOffFunction           (CmdState_t *state)
+static CliExRes_t powerOffFunction           (CliState_t *state)
 {
-  if (state->argc != 1)
+  if (state->argc < 2)
     return ERROR_INFORM;
 
-  uint8_t outNo = cmdlineGetArgInt(1, state);
+  uint8_t outNo = atoi(state->argv[1]);
   if (outNo > 12 || outNo == 0)
     return ERROR_INFORM;
 
@@ -293,96 +293,96 @@ static CliExRes_t powerOffFunction           (CmdState_t *state)
 }
 
 
-static CliExRes_t hc12sendForwardFunction    (CmdState_t *state)
+static CliExRes_t hc12sendForwardFunction    (CliState_t *state)
 {
   TlvMsgMoveDta_t dta;
   dta.duration = 0;
   dta.pwmLeft  = 50;
   dta.pwmRight = 50;
 
-  if (state->argc == 1)
-    dta.pwmLeft = dta.pwmRight = cmdlineGetArgInt(1, state);
-  if (state->argc >=2)
+  if (state->argc == 2)
+    dta.pwmLeft = dta.pwmRight = atoi(state->argv[1]);
+  if (state->argc >2)
   {
-    dta.pwmLeft = cmdlineGetArgInt(1, state);
-    dta.pwmRight = cmdlineGetArgInt(2, state);
+    dta.pwmLeft = atoi(state->argv[1]);
+    dta.pwmRight = atoi(state->argv[2]);
   }
   sendHC12(state, 0, FORWARD, sizeof(TlvMsgMoveDta_t), (uint8_t *) &dta);
   return OK_SILENT;
 }
 
-static CliExRes_t hc12sendBackwordFunction   (CmdState_t *state)
+static CliExRes_t hc12sendBackwordFunction   (CliState_t *state)
 {
   TlvMsgMoveDta_t dta;
   dta.duration = 0;
   dta.pwmLeft  = 50;
   dta.pwmRight = 50;
 
-  if (state->argc == 1)
-    dta.pwmLeft = dta.pwmRight = cmdlineGetArgInt(1, state);
-  if (state->argc >=2)
+  if (state->argc == 2)
+    dta.pwmLeft = dta.pwmRight = atoi(state->argv[1]);
+  if (state->argc >2)
   {
-    dta.pwmLeft = cmdlineGetArgInt(1, state);
-    dta.pwmRight = cmdlineGetArgInt(2, state);
+    dta.pwmLeft = atoi(state->argv[1]);
+    dta.pwmRight = atoi(state->argv[2]);
   }
   sendHC12(state, 0, BACKWORD, sizeof(TlvMsgMoveDta_t), (uint8_t *) &dta);
   return OK_SILENT;
 }
 
 
-static CliExRes_t hc12sendRotateLeftFunction    (CmdState_t *state)
+static CliExRes_t hc12sendRotateLeftFunction    (CliState_t *state)
 {
   TlvMsgMoveDta_t dta;
   dta.duration = 0;
   dta.pwmLeft  = 50;
   dta.pwmRight = 50;
 
-  if (state->argc == 1)
-    dta.pwmLeft = dta.pwmRight = cmdlineGetArgInt(1, state);
-  if (state->argc >=2)
+  if (state->argc == 2)
+    dta.pwmLeft = dta.pwmRight = atoi(state->argv[1]);
+  if (state->argc >2)
   {
-    dta.pwmLeft = cmdlineGetArgInt(1, state);
-    dta.pwmRight = cmdlineGetArgInt(2, state);
+    dta.pwmLeft = atoi(state->argv[1]);
+    dta.pwmRight = atoi(state->argv[2]);
   }
   sendHC12(state, 0, ROTATE_LEFT, sizeof(TlvMsgMoveDta_t), (uint8_t *) &dta);
 
   return OK_SILENT;
 }
 
-static CliExRes_t hc12sendRotateRightFunction    (CmdState_t *state)
+static CliExRes_t hc12sendRotateRightFunction    (CliState_t *state)
 {
   TlvMsgMoveDta_t dta;
   dta.duration = 0;
   dta.pwmLeft  = 50;
   dta.pwmRight = 50;
 
-  if (state->argc == 1)
-    dta.pwmLeft = dta.pwmRight = cmdlineGetArgInt(1, state);
-  if (state->argc >=2)
+  if (state->argc == 2)
+    dta.pwmLeft = dta.pwmRight = atoi(state->argv[1]);
+  if (state->argc >2)
   {
-    dta.pwmLeft = cmdlineGetArgInt(1, state);
-    dta.pwmRight = cmdlineGetArgInt(2, state);
+    dta.pwmLeft = atoi(state->argv[1]);
+    dta.pwmRight = atoi(state->argv[2]);
   }
   sendHC12(state, 0, ROTATE_RIGHT, sizeof(TlvMsgMoveDta_t), (uint8_t *) &dta);
 
   return OK_SILENT;
 }
 
-static CliExRes_t hc12sendStopFunction       (CmdState_t *state)
+static CliExRes_t hc12sendStopFunction       (CliState_t *state)
 {
   sendHC12(state, 0, STOP, 0, NULL);
   return OK_SILENT;
 }
 
-static CliExRes_t sendHC12AtCmd(CmdState_t *state, const char cmd[])
+static CliExRes_t sendHC12AtCmd(CliState_t *state, const char cmd[])
 {
   if (xSemaphoreTake(Hc12semaphore, 10) == pdTRUE)
   {
     vTaskDelay(2);
     HC12setAtMode();
     vTaskDelay(25);
-    fprintf_P(state->myStdInOut, cmd, cmdlineGetArgStr(1, state));
-    fprintf_P(&hc12Stream,       cmd, cmdlineGetArgStr(1, state));
+    fprintf_P(state->myStdInOut, cmd, state->argv[1]);
+    fprintf_P(&hc12Stream,       cmd, state->argv[1]);
 
     uint8_t val;
     while (xQueueReceive(xHC12Rec, &val, 100) == pdTRUE)
@@ -400,7 +400,7 @@ static CliExRes_t sendHC12AtCmd(CmdState_t *state, const char cmd[])
   }
 }
 
-static CliExRes_t sendHC12(CmdState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[])
+static CliExRes_t sendHC12(CliState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[])
 {
   (void) state;
   TlvMsg_t msg;
@@ -416,7 +416,7 @@ static CliExRes_t sendHC12(CmdState_t *state, uint8_t addr, uint8_t type, uint8_
   return OK_INFORM;
 }
 
-__attribute__((unused)) static CliExRes_t sendHC12loopback(CmdState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[])
+__attribute__((unused)) static CliExRes_t sendHC12loopback(CliState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[])
 {
   (void) state;
   TlvMsg_t msg;
@@ -432,50 +432,50 @@ __attribute__((unused)) static CliExRes_t sendHC12loopback(CmdState_t *state, ui
   return OK_INFORM;
 }
 
-static CliExRes_t hc12modeFunction       (CmdState_t *state)
+static CliExRes_t hc12modeFunction       (CliState_t *state)
 {
-    confHC12mode = cmdlineGetArgInt(1, state);
+    confHC12mode = atoi(state->argv[1]);
     return sendHC12AtCmd(state, PSTR("AT+FU%s\r\n"));
 }
 
-static CliExRes_t hc12channelFunction    (CmdState_t *state)
+static CliExRes_t hc12channelFunction    (CliState_t *state)
 {
-    confHC12channel = cmdlineGetArgInt(1, state);
+    confHC12channel = atoi(state->argv[1]);
     return sendHC12AtCmd(state, PSTR("AT+C%s\r\n"));
 }
 
-static CliExRes_t hc12baudrateFunction   (CmdState_t *state)
+static CliExRes_t hc12baudrateFunction   (CliState_t *state)
 {
-    confHC12baud = cmdlineGetArgInt(1, state);
+    confHC12baud = atoi(state->argv[1]);
     return sendHC12AtCmd(state, PSTR("AT+B%s\r\n"));
 }
 
-static CliExRes_t hc12powerFunction      (CmdState_t *state)
+static CliExRes_t hc12powerFunction      (CliState_t *state)
 {
-    confHC12power = cmdlineGetArgInt(1, state);
+    confHC12power = atoi(state->argv[1]);
     return sendHC12AtCmd(state, PSTR("AT+P%s\r\n"));
 }
 
-static CliExRes_t hc12statusFunction     (CmdState_t *state)
+static CliExRes_t hc12statusFunction     (CliState_t *state)
 {
     return sendHC12AtCmd(state, PSTR("AT+RX\r\n"));
 }
 
-static CliExRes_t sim900OnFunction           (CmdState_t *state)
+static CliExRes_t sim900OnFunction           (CliState_t *state)
 {
     (void) state;
     sim900pwrOn();
     return OK_INFORM;
 }
 
-static CliExRes_t sim900OffFunction          (CmdState_t *state)
+static CliExRes_t sim900OffFunction          (CliState_t *state)
 {
     (void) state;
     sim900pwrOffHw();
     return OK_INFORM;
 }
 
-static CliExRes_t sim900atMode               (CmdState_t *state)
+static CliExRes_t sim900atMode               (CliState_t *state)
 {
     uint8_t znak;
     fprintf_P(state->myStdInOut, PSTR("Press ^z to exit at mode\r\n"));

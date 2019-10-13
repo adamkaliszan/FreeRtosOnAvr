@@ -8,10 +8,11 @@
 #define LANG_EN 1
 #define LANG_PL 0
 
-
 /* CLI */
-#define CMD_STATE_HISTORY 4
-#define CMD_STATE_HISTORY_MASK 0x03
+#define CLI_STATE_INP_CMD_LEN 32
+#define CLI_STATE_HISTORY_LEN 40
+#define CLI_STATE_MAX_ARGC 6
+
 
 
 #endif
