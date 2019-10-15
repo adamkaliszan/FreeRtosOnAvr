@@ -49,6 +49,7 @@
       <itemPath>vty_pl.h</itemPath>
       <itemPath>taskSensors.h</itemPath>
       <itemPath>sensors.h</itemPath>
+      <itemPath>../../../LibRtos/include/ibus.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -89,6 +90,7 @@
       <itemPath>vty.c</itemPath>
       <itemPath>hc12.c</itemPath>
       <itemPath>taskSensors.c</itemPath>
+      <itemPath>../../../LibRtos/ibus.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

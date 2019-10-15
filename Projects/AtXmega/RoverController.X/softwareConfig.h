@@ -15,5 +15,8 @@
 #define CLI_STATE_MAX_ARGC 6
 
 
+//#define USE_IBUS 1
+//#define IBUS_NO_OF_CHAN 8
+
 
 #endif
