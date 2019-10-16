@@ -1,0 +1,27 @@
+Zlacze Rs232:
+1) 5V
+2) RXD
+3) TXD
+4) GND
+
+ISP:
+1) GND
+2) RESET
+3) SCK
+4) MISO
+5) MOSI
+
+SterTest1 - zlacze do sterowaniasilnikami
+GND	|9 10| 5V
+lewy p	|7  8| prawy p
+lewy t	|5  6| prawy t
+l prad  |3  4| prawy prad
+l refer	|1  2| prawy referencja
+
+SterTest2 - zlacze do sterowaniasilnikami IRF7389
+GND	|9 10| 5V
+lewy p	|7  8| prawy przód
+lewy t	|5  6| prawy tyl
+l komp  |3  4| prawy komparator out
+l refer	|1  2| prawy referencja
+

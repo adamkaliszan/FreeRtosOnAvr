@@ -1,0 +1,466 @@
+EESchema Schematic File Version 4
+LIBS:czujnikiRpi3b-cache
+EELAYER 26 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 9
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Sheet
+S 3650 4150 900  3300
+U 5DA750F6
+F0 "CPU" 50
+F1 "cpu.sch" 50
+F2 "PD1" I L 3650 5900 50 
+F3 "PD2" I L 3650 5400 50 
+F4 "PD3" I L 3650 5500 50 
+F5 "PC3" I R 4550 7250 50 
+F6 "PC2" I R 4550 7350 50 
+F7 "PE1" I L 3650 4250 50 
+F8 "PE2" I L 3650 4350 50 
+F9 "PE3" I L 3650 4450 50 
+F10 "PR0" I L 3650 4550 50 
+F11 "PR1" I R 4550 4250 50 
+$EndSheet
+$Sheet
+S 1650 3100 900  1350
+U 5DA75EF8
+F0 "USB" 50
+F1 "USB.sch" 50
+F2 "PWR_USB" I R 2550 3450 50 
+F3 "RX1" I R 2550 3650 50 
+F4 "TX1" I R 2550 3750 50 
+F5 "TX0" I R 2550 4200 50 
+F6 "RX0" I R 2550 4050 50 
+$EndSheet
+Text GLabel 997  2257 0    10   BiDi ~ 0
+GND
+$Comp
+L czujnikiRpi3b-eagle-import:SIM900 IC2
+U 2 0 F59E75D07277C65C
+P 997 2257
+AR Path="/F59E75D07277C65C" Ref="IC2"  Part="2" 
+AR Path="/" Ref="IC2"  Part="2" 
+F 0 "IC2" H 597 2557 150 0001 L BNN
+F 1 "SIM900" H 597 1757 150 0001 L BNN
+F 2 "czujnikiRpi3b:SIM900" H 997 2257 50  0001 C CNN
+F 3 "" H 997 2257 50  0001 C CNN
+	2    997  2257
+	1    0    0    -1  
+$EndComp
+Text GLabel 1817 2257 0    10   BiDi ~ 0
+GND
+$Comp
+L czujnikiRpi3b-eagle-import:SIM900 IC2
+U 3 0 F59E75D07277C658
+P 1817 2257
+AR Path="/F59E75D07277C658" Ref="IC2"  Part="3" 
+AR Path="/" Ref="IC2"  Part="3" 
+F 0 "IC2" H 1417 2557 150 0001 L BNN
+F 1 "SIM900" H 1417 1757 150 0001 L BNN
+F 2 "czujnikiRpi3b:SIM900" H 1817 2257 50  0001 C CNN
+F 3 "" H 1817 2257 50  0001 C CNN
+	3    1817 2257
+	1    0    0    -1  
+$EndComp
+Text GLabel 2637 2257 0    10   BiDi ~ 0
+GND
+$Comp
+L czujnikiRpi3b-eagle-import:SIM900 IC2
+U 4 0 F59E75D07277C644
+P 2637 2257
+AR Path="/F59E75D07277C644" Ref="IC2"  Part="4" 
+AR Path="/" Ref="IC2"  Part="4" 
+F 0 "IC2" H 2237 2557 150 0001 L BNN
+F 1 "SIM900" H 2237 1757 150 0001 L BNN
+F 2 "czujnikiRpi3b:SIM900" H 2637 2257 50  0001 C CNN
+F 3 "" H 2637 2257 50  0001 C CNN
+	4    2637 2257
+	1    0    0    -1  
+$EndComp
+Text GLabel 3457 2257 0    10   BiDi ~ 0
+GND
+$Comp
+L czujnikiRpi3b-eagle-import:SIM900 IC2
+U 5 0 F59E75D07277C640
+P 3457 2257
+AR Path="/F59E75D07277C640" Ref="IC2"  Part="5" 
+AR Path="/" Ref="IC2"  Part="5" 
+F 0 "IC2" H 3057 2557 150 0001 L BNN
+F 1 "SIM900" H 3057 1757 150 0001 L BNN
+F 2 "czujnikiRpi3b:SIM900" H 3457 2257 50  0001 C CNN
+F 3 "" H 3457 2257 50  0001 C CNN
+	5    3457 2257
+	1    0    0    -1  
+$EndComp
+Text GLabel 4277 2257 0    10   BiDi ~ 0
+GND
+$Comp
+L czujnikiRpi3b-eagle-import:SIM900 IC2
+U 6 0 F59E75D07277C64C
+P 4277 2257
+AR Path="/F59E75D07277C64C" Ref="IC2"  Part="6" 
+AR Path="/" Ref="IC2"  Part="6" 
+F 0 "IC2" H 3877 2557 150 0001 L BNN
+F 1 "SIM900" H 3877 1757 150 0001 L BNN
+F 2 "czujnikiRpi3b:SIM900" H 4277 2257 50  0001 C CNN
+F 3 "" H 4277 2257 50  0001 C CNN
+	6    4277 2257
+	1    0    0    -1  
+$EndComp
+Text GLabel 5097 2257 0    10   BiDi ~ 0
+GND
+$Comp
+L czujnikiRpi3b-eagle-import:SIM900 IC2
+U 7 0 F59E75D07277C648
+P 5097 2257
+AR Path="/F59E75D07277C648" Ref="IC2"  Part="7" 
+AR Path="/" Ref="IC2"  Part="7" 
+F 0 "IC2" H 4697 2557 150 0001 L BNN
+F 1 "SIM900" H 4697 1757 150 0001 L BNN
+F 2 "czujnikiRpi3b:SIM900" H 5097 2257 50  0001 C CNN
+F 3 "" H 5097 2257 50  0001 C CNN
+	7    5097 2257
+	1    0    0    -1  
+$EndComp
+Text GLabel 5917 2257 0    10   BiDi ~ 0
+GND
+$Comp
+L czujnikiRpi3b-eagle-import:SIM900 IC2
+U 8 0 F59E75D07277C674
+P 5917 2257
+AR Path="/F59E75D07277C674" Ref="IC2"  Part="8" 
+AR Path="/" Ref="IC2"  Part="8" 
+F 0 "IC2" H 5517 2557 150 0001 L BNN
+F 1 "SIM900" H 5517 1757 150 0001 L BNN
+F 2 "czujnikiRpi3b:SIM900" H 5917 2257 50  0001 C CNN
+F 3 "" H 5917 2257 50  0001 C CNN
+	8    5917 2257
+	1    0    0    -1  
+$EndComp
+Text GLabel 6737 2257 0    10   BiDi ~ 0
+GND
+$Comp
+L czujnikiRpi3b-eagle-import:SIM900 IC2
+U 9 0 F59E75D07277C670
+P 6737 2257
+AR Path="/F59E75D07277C670" Ref="IC2"  Part="9" 
+AR Path="/" Ref="IC2"  Part="9" 
+F 0 "IC2" H 6337 2557 150 0001 L BNN
+F 1 "SIM900" H 6337 1757 150 0001 L BNN
+F 2 "czujnikiRpi3b:SIM900" H 6737 2257 50  0001 C CNN
+F 3 "" H 6737 2257 50  0001 C CNN
+	9    6737 2257
+	1    0    0    -1  
+$EndComp
+Text GLabel 7557 2257 0    10   BiDi ~ 0
+GND
+$Comp
+L czujnikiRpi3b-eagle-import:SIM900 IC2
+U 10 0 F59E75D07277C67C
+P 7557 2257
+AR Path="/F59E75D07277C67C" Ref="IC2"  Part="10" 
+AR Path="/" Ref="IC2"  Part="10" 
+F 0 "IC2" H 7157 2557 150 0001 L BNN
+F 1 "SIM900" H 7157 1757 150 0001 L BNN
+F 2 "czujnikiRpi3b:SIM900" H 7557 2257 50  0001 C CNN
+F 3 "" H 7557 2257 50  0001 C CNN
+	10   7557 2257
+	1    0    0    -1  
+$EndComp
+Text GLabel 8377 2257 0    10   BiDi ~ 0
+GND
+$Comp
+L czujnikiRpi3b-eagle-import:SIM900 IC2
+U 11 0 F59E75D07277C678
+P 8377 2257
+AR Path="/F59E75D07277C678" Ref="IC2"  Part="11" 
+AR Path="/" Ref="IC2"  Part="11" 
+F 0 "IC2" H 7977 2557 150 0001 L BNN
+F 1 "SIM900" H 7977 1757 150 0001 L BNN
+F 2 "czujnikiRpi3b:SIM900" H 8377 2257 50  0001 C CNN
+F 3 "" H 8377 2257 50  0001 C CNN
+	11   8377 2257
+	1    0    0    -1  
+$EndComp
+Text GLabel 9197 2257 0    10   BiDi ~ 0
+GND
+$Comp
+L czujnikiRpi3b-eagle-import:SIM900 IC2
+U 12 0 F59E75D07277C664
+P 9197 2257
+AR Path="/F59E75D07277C664" Ref="IC2"  Part="12" 
+AR Path="/" Ref="IC2"  Part="12" 
+F 0 "IC2" H 8797 2557 150 0001 L BNN
+F 1 "SIM900" H 8797 1757 150 0001 L BNN
+F 2 "czujnikiRpi3b:SIM900" H 9197 2257 50  0001 C CNN
+F 3 "" H 9197 2257 50  0001 C CNN
+	12   9197 2257
+	1    0    0    -1  
+$EndComp
+Text GLabel 10017 2257 0    10   BiDi ~ 0
+GND
+$Comp
+L czujnikiRpi3b-eagle-import:SIM900 IC2
+U 13 0 F59E75D07277C660
+P 10017 2257
+AR Path="/F59E75D07277C660" Ref="IC2"  Part="13" 
+AR Path="/" Ref="IC2"  Part="13" 
+F 0 "IC2" H 9617 2557 150 0001 L BNN
+F 1 "SIM900" H 9617 1757 150 0001 L BNN
+F 2 "czujnikiRpi3b:SIM900" H 10017 2257 50  0001 C CNN
+F 3 "" H 10017 2257 50  0001 C CNN
+	13   10017 2257
+	1    0    0    -1  
+$EndComp
+Text GLabel 10837 2257 0    10   BiDi ~ 0
+GND
+$Comp
+L czujnikiRpi3b-eagle-import:SIM900 IC2
+U 14 0 F59E75D07277C66C
+P 10837 2257
+AR Path="/F59E75D07277C66C" Ref="IC2"  Part="14" 
+AR Path="/" Ref="IC2"  Part="14" 
+F 0 "IC2" H 10437 2557 150 0001 L BNN
+F 1 "SIM900" H 10437 1757 150 0001 L BNN
+F 2 "czujnikiRpi3b:SIM900" H 10837 2257 50  0001 C CNN
+F 3 "" H 10837 2257 50  0001 C CNN
+	14   10837 2257
+	1    0    0    -1  
+$EndComp
+Text GLabel 11657 2257 0    10   BiDi ~ 0
+GND
+$Comp
+L czujnikiRpi3b-eagle-import:SIM900 IC2
+U 15 0 F59E75D07277C668
+P 11657 2257
+AR Path="/F59E75D07277C668" Ref="IC2"  Part="15" 
+AR Path="/" Ref="IC2"  Part="15" 
+F 0 "IC2" H 11257 2557 150 0001 L BNN
+F 1 "SIM900" H 11257 1757 150 0001 L BNN
+F 2 "czujnikiRpi3b:SIM900" H 11657 2257 50  0001 C CNN
+F 3 "" H 11657 2257 50  0001 C CNN
+	15   11657 2257
+	1    0    0    -1  
+$EndComp
+Text GLabel 997  3288 0    10   BiDi ~ 0
+GND
+$Comp
+L czujnikiRpi3b-eagle-import:SIM900 IC2
+U 16 0 F59E75D07277C614
+P 997 3288
+AR Path="/F59E75D07277C614" Ref="IC2"  Part="16" 
+AR Path="/" Ref="IC2"  Part="16" 
+F 0 "IC2" H 597 3588 150 0001 L BNN
+F 1 "SIM900" H 597 2788 150 0001 L BNN
+F 2 "czujnikiRpi3b:SIM900" H 997 3288 50  0001 C CNN
+F 3 "" H 997 3288 50  0001 C CNN
+	16   997  3288
+	1    0    0    -1  
+$EndComp
+$Sheet
+S 1650 4850 900  1300
+U 5DA93BC9
+F0 "Sim900" 50
+F1 "sim900.sch" 50
+F2 "DBG_TX" I R 2550 5000 50 
+F3 "DBG_RX" I R 2550 5150 50 
+F4 "RST" I R 2550 5900 50 
+F5 "RXD" I R 2550 5500 50 
+F6 "TXD" I R 2550 5400 50 
+F7 "PWR" I R 2550 5800 50 
+$EndSheet
+Wire Wire Line
+	2550 5400 3650 5400
+Wire Wire Line
+	2550 5500 3650 5500
+Wire Wire Line
+	3650 5900 2550 5900
+$Comp
+L czujnikiRpi3b-eagle-import:JP2Q JP_CPU?
+U 1 0 5DCBC7A8
+P 2700 4600
+AR Path="/5DCBC7A8" Ref="JP_CPU?"  Part="1" 
+AR Path="/5DA75EF8/5DCBC7A8" Ref="JP_CPU?"  Part="1" 
+F 0 "JP_CPU?" H 2450 4600 59  0000 L BNN
+F 1 "JP2Q" H 2600 4500 59  0000 L BNN
+F 2 "czujnikiRpi3b:JP2Q" H 2700 4600 50  0001 C CNN
+F 3 "" H 2700 4600 50  0001 C CNN
+	1    2700 4600
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2700 4200 2700 4300
+Wire Wire Line
+	2550 4200 2700 4200
+Wire Wire Line
+	2800 4050 2800 4300
+Wire Wire Line
+	2550 4050 2800 4050
+Wire Wire Line
+	2800 4900 2800 5150
+Wire Wire Line
+	2550 5150 2800 5150
+Wire Wire Line
+	2700 4900 2700 5000
+Wire Wire Line
+	2550 5000 2700 5000
+$Sheet
+S 1650 6400 900  400 
+U 5DD2AD5C
+F0 "HC12" 50
+F1 "HC12.sch" 50
+F2 "SET" I R 2550 6500 50 
+F3 "TX" I R 2550 6600 50 
+F4 "RX" I R 2550 6700 50 
+$EndSheet
+$Sheet
+S 3650 3000 900  800 
+U 5DD2AD62
+F0 "RPI" 50
+F1 "RPI.sch" 50
+F2 "PWR_3.3_EN" I L 3650 3700 50 
+F3 "TX" I L 3650 3600 50 
+F4 "RX" I L 3650 3500 50 
+F5 "PWR_5_EN" I L 3650 3400 50 
+$EndSheet
+$Sheet
+S 5050 3850 1300 1200
+U 5DD2AD78
+F0 "Opto" 50
+F1 "opto.sch" 50
+F2 "Enable_in" I L 5050 4250 50 
+F3 "Enable_out" I R 6350 4250 50 
+F4 "PWM_A_in" I L 5050 4400 50 
+F5 "PWM_B_in" I L 5050 4750 50 
+F6 "A1_in" I L 5050 4500 50 
+F7 "A2_in" I L 5050 4600 50 
+F8 "B1_in" I L 5050 4850 50 
+F9 "B2_in" I L 5050 4950 50 
+$EndSheet
+$Sheet
+S 1650 7050 900  400 
+U 5DD2AD87
+F0 "ZigBee" 50
+F1 "ZigBee.sch" 50
+F2 "RST" I R 2550 7150 50 
+F3 "TX" I R 2550 7250 50 
+F4 "RX" I R 2550 7350 50 
+$EndSheet
+Wire Wire Line
+	2550 6600 2850 6600
+Wire Wire Line
+	2850 6600 2850 7250
+Wire Wire Line
+	2850 7250 2550 7250
+Wire Wire Line
+	2550 6700 2750 6700
+Wire Wire Line
+	2750 6700 2750 7350
+Wire Wire Line
+	2750 7350 2550 7350
+Wire Wire Line
+	2550 6500 2650 6500
+Wire Wire Line
+	2650 6500 2650 7150
+Wire Wire Line
+	2650 7150 2550 7150
+$Comp
+L czujnikiRpi3b-eagle-import:22-23-2041 RS?
+U 1 0 5DDC84A8
+P 5000 7450
+AR Path="/5DDC84A8" Ref="RS?"  Part="1" 
+AR Path="/5DA750F6/5DDC84A8" Ref="RS?"  Part="1" 
+F 0 "RS?" H 5100 7450 51  0000 L BNN
+F 1 "22-23-2041" H 4970 7505 59  0001 L BNN
+F 2 "czujnikiRpi3b:22-23-2041" H 5000 7450 50  0001 C CNN
+F 3 "" H 5000 7450 50  0001 C CNN
+	1    5000 7450
+	1    0    0    -1  
+$EndComp
+$Comp
+L czujnikiRpi3b-eagle-import:22-23-2041 RS?
+U 2 0 5DDC84AF
+P 5000 7350
+AR Path="/5DDC84AF" Ref="RS?"  Part="2" 
+AR Path="/5DA750F6/5DDC84AF" Ref="RS?"  Part="2" 
+F 0 "RS?" H 5100 7350 51  0000 L BNN
+F 1 "22-23-2041" H 4970 7405 59  0001 L BNN
+F 2 "czujnikiRpi3b:22-23-2041" H 5000 7350 50  0001 C CNN
+F 3 "" H 5000 7350 50  0001 C CNN
+	2    5000 7350
+	1    0    0    -1  
+$EndComp
+$Comp
+L czujnikiRpi3b-eagle-import:22-23-2041 RS?
+U 3 0 5DDC84B6
+P 5000 7250
+AR Path="/5DDC84B6" Ref="RS?"  Part="3" 
+AR Path="/5DA750F6/5DDC84B6" Ref="RS?"  Part="3" 
+F 0 "RS?" H 5100 7250 51  0000 L BNN
+F 1 "22-23-2041" H 4970 7305 59  0001 L BNN
+F 2 "czujnikiRpi3b:22-23-2041" H 5000 7250 50  0001 C CNN
+F 3 "" H 5000 7250 50  0001 C CNN
+	3    5000 7250
+	1    0    0    -1  
+$EndComp
+$Comp
+L czujnikiRpi3b-eagle-import:22-23-2041 RS?
+U 4 0 5DDC84BD
+P 5000 7150
+AR Path="/5DDC84BD" Ref="RS?"  Part="4" 
+AR Path="/5DA750F6/5DDC84BD" Ref="RS?"  Part="4" 
+F 0 "RS?" H 5100 7150 51  0000 L BNN
+F 1 "22-23-2041" H 4970 7205 59  0001 L BNN
+F 2 "czujnikiRpi3b:22-23-2041" H 5000 7150 50  0001 C CNN
+F 3 "" H 5000 7150 50  0001 C CNN
+	4    5000 7150
+	1    0    0    -1  
+$EndComp
+Text Notes 5450 7300 0    59   ~ 0
+UART C0 - USB/EXT
+Wire Wire Line
+	4900 7250 4550 7250
+Wire Wire Line
+	4900 7350 4550 7350
+Wire Wire Line
+	3650 3700 3550 3700
+Wire Wire Line
+	3550 3700 3550 4250
+Wire Wire Line
+	3550 4250 3650 4250
+Wire Wire Line
+	3650 3600 3450 3600
+Wire Wire Line
+	3450 3600 3450 4350
+Wire Wire Line
+	3450 4350 3650 4350
+Wire Wire Line
+	3650 3500 3350 3500
+Wire Wire Line
+	3350 3500 3350 4450
+Wire Wire Line
+	3350 4450 3650 4450
+Wire Wire Line
+	3700 4550 3250 4550
+Wire Wire Line
+	3250 4550 3250 3400
+Wire Wire Line
+	3250 3400 3650 3400
+$Sheet
+S 1650 500  1200 1050
+U 5DFE6DCE
+F0 "Power" 50
+F1 "pwr.sch" 50
+$EndSheet
+Wire Wire Line
+	5050 4250 4550 4250
+$EndSCHEMATC
