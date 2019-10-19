@@ -108,8 +108,9 @@ struct CmdState
       
         struct
         {
+#if CLI_SHARE_CMD_AND_HIST_BUF > 0
             char data [CLI_STATE_INP_CMD_LEN];
-            
+#endif        
             struct
             {
 #if CLI_STATE_INP_CMD_LEN < 256
@@ -119,6 +120,10 @@ struct CmdState
                 uint16_t length;              ///< Number of writen chars in buffer
                 uint16_t editPos;             ///< Edit position in the buffer
 #endif
+#if CLI_SHARE_CMD_AND_HIST_BUF <= 0
+                char data [CLI_STATE_INP_CMD_LEN];
+#endif
+
             } input;
             
             struct
@@ -132,6 +137,9 @@ struct CmdState
 #endif
                 uint8_t depthLength;          ///< Number of commands, that are stored
                 uint8_t depthIdx;             ///< Current cmd idx. 0: last command in history buffer                
+#if CLI_SHARE_CMD_AND_HIST_BUF <= 0
+                char data [CLI_STATE_INP_CMD_LEN];
+#endif
             } history;            
         } buffer;
         
