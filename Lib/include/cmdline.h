@@ -89,6 +89,14 @@ typedef enum CLI_ST
     CLI_ST_HISTORY = 3
 } CLI_ST_t;
 
+typedef enum VT100_ST 
+{
+    VT100_ST_DISABLED,
+    VT100_ST_ESC,
+    VT100_ST_CMD
+} VT100_ST_t;                                  ///< VTY 100 state
+
+
 struct CmdState
 {
     uint8_t   argc;                            ///< Index of last argument
@@ -105,37 +113,45 @@ struct CmdState
     struct
     {
         CLI_ST_t state;        
-        struct
-        {
-#if CLI_STATE_INP_CMD_LEN < 256
-            uint8_t rdIdx;                ///< Read index
-            uint8_t wrIdx;                ///< Write Index
-#else
-            uint16_t length;              ///< Read index
-            uint16_t editPos;             ///< Write index
-#endif
-            uint8_t depthLength;          ///< Number of commands, that are stored
-            uint8_t depthIdx;             ///< Current cmd idx. 0: last command in history buffer
-            char data [CLI_STATE_HISTORY_LEN];
-
-        } history;
       
         struct
         {
+#if CLI_SHARE_CMD_AND_HIST_BUF > 0
             char data [CLI_STATE_INP_CMD_LEN];
+#endif        
+            struct
+            {
 #if CLI_STATE_INP_CMD_LEN < 256
-            uint8_t length;               ///< Number of writen chars in buffer
-            uint8_t editPos;              ///< Edit position in the buffer
-#else
-            uint16_t length;              ///< Number of writen chars in buffer
-            uint16_t editPos;             ///< Edit position in the buffer
+                uint8_t length;               ///< Number of writen chars in buffer
+                uint8_t editPos;              ///< Edit position in the buffer
+#else                            
+                uint16_t length;              ///< Number of writen chars in buffer
+                uint16_t editPos;             ///< Edit position in the buffer
 #endif
-        } inputBuffer;
+#if CLI_SHARE_CMD_AND_HIST_BUF <= 0
+                char data [CLI_STATE_INP_CMD_LEN];
+#endif
+
+            } input;
+            
+            struct
+            {
+#if CLI_STATE_INP_CMD_LEN < 256
+                uint8_t rdIdx;                ///< Read index
+                uint8_t wrIdx;                ///< Write Index
+#else
+                uint16_t length;              ///< Read index
+                uint16_t editPos;             ///< Write index
+#endif
+                uint8_t depthLength;          ///< Number of commands, that are stored
+                uint8_t depthIdx;             ///< Current cmd idx. 0: last command in history buffer                
+#if CLI_SHARE_CMD_AND_HIST_BUF <= 0
+                char data [CLI_STATE_INP_CMD_LEN];
+#endif
+            } history;            
+        } buffer;
         
-        struct
-        {
-            uint8_t state;            ///< Commandline State TODO add enum type
-        } vty100;
+        VT100_ST_t vt100state;
 
         Command_t cmd;
         
