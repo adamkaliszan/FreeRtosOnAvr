@@ -89,6 +89,14 @@ typedef enum CLI_ST
     CLI_ST_HISTORY = 3
 } CLI_ST_t;
 
+typedef enum VT100_ST 
+{
+    VT100_ST_DISABLED,
+    VT100_ST_ESC,
+    VT100_ST_CMD
+} VT100_ST_t;                                  ///< VTY 100 state
+
+
 struct CmdState
 {
     uint8_t   argc;                            ///< Index of last argument
@@ -143,10 +151,7 @@ struct CmdState
             } history;            
         } buffer;
         
-        struct
-        {
-            uint8_t state;            ///< Commandline State TODO add enum type
-        } vty100;
+        VT100_ST_t vt100state;
 
         Command_t cmd;
         
