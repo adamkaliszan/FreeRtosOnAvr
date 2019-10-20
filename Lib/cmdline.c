@@ -658,7 +658,7 @@ void cliHistoryShow(CliState_t *state)
     while (state->internalData.buffer.data[srcIdx] != '\0')
     {
         fputc(state->internalData.buffer.data[srcIdx], state->myStdInOut);
-        srcIdx++;
+        srcIdx--;
         cmdLength++;
     }    
 #endif
@@ -890,19 +890,21 @@ static uint8_t cliHistorySave(CliState_t *state)
 
 static void cliHistoryLoad(CliState_t *state)
 {
-# if CLI_STATE_HISTORY_LEN > 255    
-    uint16_t srcIdx;
-#else
-    uint8_t srcIdx;    
-#endif
 #if CLI_STATE_INP_CMD_LEN > 255
     uint16_t dstIdx;            
 #else
     uint8_t dstIdx;        
 #endif
-    srcIdx = state->internalData.buffer.history.rdIdx;
     dstIdx = 0;
 #if CLI_SHARE_CMD_AND_HIST_BUF <= 0
+# if CLI_STATE_HISTORY_LEN > 255    
+    uint16_t srcIdx;
+#else
+    uint8_t srcIdx;    
+#endif    
+    srcIdx = state->internalData.buffer.history.rdIdx;
+
+
     memset(state->internalData.buffer.input.data, 0, CLI_STATE_INP_CMD_LEN);
     state->internalData.buffer.input.length = 0;
     state->internalData.buffer.input.editPos = 0;
@@ -922,14 +924,64 @@ static void cliHistoryLoad(CliState_t *state)
     } 
 #endif
 #if CLI_SHARE_CMD_AND_HIST_BUF > 0
-    memset(state->internalData.buffer.data, 0, CLI_STATE_INP_CMD_LEN);
+# if CLI_STATE_INP_CMD_LEN > 255    
+    uint16_t srcIdx;
+#else
+    uint8_t srcIdx;    
+#endif    
+    uint8_t tmp;
+    
+    srcIdx = state->internalData.buffer.history.rdIdx;
+
     state->internalData.buffer.input.length = 0;
     state->internalData.buffer.input.editPos = 0;
     
-       
     while (state->internalData.buffer.data[srcIdx] != '\0')
     {
         state->internalData.buffer.input.length++;
+        srcIdx--;
+    }
+    
+    srcIdx = state->internalData.buffer.history.rdIdx;
+    while (state->internalData.buffer.input.length >= state->internalData.buffer.history.wrIdx) //Can't load the history, because cmp buffer and history buffer overlap
+    {   
+        if (state->internalData.buffer.history.depthIdx + 1 < state->internalData.buffer.history.depthLength)
+            cliHistoryRemoveOldest(state); //Just drop the history item
+        else 
+        {   //we want to load this item, so we can not drop it
+
+            //Strings in history are reversed. Reverse id and shift on the beggining of the buffer            
+            srcIdx =  state->internalData.buffer.history.wrIdx + 2;
+            dstIdx =  srcIdx + state->internalData.buffer.input.length-1;
+
+            while (srcIdx < dstIdx)
+            {
+                tmp = state->internalData.buffer.data[srcIdx];
+                state->internalData.buffer.data[srcIdx] = state->internalData.buffer.data[dstIdx];
+                state->internalData.buffer.data[dstIdx] = tmp;
+                srcIdx++;
+                dstIdx--;
+            }
+            
+            //Shift on the beginning
+            srcIdx =  state->internalData.buffer.history.wrIdx + 2;
+            
+            for (dstIdx = 0; dstIdx < state->internalData.buffer.input.length; dstIdx++, srcIdx++)
+               state->internalData.buffer.data[dstIdx] = state->internalData.buffer.data[srcIdx];            
+
+            //Update history history (drop item, that was moved to input buffer)
+            state->internalData.buffer.history.wrIdx+=  state->internalData.buffer.input.length;
+            for (srcIdx = state->internalData.buffer.input.length; srcIdx <= state->internalData.buffer.history.wrIdx; srcIdx++)
+            {
+                state->internalData.buffer.data[srcIdx] = '\0';
+            }            
+            srcIdx = state->internalData.buffer.input.length;            
+            cliHistoryNavigateTop(state);
+        }
+    }
+        
+    while (state->internalData.buffer.data[srcIdx] != '\0')
+    {
         state->internalData.buffer.input.editPos++;
         state->internalData.buffer.data[dstIdx] = state->internalData.buffer.data[srcIdx];
         srcIdx--;
@@ -940,6 +992,7 @@ static void cliHistoryLoad(CliState_t *state)
             break;
         }
     }
+    state->internalData.buffer.data[state->internalData.buffer.input.length] = '\0';
 #endif
 }
 
@@ -1184,11 +1237,11 @@ void cmdPrintHistory(CliState_t *state)
     
     rdIdxOld = CLI_STATE_INP_CMD_LEN -1;
     
-    fprintf(state->myStdInOut, "History length %d rdIdx %d\r\n", state->internalData.buffer.history.depthLength, state->internalData.buffer.history.rdIdx);
+    fprintf(state->myStdInOut, "History length (%d/%d) rdIdx %d wrIdx 0x%02x\r\n", state->internalData.buffer.history.depthLength, state->internalData.buffer.history.depthIdx, state->internalData.buffer.history.rdIdx, state->internalData.buffer.history.wrIdx);
     
     for (i=0; i < state->internalData.buffer.history.depthLength; i++)
     {
-        fprintf(state->myStdInOut, "%2d\t", i+1);
+        fprintf(state->myStdInOut, "%2d (0X%02x) ", i+1, rdIdxOld);
         while (state->internalData.buffer.data[rdIdxOld] != '\0')
         {
             fputc(state->internalData.buffer.data[rdIdxOld--], state->myStdInOut);
@@ -1243,7 +1296,7 @@ static void cliHistoryRemoveOldest(CliState_t *state)
     
     state->internalData.buffer.history.wrIdx+=2;
 
-    while (state->internalData.buffer.data[state->internalData.buffer.history.wrIdx++] != '\0')    // Check if the previous command need to be overwritten
+    while (state->internalData.buffer.data[++state->internalData.buffer.history.wrIdx] != '\0')    // Check if the previous command need to be overwritten
     {
         if (state->internalData.buffer.history.wrIdx >= CLI_STATE_INP_CMD_LEN)
         {
@@ -1251,6 +1304,8 @@ static void cliHistoryRemoveOldest(CliState_t *state)
             break;
         }
     }
+    state->internalData.buffer.history.wrIdx-=1;
+
     state->internalData.buffer.history.depthLength--;
 }
 #endif
