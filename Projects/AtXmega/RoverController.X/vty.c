@@ -12,7 +12,7 @@
 
 #include "hc12.h"
 
-#include "drvPAL/i2cPAL.h"
+#include "twi.h"
 
 #if LANG_EN
 #include "vty_en.h"
@@ -568,9 +568,14 @@ static CliExRes_t twiWtiteAndRead(CliState_t *state)
     vTaskDelay(100);
     result = TWI_MasterWriteRead(&hardwarePAL.twiSensors, address, tmpDta, wrDtaLen, rdDtaLen);
   
-    if (result)
+    
+    
+    fprintf(state->myStdInOut, "Result: 0x%x\r\n", result);
+    fprintf(state->myStdInOut, "Received: %d / %d bytes\r\n", hardwarePAL.twiSensors.bytesRead, hardwarePAL.twiSensors.bytesToRead);
+    fprintf(state->myStdInOut, "Transmitted: %d / %d bytes\r\n", hardwarePAL.twiSensors.bytesWritten, hardwarePAL.twiSensors.bytesToWrite);
+    
+    if (result == TWIM_RESULT_OK)
     {
-        fprintf(state->myStdInOut, "Result: ");
         vTaskDelay(100);
         for(result = 0; result < rdDtaLen; result++)
         {
@@ -579,8 +584,8 @@ static CliExRes_t twiWtiteAndRead(CliState_t *state)
         fprintf(state->myStdInOut, "\n");
       
         return OK_INFORM;    
-  }
-  return ERROR_INFORM;
+    }
+    return ERROR_INFORM;
 }
 
 

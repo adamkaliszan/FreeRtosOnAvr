@@ -22,10 +22,11 @@
       <logicalFolder name="f2" displayName="Lib" projectFiles="true">
         <itemPath>../../../Lib/include/cmdline.h</itemPath>
         <itemPath>../../../Lib/include/tlvProt.h</itemPath>
-        <itemPath>../../../Lib/include/i2c.h</itemPath>
+        <itemPath>../../../Lib/include/adxl345.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f4" displayName="LibRtos" projectFiles="true">
         <itemPath>../../../LibRtos/include/sim900.h</itemPath>
+        <itemPath>../../../LibRtos/include/twi.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Port" projectFiles="true">
         <itemPath>../../../FreeRtosCore/portable/GCC/ATXmega/portmacro.h</itemPath>
@@ -50,6 +51,7 @@
       <itemPath>taskSensors.h</itemPath>
       <itemPath>sensors.h</itemPath>
       <itemPath>../../../LibRtos/include/ibus.h</itemPath>
+      <itemPath>hardwareBsp.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -58,9 +60,6 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <logicalFolder name="f5" displayName="drvPAL" projectFiles="true">
-        <itemPath>drvPAL/i2cPAL.c</itemPath>
-      </logicalFolder>
       <logicalFolder name="f1" displayName="FreeRTOS" projectFiles="true">
         <itemPath>../../../FreeRtosCore/Source/croutine.c</itemPath>
         <itemPath>../../../FreeRtosCore/Source/list.c</itemPath>
@@ -69,11 +68,12 @@
       </logicalFolder>
       <logicalFolder name="f2" displayName="Lib" projectFiles="true">
         <itemPath>../../../Lib/tlvProt.c</itemPath>
-        <itemPath>../../../Lib/i2c.c</itemPath>
         <itemPath>../../../Lib/cmdline.c</itemPath>
+        <itemPath>../../../Lib/adxl345.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f4" displayName="LibRtos" projectFiles="true">
         <itemPath>../../../LibRtos/sim900.c</itemPath>
+        <itemPath>../../../LibRtos/twi.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Port" projectFiles="true">
         <itemPath>../../../FreeRtosCore/portable/MemMang/heap_avr.c</itemPath>
@@ -499,6 +499,10 @@
                   value="report"/>
         <property key="warningmessagebreakoptions.W0245_ADC_BUFREGEN_NOT_ALLOWED"
                   value="report"/>
+        <property key="warningmessagebreakoptions.W0246_ADC_ACCUMULATION_BAD_RESSEL"
+                  value="report"/>
+        <property key="warningmessagebreakoptions.W0247_ADC_CONVERSION_BAD_RESSEL"
+                  value="report"/>
         <property key="warningmessagebreakoptions.W0400_PWM_PWM_FASTER_THAN_FOSC"
                   value="report"/>
         <property key="warningmessagebreakoptions.W0600_WDT_2ND_WDT_MR_WRITE"
@@ -598,6 +602,8 @@
         <property key="warningmessagebreakoptions.W7003_SMT_WIN_SELECTION_NOT_SUPPORT"
                   value="report"/>
         <property key="warningmessagebreakoptions.W8001_OSC_INVALID_CLOCK_SOURCE"
+                  value="report"/>
+        <property key="warningmessagebreakoptions.W8002_OSC_RESERVED_FEXTOSC"
                   value="report"/>
         <property key="warningmessagebreakoptions.W9001_TMR_GATE_AND_EXTCLOCK_ENABLED"
                   value="report"/>
@@ -714,8 +720,8 @@
                   value="Press to select which tool pack to use"/>
         <property key="communication.interface" value="pdi"/>
         <property key="communication.interface.jtag" value="2wire"/>
-        <property key="communication.speed" value="1,0"/>
-        <property key="debugoptions.useswbreakpoints" value="true"/>
+        <property key="communication.speed" value="4,000"/>
+        <property key="debugoptions.useswbreakpoints" value="false"/>
         <property key="memories.aux" value="false"/>
         <property key="memories.bootflash" value="true"/>
         <property key="memories.configurationmemory" value="true"/>
@@ -729,6 +735,8 @@
                   value="${memories.instruction.ram.ranges}"/>
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-10fff"/>
+        <property key="programmerToGoFilePath"
+                  value="/home/adam/github/FreeRtosOnAvr/Projects/AtXmega/RoverController.X/debug/default/RoverController_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.pgmentry.voltage" value="low"/>
@@ -757,11 +765,11 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool></platformTool>
         <languageToolchain>XC8</languageToolchain>
-        <languageToolchainVersion>2.05</languageToolchainVersion>
+        <languageToolchainVersion>2.10</languageToolchainVersion>
         <platform>2</platform>
       </toolsSet>
       <packs>
-        <pack name="XMEGAA_DFP" vendor="Microchip" version="2.0.3"/>
+        <pack name="XMEGAA_DFP" vendor="Microchip" version="2.0.11"/>
       </packs>
       <compileType>
         <linkerTool>

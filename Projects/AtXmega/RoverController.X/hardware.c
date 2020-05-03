@@ -1,8 +1,11 @@
 #include "hardware.h"
 #include <avr/pgmspace.h>
 #include <stddef.h>
-#include "drvPAL/i2cPAL.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+
+#include "twi.h"
 
 #define BAUDRATE	100000
 #define TWI_BAUDSETTING TWI_BAUD(F_SYS, BAUDRATE)
@@ -255,5 +258,7 @@ uint8_t isPwr4v3rpi(void)
 
 ISR(TWIC_TWIM_vect)
 {
-      TWI_MasterInterruptHandler(&hardwarePAL.twiSensors);
+    TWI_MasterInterruptHandler(&hardwarePAL.twiSensors);
+    if (hardwarePAL.twiSensors.hptw != pdFALSE)
+        taskYIELD();
 }

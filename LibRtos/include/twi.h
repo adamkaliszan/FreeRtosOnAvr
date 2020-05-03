@@ -2,13 +2,12 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-#define TWI_MASTER_CTRLA      TWIC.MASTER.CTRLA
-#define TWI_MASTER_CTRLB      TWIC.MASTER.CTRLB
-#define TWI_MASTER_CTRLC      TWIC.MASTER.CTRLC
-#define TWI_MASTER_STATUS     TWIC.MASTER.STATUS
-#define TWI_MASTER_BAUD       TWIC.MASTER.BAUD
-#define TWI_MASTER_ADDRESS    TWIC.MASTER.ADDRESS
-#define TWI_MASTER_DATA       TWIC.MASTER.DATA
+#include "FreeRTOS.h"
+#include "semphr.h"
+
+#include "hardwareBsp.h"
+
+
 
 
 /* This file has been prepared for Doxygen automatic documentation generation.*/
@@ -93,6 +92,7 @@ typedef enum TWIM_RESULT_enum {
 	TWIM_RESULT_BUS_ERROR        = (0x04<<0),
 	TWIM_RESULT_NACK_RECEIVED    = (0x05<<0),
 	TWIM_RESULT_FAIL             = (0x06<<0),
+	TWIM_RESULT_MUTEX_TIMEOUT    = (0x07<<0)            
 } TWIM_RESULT_t;
 
 /*! Buffer size defines */
@@ -106,7 +106,10 @@ typedef enum TWIM_RESULT_enum {
  *  buffers and necessary varibles.
  */
 typedef struct TWI_Master {
-	TWI_t *interface;                  /*!< Pointer to what interface to use */
+	TWI_t *interface;                           /*!< Pointer to what interface to use */
+    xSemaphoreHandle busy;                      /*!< Mutex, async blocking operations */
+    signed portBASE_TYPE hptw;                  /*!< Higher Priority Task Woken*/
+    
 	uint8_t address;                            /*!< Slave address */
 	uint8_t writeData[TWIM_WRITE_BUFFER_SIZE];  /*!< Data to write */
 	uint8_t readData[TWIM_READ_BUFFER_SIZE];    /*!< Read data */
@@ -124,23 +127,11 @@ void TWI_MasterInit(TWI_Master_t *twi, TWI_t *module, TWI_MASTER_INTLVL_t intLev
 
 TWI_MASTER_BUSSTATE_t TWI_MasterState(TWI_Master_t *twi);
 uint8_t TWI_MasterReady(TWI_Master_t *twi);
-uint8_t TWI_MasterWrite(TWI_Master_t *twi,
-                     uint8_t address,
-                     uint8_t * writeData,
-                     uint8_t bytesToWrite);
-uint8_t TWI_MasterRead(TWI_Master_t *twi,
-                    uint8_t address,
-                    uint8_t bytesToRead);
-uint8_t TWI_MasterWriteRead(TWI_Master_t *twi,
-                         uint8_t address,
-                         uint8_t *writeData,
-                         uint8_t bytesToWrite,
-                         uint8_t bytesToRead);
+uint8_t TWI_MasterWrite(TWI_Master_t *twi, uint8_t address, uint8_t * writeData, uint8_t bytesToWrite);
+uint8_t TWI_MasterRead(TWI_Master_t *twi, uint8_t address, uint8_t bytesToRead);
+uint8_t TWI_MasterWriteRead(TWI_Master_t *twi, uint8_t address, uint8_t *writeData, uint8_t bytesToWrite, uint8_t bytesToRead);
+
 void TWI_MasterInterruptHandler(TWI_Master_t *twi);
-void TWI_MasterArbitrationLostBusErrorHandler(TWI_Master_t *twi);
-void TWI_MasterWriteHandler(TWI_Master_t *twi);
-void TWI_MasterReadHandler(TWI_Master_t *twi);
-void TWI_MasterTransactionFinished(TWI_Master_t *twi, uint8_t result);
 
 
 /*! TWI master interrupt service routine.

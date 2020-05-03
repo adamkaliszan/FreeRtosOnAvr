@@ -3,7 +3,7 @@
 #include "taskSensors.h"
 #include "task.h"
 
-#include "drvPAL/i2cPAL.h"
+#include "twi.h"
 #include "hardware.h"
 #include "hardwareConfig.h"
 

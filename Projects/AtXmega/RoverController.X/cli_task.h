@@ -5,10 +5,11 @@
 #include <avr/pgmspace.h>
 
 #include "FreeRTOS.h"
+#include "task.h"
 #include "queue.h"
+
 #include "cmdline.h"
 
-#include "task.h"
 
 extern xQueueHandle         xVtyRec;
 extern xQueueHandle         xVtyTx;
