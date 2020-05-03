@@ -156,7 +156,7 @@ struct CmdState
  * @param maxLen - length of data array
  * @return number of readed bytes
  */
-uint8_t hexStrToDataN(uint8_t *data, const uint8_t *hexStr, uint8_t maxLen);
+uint8_t hexStrToDataN(uint8_t *data, const char *hexStr, uint8_t maxLen);
 
 /**
  * call this function to pass input charaters from the user terminal

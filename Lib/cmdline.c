@@ -105,10 +105,10 @@ static uint8_t hexToInt(uint8_t hex)
     return 0;
 }
 
-uint8_t hexStrToDataN(uint8_t *data, const uint8_t *hexStr, uint8_t maxLen)
+uint8_t hexStrToDataN(uint8_t *data, const char *hexStr, uint8_t maxLen)
 {
     uint8_t result = 0;
-    const uint8_t *srcPntr = hexStr;
+    const char *srcPntr = hexStr;
     uint8_t dataA;
     uint8_t dataB;
     while (result < maxLen)

@@ -1,4 +1,6 @@
+#include <stdlib.h>
 #include <avr/io.h>
+#include <avr/interrupt.h>
 
 #define TWI_MASTER_CTRLA      TWIC.MASTER.CTRLA
 #define TWI_MASTER_CTRLB      TWIC.MASTER.CTRLB
@@ -71,7 +73,6 @@
 #define TWI_MASTER_DRIVER_H
 
 #include <stdint.h>
-
 #include "hardwareConfig.h"
 
 /*! Baud register setting calculation. Formula described in datasheet. */
@@ -147,10 +148,6 @@ void TWI_MasterTransactionFinished(TWI_Master_t *twi, uint8_t result);
  *  Interrupt service routine for the TWI master. Copy the needed vectors
  *  into your code.
  *
-    ISR(TWIC_TWIM_vect)
-    {
-      TWI_MasterInterruptHandler(&twiMaster);
-    }
 
  *
  */

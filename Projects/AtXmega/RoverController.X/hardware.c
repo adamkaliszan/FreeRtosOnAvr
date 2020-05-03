@@ -252,3 +252,8 @@ uint8_t isPwr4v3rpi(void)
 //    return ((PORTE.OUT & 0x01 == 0x00) && ((PORTR.OUT & 0x01) == 0x01));
     return (PORTR.OUT & 0x01);
 }
+
+ISR(TWIC_TWIM_vect)
+{
+      TWI_MasterInterruptHandler(&hardwarePAL.twiSensors);
+}

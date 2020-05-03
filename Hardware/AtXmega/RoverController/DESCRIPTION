@@ -1,0 +1,28 @@
+<h3>Sumo robot Lobo</h3>
+SterSilnik - sterowanie 4 krokowymi silnikami, obudowa MQLF
+<br>SterSilnik2 - sterowanie 4 krokowymi silnikami, obudowa TQFP
+<br>Sterowanie - główny procesor, wizja
+<br>Sterowanie2 - błędna koncepcja
+<br>ster_Test - eksperymenty z ograniczeniem prądu
+<br>Ster_ręczne - konsolka z 4 przyciskami i zasilaniem
+
+<h3>Dron drobo</h3>
+Zastosowane czujniki
+<ul>
+<li>Czujnik prądu ACS712ELC</li>
+<li>Kompas</li>
+<li>GPS</li>
+</ul>
+Komunikacja radiowa
+<ul>HC-12 wireless TTL</ul>
+Wyjścia
+<ul>PWM/servo</ul>
+Porty szergowe:
+<ol>
+ <li>GPS</li>
+ <li>GMS</li>
+ <li>RPi</li>
+ <li>Debug</li.
+ <li>Hc12</li>
+
+</ol>
