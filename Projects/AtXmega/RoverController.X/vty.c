@@ -554,27 +554,36 @@ static CliExRes_t sendHC12loopback(CliState_t *state, uint8_t addr, uint8_t type
 
 static CliExRes_t twiWtiteAndRead(CliState_t *state)
 {
-    uint8_t result;
+    uint8_t result = 1;
     uint8_t tmpDta[8];
     
     
+<<<<<<< HEAD
   uint8_t address = atoi(state->argv[1]);
   uint8_t rdDtaLen = atoi(state->argv[2]);
   uint8_t wrDtaLen = hexStrToDataN(tmpDta, state->argv[3], 8);
+=======
+    uint8_t address = atoi(state->argv[1]);
+    uint8_t rdDtaLen = atoi(state->argv[2]);
+    uint8_t wrDtaLen = hexStrToDataN(tmpDta, (const uint8_t*)state->argv[3], 8);
+>>>>>>> 2d7b4a9f1f27cd087fcad9ca6a560eca75809916
 
-  result = TWI_MasterWriteRead(&hardwarePAL.twiSensors, address, tmpDta, wrDtaLen, rdDtaLen);
+
+    fprintf(state->myStdInOut, "Sending %d bytes\r\n", wrDtaLen);
+    vTaskDelay(100);
+    result = TWI_MasterWriteRead(&hardwarePAL.twiSensors, address, tmpDta, wrDtaLen, rdDtaLen);
   
-  if (result)
-  {
-      fprintf(state->myStdInOut, "Result: ");
-      vTaskDelay(100);
-      for(result = 0; result < rdDtaLen; result++)
-      {
-          fprintf(state->myStdInOut, "0x%02x ", hardwarePAL.twiSensors.readData[result]);
-      }
-      fprintf(state->myStdInOut, "\n");
+    if (result)
+    {
+        fprintf(state->myStdInOut, "Result: ");
+        vTaskDelay(100);
+        for(result = 0; result < rdDtaLen; result++)
+        {
+            fprintf(state->myStdInOut, "0x%02x ", hardwarePAL.twiSensors.readData[result]);
+        }
+        fprintf(state->myStdInOut, "\n");
       
-      return OK_INFORM;    
+        return OK_INFORM;    
   }
   return ERROR_INFORM;
 }
