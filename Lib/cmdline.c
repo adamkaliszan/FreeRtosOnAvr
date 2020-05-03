@@ -73,7 +73,6 @@ static void cliInputDataProcess(CliState_t *state);
 static void cliPrintPrompt(CliState_t *state);
 static void cliPrintCommandNotFound(CliState_t *state);
 
-<<<<<<< HEAD
 //static void cliHistoryLoad(CliState_t *state);
 
 /**
@@ -87,7 +86,6 @@ static void cliUnparse(CliState_t *state);
 static inline void cliHistoryIncWrPointer(CliState_t *state);
 static inline void cliHistoryIncRdPointerCharacter(CliState_t *state);
 static inline void cliHistoryDecRdPointerCharacter(CliState_t *state);
-static inline void cliHistoryIncRdPointerItem(CliState_t *state);
 static inline void cliHistoryDecRdPointerItem(CliState_t *state);
 
 
@@ -105,46 +103,6 @@ static uint8_t hexToInt(uint8_t hex)
 
     return 0;
 }
-
-uint8_t hexStrToDataN(uint8_t *data, const char *hexStr, uint8_t maxLen)
-{
-    uint8_t result = 0;
-    const char *srcPntr = hexStr;
-    uint8_t dataA;
-    uint8_t dataB;
-    while (result < maxLen)
-    {
-        if (*srcPntr == '\0')
-            break;
-
-        if (*(srcPntr+1) == '\0')
-            break;
-
-        dataA = *(srcPntr++);
-        
-        if ((dataA == ' ') || (dataA == 'X') || (dataA == 'x'))
-            continue;
-        
-        dataB = *(srcPntr++);
-
-        if ((dataB == ' ') || (dataB == 'X') || (dataB == 'x'))
-            continue;
-
-        *(data++) = (hexToInt(dataA) << 4) + hexToInt(dataB);
-        
-        result++;
-    }
-    
-    return result;
-}
-
-=======
-#if CLI_STATE_INP_CMD_LEN <= 255
-static uint8_t cliHistorySave(CliState_t* state);
-#else
-static uint16_t cliHistorySave(CliState_t* state);
-#endif
->>>>>>> 2d7b4a9f1f27cd087fcad9ca6a560eca75809916
 
 #if CLI_SHARE_CMD_AND_HIST_BUF <= 0
 static void cliHistoryFreeIfNoSpace(CliState_t *state);
@@ -1457,19 +1415,6 @@ static void cliHistoryDecRdPointerCharacter(CliState_t *state)
 
 #endif
 
-static uint8_t hexToInt(uint8_t hex)
-{
-    if (hex >= '0' && hex <= '9')
-        return hex - '0';
-    
-    if (hex >= 'a' && hex <= 'f')
-        return hex - 'a' + 10;
-
-    if (hex >= 'A' && hex <= 'F')
-        return hex - 'A' + 10;
-
-    return 0;
-}
 
 uint8_t hexStrToDataN(uint8_t *data, const uint8_t *hexStr, uint8_t maxLen)
 {

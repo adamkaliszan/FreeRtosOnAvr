@@ -558,15 +558,10 @@ static CliExRes_t twiWtiteAndRead(CliState_t *state)
     uint8_t tmpDta[8];
     
     
-<<<<<<< HEAD
-  uint8_t address = atoi(state->argv[1]);
-  uint8_t rdDtaLen = atoi(state->argv[2]);
-  uint8_t wrDtaLen = hexStrToDataN(tmpDta, state->argv[3], 8);
-=======
     uint8_t address = atoi(state->argv[1]);
     uint8_t rdDtaLen = atoi(state->argv[2]);
-    uint8_t wrDtaLen = hexStrToDataN(tmpDta, (const uint8_t*)state->argv[3], 8);
->>>>>>> 2d7b4a9f1f27cd087fcad9ca6a560eca75809916
+    uint8_t wrDtaLen = hexStrToDataN(tmpDta, state->argv[3], 8);
+
 
 
     fprintf(state->myStdInOut, "Sending %d bytes\r\n", wrDtaLen);
