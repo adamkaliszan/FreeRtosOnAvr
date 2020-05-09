@@ -565,16 +565,35 @@ static CliExRes_t twiWtiteAndRead(CliState_t *state)
 
 
     fprintf(state->myStdInOut, "Sending %d bytes\r\n", wrDtaLen);
-    vTaskDelay(100);
-    result = TWI_MasterWriteRead(&hardwarePAL.twiSensors, address, tmpDta, wrDtaLen, rdDtaLen);
-  
+    result = TwiMaster_Read(&hardwarePAL.twiSensors, address, tmpDta, wrDtaLen, rdDtaLen);    
     
-    
-    fprintf(state->myStdInOut, "Result: 0x%x\r\n", result);
+    fprintf(state->myStdInOut, "Result: 0x%02x", result);
+    if (result & TWI_REZ_OVERFLOW)        
+        fprintf(state->myStdInOut, " BUFFER_OVERFLOW");
+        
+    if (result & TWI_REZ_ARBITRATION_LOST)        
+        fprintf(state->myStdInOut, " ARBITRATION_LOST");
+        
+    if (result & TWI_REZ_BUS_ERROR)        
+        fprintf(state->myStdInOut, " BUS_ERROR");
+        
+    if (result & TWI_REX_NACK_RECEIVED)        
+        fprintf(state->myStdInOut, " NACK_RECEIVED");
+        
+    if (result & TWI_REZ_FAIL)        
+        fprintf(state->myStdInOut, " FAIL");
+
+    if (result & TWI_REZ_MUTEX_TIMEOUT_STAGE1)        
+        fprintf(state->myStdInOut, " MUTEX_TIMEOUT_STAGE1");
+
+    if (result & TWI_REZ_MUTEX_TIMEOUT_STAGE2)        
+        fprintf(state->myStdInOut, " MUTEX_TIMEOUT_STAGE2");        
+        
+    fprintf(state->myStdInOut, "\r\n");
     fprintf(state->myStdInOut, "Received: %d / %d bytes\r\n", hardwarePAL.twiSensors.bytesRead, hardwarePAL.twiSensors.bytesToRead);
     fprintf(state->myStdInOut, "Transmitted: %d / %d bytes\r\n", hardwarePAL.twiSensors.bytesWritten, hardwarePAL.twiSensors.bytesToWrite);
     
-    if (result == TWIM_RESULT_OK)
+    if (result == TWI_REZ_OK)
     {
         vTaskDelay(100);
         for(result = 0; result < rdDtaLen; result++)

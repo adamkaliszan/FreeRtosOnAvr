@@ -33,7 +33,7 @@ void vTaskSensors(void *Ptr)
     {
         tmp.cmd.length = sizeof(baroCmd);
         memcpy(tmp.cmd.data, baroCmd, tmp.cmd.length);
-        if (TWI_MasterWriteRead(&hardwarePAL.twiSensors, BARO_ADDR, tmp.cmd.data, tmp.cmd.length, BARO_RESP_LEN))
+        if (TwiMaster_Read(&hardwarePAL.twiSensors, BARO_ADDR, tmp.cmd.data, tmp.cmd.length, BARO_RESP_LEN))
         {
             //while(PORTD.IN)
                 vTaskDelay(10); //TODO Adam use async IO

@@ -4,9 +4,6 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <logicalFolder name="f5" displayName="drvPAL" projectFiles="true">
-        <itemPath>drvPAL/i2cPAL.h</itemPath>
-      </logicalFolder>
       <logicalFolder name="f1" displayName="FreeRTOS" projectFiles="true">
         <itemPath>../../../FreeRtosCore/Source/include/FreeRTOS.h</itemPath>
         <itemPath>../../../FreeRtosCore/Source/include/StackMacros.h</itemPath>
@@ -109,6 +106,7 @@
     <Elem>../../../Lib/include</Elem>
     <Elem>../../../LibRtos</Elem>
     <Elem>../../../LibXc</Elem>
+    <Elem>../../../LibRtos/include</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -721,7 +719,7 @@
         <property key="communication.interface" value="pdi"/>
         <property key="communication.interface.jtag" value="2wire"/>
         <property key="communication.speed" value="4,000"/>
-        <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="debugoptions.useswbreakpoints" value="true"/>
         <property key="memories.aux" value="false"/>
         <property key="memories.bootflash" value="true"/>
         <property key="memories.configurationmemory" value="true"/>
@@ -735,8 +733,6 @@
                   value="${memories.instruction.ram.ranges}"/>
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-10fff"/>
-        <property key="programmerToGoFilePath"
-                  value="/home/adam/github/FreeRtosOnAvr/Projects/AtXmega/RoverController.X/debug/default/RoverController_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.pgmentry.voltage" value="low"/>

@@ -54,7 +54,10 @@ void hardwareInit(void)
 
     PORTC.REMAP=((1<<PORT_TC0A_bp)|(1<<PORT_TC0B_bp)) ;
     PORTC.DIR=0xB8;
-    PORTC.OUT=0x00;
+    //PORTC.OUT=0x03;
+    PORTCFG.MPCMASK = 0x03; // Configure several PINxCTRL registers at the same time
+	PORTC.PIN0CTRL = (PORTC.PIN0CTRL & ~PORT_OPC_gm) | PORT_OPC_PULLUP_gc; //Enable pull-up to get a defined level on the switches
+
 
     ///PORT D
     // 0 Radio set/reset  4 Sim900 PWR key
@@ -109,7 +112,7 @@ void hardwareInit(void)
     ADCA.CALL = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCACAL0) );
     ADCA.CALH = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCACAL1) );
 
-    TWI_MasterInit(&hardwarePAL.twiSensors, &TWIC, TWI_MASTER_INTLVL_LO_gc, TWI_BAUDSETTING);
+    TwiMaster_Init(&hardwarePAL.twiSensors, &TWIC, TWI_MASTER_INTLVL_LO_gc, TWI_BAUDSETTING);
 
     //TWI_MasterWriteRead(&hardwarePAL.twiSensors, 10, NULL, 1, 1);
 }
@@ -258,7 +261,8 @@ uint8_t isPwr4v3rpi(void)
 
 ISR(TWIC_TWIM_vect)
 {
-    TWI_MasterInterruptHandler(&hardwarePAL.twiSensors);
+    hardwarePAL.twiSensors.hptw = pdFALSE;
+    TwiMaster_Irq(&hardwarePAL.twiSensors);
     if (hardwarePAL.twiSensors.hptw != pdFALSE)
         taskYIELD();
 }

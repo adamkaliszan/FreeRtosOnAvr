@@ -23,6 +23,7 @@
                 <sourceRootElem>../../../Lib/include</sourceRootElem>
                 <sourceRootElem>../../../LibRtos</sourceRootElem>
                 <sourceRootElem>../../../LibXc</sourceRootElem>
+                <sourceRootElem>../../../LibRtos/include</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

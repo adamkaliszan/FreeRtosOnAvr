@@ -1,11 +1,10 @@
 #include "twi.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
-
-
-static void _twiMasterArbitrationLostBusErrorHandler(TWI_Master_t *twi);
-static void _twiMasterWriteHandler(TWI_Master_t *twi);
-static void _twiMasterReadHandler(TWI_Master_t *twi);
-static void _twiMasterTransactionFinished(TWI_Master_t *twi, uint8_t result);
+static inline void _twiMasterWriteHandler(TWI_Master_t *twi);
+static inline void _twiMasterReadHandler(TWI_Master_t *twi);
+static inline void _twiMasterTransactionFinished(TWI_Master_t *twi, uint8_t result);
 
 
 /*! \brief Initialize the TWI module.
@@ -19,7 +18,7 @@ static void _twiMasterTransactionFinished(TWI_Master_t *twi, uint8_t result);
  *  \param intLevel                 Master interrupt level.
  *  \param baudRateRegisterSetting  The baud rate register value.
  */
-void TWI_MasterInit(TWI_Master_t *twi,
+void TwiMaster_Init(TWI_Master_t *twi,
                     TWI_t *module,
                     TWI_MASTER_INTLVL_t intLevel,
                     uint8_t baudRateRegisterSetting)
@@ -35,6 +34,11 @@ void TWI_MasterInit(TWI_Master_t *twi,
 	twi->interface->MASTER.STATUS = TWI_MASTER_BUSSTATE_IDLE_gc;
 }
 
+void TwiMaster_Restart(TWI_Master_t *twi)
+{
+    xSemaphoreGive(twi->busy);
+}
+
 
 /*! \brief Returns the TWI bus state.
  *
@@ -48,7 +52,7 @@ void TWI_MasterInit(TWI_Master_t *twi,
  *  \retval TWI_MASTER_BUSSTATE_OWNER_gc   Bus state is owned by the master.
  *  \retval TWI_MASTER_BUSSTATE_BUSY_gc    Bus state is busy.
  */
-TWI_MASTER_BUSSTATE_t TWI_MasterState(TWI_Master_t *twi)
+TWI_MASTER_BUSSTATE_t TwiMaster_State(TWI_Master_t *twi)
 {
 	TWI_MASTER_BUSSTATE_t twi_status;
 	twi_status = (TWI_MASTER_BUSSTATE_t) (twi->interface->MASTER.STATUS &
@@ -67,12 +71,12 @@ TWI_MASTER_BUSSTATE_t TWI_MasterState(TWI_Master_t *twi)
  *  \retval true  If transaction could be started.
  *  \retval false If transaction could not be started.
  */
-uint8_t TWI_MasterReady(TWI_Master_t *twi)
+uint8_t TwiMaster_IsReady(TWI_Master_t *twi)
 {
 	uint8_t twi_status = 0;
     if (xSemaphoreTake(twi->busy, 100) == pdFALSE)
         goto exit;
-    twi_status = (twi->status & TWIM_STATUS_READY);
+    twi_status = 1;
 
     xSemaphoreGive(twi->busy);
 	exit:
@@ -92,9 +96,9 @@ uint8_t TWI_MasterReady(TWI_Master_t *twi)
  *  \retval true  If transaction could be started.
  *  \retval false If transaction could not be started.
  */
-uint8_t TWI_MasterWrite(TWI_Master_t *twi, uint8_t address, uint8_t *writeData, uint8_t bytesToWrite)
+uint8_t TwiMaster_Write(TWI_Master_t *twi, uint8_t address, uint8_t *writeData, uint8_t bytesToWrite)
 {
-	uint8_t twi_status = TWI_MasterWriteRead(twi, address, writeData, bytesToWrite, 0);
+	uint8_t twi_status = TwiMaster_Read(twi, address, writeData, bytesToWrite, 0);
 	return twi_status;
 }
 
@@ -110,11 +114,11 @@ uint8_t TWI_MasterWrite(TWI_Master_t *twi, uint8_t address, uint8_t *writeData, 
  *  \retval true  If transaction could be started.
  *  \retval false If transaction could not be started.
  */
-uint8_t TWI_MasterRead(TWI_Master_t *twi,
+uint8_t TwiMaster_ReadWrite(TWI_Master_t *twi,
                     uint8_t address,
                     uint8_t bytesToRead)
 {
-	uint8_t twi_status = TWI_MasterWriteRead(twi, address, 0, 0, bytesToRead);
+	uint8_t twi_status = TwiMaster_Read(twi, address, 0, 0, bytesToRead);
 	return twi_status;
 }
 
@@ -134,20 +138,20 @@ uint8_t TWI_MasterRead(TWI_Master_t *twi,
  *  \retval true  If transaction could be started.
  *  \retval false If transaction could not be started.
  */
-uint8_t TWI_MasterWriteRead(TWI_Master_t *twi, uint8_t address, uint8_t *writeData, uint8_t bytesToWrite, uint8_t bytesToRead)
+uint8_t TwiMaster_Read(TWI_Master_t *twi, uint8_t address, uint8_t *writeData, uint8_t bytesToWrite, uint8_t bytesToRead)
 {
     uint8_t result = 0;
 	/*Parameter sanity check. */
 	if (bytesToWrite > TWIM_WRITE_BUFFER_SIZE)
     {
-        result = TWIM_RESULT_BUFFER_OVERFLOW;
+        result = TWI_REZ_OVERFLOW;
         goto exit;
     }
 
 	
 	if (bytesToRead > TWIM_READ_BUFFER_SIZE)
     {
-        result = TWIM_RESULT_BUFFER_OVERFLOW;
+        result = TWI_REZ_OVERFLOW;
         goto exit;
     }
     
@@ -155,53 +159,42 @@ uint8_t TWI_MasterWriteRead(TWI_Master_t *twi, uint8_t address, uint8_t *writeDa
 
     if (xSemaphoreTake(twi->busy, 10) == pdFALSE)
     {
-        result = TWIM_RESULT_MUTEX_TIMEOUT;
+        result|= TWI_REZ_MUTEX_TIMEOUT_STAGE1;
         goto exit;
     }
     
-	if (twi->status == TWIM_STATUS_READY) 
-    {
+	twi->result = TWI_REZ_UNKNOWN;
+	twi->address = address<<1;
 
-		twi->status = TWIM_STATUS_BUSY;
-		twi->result = TWIM_RESULT_UNKNOWN;
+	/* Fill write data buffer. */
+	for (uint8_t bufferIndex=0; bufferIndex < bytesToWrite; bufferIndex++)
+		twi->writeData[bufferIndex] = writeData[bufferIndex];
 
-		twi->address = address<<1;
-
-		/* Fill write data buffer. */
-		for (uint8_t bufferIndex=0; bufferIndex < bytesToWrite; bufferIndex++) {
-			twi->writeData[bufferIndex] = writeData[bufferIndex];
-		}
-
-		twi->bytesToWrite = bytesToWrite;
-		twi->bytesToRead = bytesToRead;
-		twi->bytesWritten = 0;
-		twi->bytesRead = 0;
+	twi->bytesToWrite = bytesToWrite;
+	twi->bytesToRead = bytesToRead;
+	twi->bytesWritten = 0;
+	twi->bytesRead = 0;
 
 		/* If write command, send the START condition + Address +
 		 * 'R/_W = 0'
 		 */
-		if (twi->bytesToWrite > 0) {
-			uint8_t writeAddress = twi->address & ~0x01;
-			twi->interface->MASTER.ADDR = writeAddress;
-		}
-
-		/* If read command, send the START condition + Address +
-		 * 'R/_W = 1'
-		 */
-		else if (twi->bytesToRead > 0) {
-			uint8_t readAddress = twi->address | 0x01;
-			twi->interface->MASTER.ADDR = readAddress;
-		}
+	if (twi->bytesToWrite > 0) {
+		uint8_t writeAddress = twi->address & ~0x01;
+		twi->interface->MASTER.ADDR = writeAddress;
 	}
-    
-    if (xSemaphoreTake(twi->busy, 100) == pdTRUE)
+	else if (twi->bytesToRead > 0) {
+		uint8_t readAddress = twi->address | 0x01;
+        twi->interface->MASTER.ADDR = readAddress;
+    }
+
+    if (xSemaphoreTake(twi->busy, 200) == pdTRUE)
     {
         result = twi->result;
         xSemaphoreGive(twi->busy);
     }
     else
     {
-        result = TWIM_RESULT_MUTEX_TIMEOUT;
+        result = twi->result | TWI_REZ_MUTEX_TIMEOUT_STAGE2;
     }
     
     exit:
@@ -215,60 +208,39 @@ uint8_t TWI_MasterWriteRead(TWI_Master_t *twi, uint8_t address, uint8_t *writeDa
  *
  *  \param twi  The TWI_Master_t struct instance.
  */
-void TWI_MasterInterruptHandler(TWI_Master_t *twi)
+void TwiMaster_Irq(TWI_Master_t *twi)
 {
-    twi->hptw = pdFALSE;
 	uint8_t currentStatus = twi->interface->MASTER.STATUS;
 
 	/* If arbitration lost or bus error. */
-	if ((currentStatus & TWI_MASTER_ARBLOST_bm) ||
-	    (currentStatus & TWI_MASTER_BUSERR_bm)) {
+	if (currentStatus & TWI_MASTER_ARBLOST_bm)
+    {
+        twi->result|= TWI_REZ_ARBITRATION_LOST;
 
-		_twiMasterArbitrationLostBusErrorHandler(twi);
+    	/* Clear interrupt flag. */
+        twi->interface->MASTER.STATUS = twi->interface->MASTER.STATUS | TWI_MASTER_ARBLOST_bm;
+        xSemaphoreGiveFromISR(twi->busy, &twi->hptw);
 	}
+    else if (currentStatus & TWI_MASTER_BUSERR_bm) 
+    {
+      	twi->result|= TWI_REZ_BUS_ERROR;
 
-	/* If master write interrupt. */
-	else if (currentStatus & TWI_MASTER_WIF_bm) {
+    	/* Clear interrupt flag. */
+        twi->interface->MASTER.STATUS = twi->interface->MASTER.STATUS | TWI_MASTER_ARBLOST_bm;
+        xSemaphoreGiveFromISR(twi->busy, &twi->hptw);
+	}
+	else if (currentStatus & TWI_MASTER_WIF_bm) /* If master write interrupt. */
+    {
 		_twiMasterWriteHandler(twi);
 	}
-
-	/* If master read interrupt. */
-	else if (currentStatus & TWI_MASTER_RIF_bm) {
+	else if (currentStatus & TWI_MASTER_RIF_bm) /* If master read interrupt. */
+    {
 		_twiMasterReadHandler(twi);
 	}
-
-	/* If unexpected state. */
-	else {
-		_twiMasterTransactionFinished(twi, TWIM_RESULT_FAIL);
+	else 	/* If unexpected state. */
+    {
+		_twiMasterTransactionFinished(twi, TWI_REZ_FAIL);
 	}
-}
-
-
-/*! \brief TWI master arbitration lost and bus error interrupt handler.
- *
- *  Handles TWI responses to lost arbitration and bus error.
- *
- *  \param twi  The TWI_Master_t struct instance.
- */
-static void _twiMasterArbitrationLostBusErrorHandler(TWI_Master_t *twi)
-{
-	uint8_t currentStatus = twi->interface->MASTER.STATUS;
-
-	/* If bus error. */
-	if (currentStatus & TWI_MASTER_BUSERR_bm) {
-		twi->result = TWIM_RESULT_BUS_ERROR;
-	}
-	/* If arbitration lost. */
-	else {
-		twi->result = TWIM_RESULT_ARBITRATION_LOST;
-	}
-
-	/* Clear interrupt flag. */
-	twi->interface->MASTER.STATUS = currentStatus | TWI_MASTER_ARBLOST_bm;
-
-    xSemaphoreGiveFromISR(twi->busy, &twi->hptw);
-
-	twi->status = TWIM_STATUS_READY;
 }
 
 
@@ -278,38 +250,30 @@ static void _twiMasterArbitrationLostBusErrorHandler(TWI_Master_t *twi)
  *
  *  \param twi The TWI_Master_t struct instance.
  */
-static void _twiMasterWriteHandler(TWI_Master_t *twi)
+static inline void _twiMasterWriteHandler(TWI_Master_t *twi)
 {
-	/* Local variables used in if tests to avoid compiler warning. */
-	uint8_t bytesToWrite  = twi->bytesToWrite;
-	uint8_t bytesToRead   = twi->bytesToRead;
-
-	/* If NOT acknowledged (NACK) by slave cancel the transaction. */
-	if (twi->interface->MASTER.STATUS & TWI_MASTER_RXACK_bm) {
+	if (twi->interface->MASTER.STATUS & TWI_MASTER_RXACK_bm) 	/* If NOT acknowledged (NACK) by slave */
+    {                                                           /* cancel the transaction. */
 		twi->interface->MASTER.CTRLC = TWI_MASTER_CMD_STOP_gc;
-		twi->result = TWIM_RESULT_NACK_RECEIVED;
-		twi->status = TWIM_STATUS_READY;
-	}
+		twi->result|= TWI_REX_NACK_RECEIVED;
 
-	/* If more bytes to write, send data. */
-	else if (twi->bytesWritten < bytesToWrite) {
+        xSemaphoreGiveFromISR(twi->busy, &twi->hptw);
+	}
+	else if (twi->bytesWritten < twi->bytesToWrite) 	        /* If more bytes to write, send data. */
+    {
 		uint8_t data = twi->writeData[twi->bytesWritten];
 		twi->interface->MASTER.DATA = data;
 		++twi->bytesWritten;
 	}
-
-	/* If bytes to read, send repeated START condition + Address +
-	 * 'R/_W = 1'
-	 */
-	else if (twi->bytesRead < bytesToRead) {
+	else if (twi->bytesRead < twi->bytesToRead)                 /* If bytes to read, send repeated */ 
+    {                                                           /* START condition + Address + 'R/_W = 1' */
 		uint8_t readAddress = twi->address | 0x01;
 		twi->interface->MASTER.ADDR = readAddress;
 	}
-
-	/* If transaction finished, send STOP condition and set RESULT OK. */
-	else {
+	else 	/* If transaction finished, send STOP condition and set RESULT OK. */
+    {
 		twi->interface->MASTER.CTRLC = TWI_MASTER_CMD_STOP_gc;
-		_twiMasterTransactionFinished(twi, TWIM_RESULT_OK);
+		_twiMasterTransactionFinished(twi, TWI_REZ_OK);
 	}
 }
 
@@ -321,34 +285,27 @@ static void _twiMasterWriteHandler(TWI_Master_t *twi)
  *
  *  \param twi The TWI_Master_t struct instance.
  */
-static void _twiMasterReadHandler(TWI_Master_t *twi)
+static inline void _twiMasterReadHandler(TWI_Master_t *twi)
 {
-	/* Fetch data if bytes to be read. */
-	if (twi->bytesRead < TWIM_READ_BUFFER_SIZE) {
-		uint8_t data = twi->interface->MASTER.DATA;
-		twi->readData[twi->bytesRead] = data;
+	if (twi->bytesRead < TWIM_READ_BUFFER_SIZE)  	/* Fetch data if bytes to be read. */
+    {
+		twi->readData[twi->bytesRead] = twi->interface->MASTER.DATA;
 		twi->bytesRead++;
 	}
-
-	/* If buffer overflow, issue STOP and BUFFER_OVERFLOW condition. */
-	else {
+	else 	/* If buffer overflow, issue STOP and BUFFER_OVERFLOW condition. */
+    {
 		twi->interface->MASTER.CTRLC = TWI_MASTER_CMD_STOP_gc;
-		_twiMasterTransactionFinished(twi, TWIM_RESULT_BUFFER_OVERFLOW);
+		_twiMasterTransactionFinished(twi, TWI_REZ_OVERFLOW);
 	}
 
-	/* Local variable used in if test to avoid compiler warning. */
-	uint8_t bytesToRead = twi->bytesToRead;
-
-	/* If more bytes to read, issue ACK and start a byte read. */
-	if (twi->bytesRead < bytesToRead) {
+	if (twi->bytesRead < twi->bytesToRead) 	/* If more bytes to read, issue ACK and start a byte read. */
+    {
 		twi->interface->MASTER.CTRLC = TWI_MASTER_CMD_RECVTRANS_gc;
 	}
-
-	/* If transaction finished, issue NACK and STOP condition. */
-	else {
-		twi->interface->MASTER.CTRLC = TWI_MASTER_ACKACT_bm |
-		                               TWI_MASTER_CMD_STOP_gc;
-		_twiMasterTransactionFinished(twi, TWIM_RESULT_OK);
+	else	/* If transaction finished, issue NACK and STOP condition. */
+    {
+		twi->interface->MASTER.CTRLC = TWI_MASTER_ACKACT_bm | TWI_MASTER_CMD_STOP_gc;
+		_twiMasterTransactionFinished(twi, TWI_REZ_OK);
 	}
 }
 
@@ -360,9 +317,8 @@ static void _twiMasterReadHandler(TWI_Master_t *twi)
  *  \param twi     The TWI_Master_t struct instance.
  *  \param result  The result of the operation.
  */
-static void _twiMasterTransactionFinished(TWI_Master_t *twi, uint8_t result)
+static inline void _twiMasterTransactionFinished(TWI_Master_t *twi, uint8_t result)
 {
-	twi->result = result;
-	twi->status = TWIM_STATUS_READY;
+	twi->result|= result;
     xSemaphoreGiveFromISR(twi->busy, &twi->hptw);
 }

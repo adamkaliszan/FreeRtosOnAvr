@@ -9,65 +9,6 @@
 
 
 
-
-/* This file has been prepared for Doxygen automatic documentation generation.*/
-/*! \file *********************************************************************
- *
- * \brief  XMEGA TWI master driver header file.
- *
- *      This file contains the function prototypes and enumerator definitions
- *      for various configuration parameters for the XMEGA TWI master driver.
- *
- *      The driver is not intended for size and/or speed critical code, since
- *      most functions are just a few lines of code, and the function call
- *      overhead would decrease code performance. The driver is intended for
- *      rapid prototyping and documentation purposes for getting started with
- *      the XMEGA TWI master module.
- *
- *      For size and/or speed critical code, it is recommended to copy the
- *      function contents directly into your application instead of making
- *      a function call.
- *
- * \par Application note:
- *      AVR1308: Using the XMEGA TWI
- *
- * \par Documentation
- *      For comprehensive code documentation, supported compilers, compiler
- *      settings and supported devices see readme.html
- *
- * \author
- *      Atmel Corporation: http://www.atmel.com \n
- *      Support email: avr@atmel.com
- *
- * $Revision: 1569 $
- * $Date: 2008-04-22 13:03:43 +0200 (ti, 22 apr 2008) $  \n
- *
- * Copyright (c) 2008, Atmel Corporation All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
- *
- * 3. The name of ATMEL may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY AND
- * SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *****************************************************************************/
 #ifndef TWI_MASTER_DRIVER_H
 #define TWI_MASTER_DRIVER_H
 
@@ -84,16 +25,18 @@
 
 
 /*! Transaction result enumeration. */
-typedef enum TWIM_RESULT_enum {
-	TWIM_RESULT_UNKNOWN          = (0x00<<0),
-	TWIM_RESULT_OK               = (0x01<<0),
-	TWIM_RESULT_BUFFER_OVERFLOW  = (0x02<<0),
-	TWIM_RESULT_ARBITRATION_LOST = (0x03<<0),
-	TWIM_RESULT_BUS_ERROR        = (0x04<<0),
-	TWIM_RESULT_NACK_RECEIVED    = (0x05<<0),
-	TWIM_RESULT_FAIL             = (0x06<<0),
-	TWIM_RESULT_MUTEX_TIMEOUT    = (0x07<<0)            
-} TWIM_RESULT_t;
+typedef enum TWI_REZ_enum {
+	TWI_REZ_UNKNOWN                 = 0,
+	TWI_REZ_OK                      = 0x01,
+    
+	TWI_REZ_OVERFLOW                = 0x02,
+	TWI_REZ_ARBITRATION_LOST        = 0x04,
+	TWI_REZ_BUS_ERROR               = 0x08,
+	TWI_REX_NACK_RECEIVED           = 0x10,
+	TWI_REZ_FAIL                    = 0x20,
+	TWI_REZ_MUTEX_TIMEOUT_STAGE1    = 0x40,
+	TWI_REZ_MUTEX_TIMEOUT_STAGE2    = 0x80
+} TWI_REZ_t;
 
 /*! Buffer size defines */
 #define TWIM_WRITE_BUFFER_SIZE         8
@@ -117,21 +60,21 @@ typedef struct TWI_Master {
 	uint8_t bytesToRead;                        /*!< Number of bytes to read */
 	uint8_t bytesWritten;                       /*!< Number of bytes written */
 	uint8_t bytesRead;                          /*!< Number of bytes read */
-	uint8_t status;                             /*!< Status of transaction */
-	uint8_t result;                             /*!< Result of transaction */
+	volatile uint8_t result;                    /*!< Result of transaction */
 }TWI_Master_t;
 
 
 
-void TWI_MasterInit(TWI_Master_t *twi, TWI_t *module, TWI_MASTER_INTLVL_t intLevel, uint8_t baudRateRegisterSetting);
+void TwiMaster_Init(TWI_Master_t *twi, TWI_t *module, TWI_MASTER_INTLVL_t intLevel, uint8_t baudRateRegisterSetting);
+void TwiMaster_Restart(TWI_Master_t *twi);
 
-TWI_MASTER_BUSSTATE_t TWI_MasterState(TWI_Master_t *twi);
-uint8_t TWI_MasterReady(TWI_Master_t *twi);
-uint8_t TWI_MasterWrite(TWI_Master_t *twi, uint8_t address, uint8_t * writeData, uint8_t bytesToWrite);
-uint8_t TWI_MasterRead(TWI_Master_t *twi, uint8_t address, uint8_t bytesToRead);
-uint8_t TWI_MasterWriteRead(TWI_Master_t *twi, uint8_t address, uint8_t *writeData, uint8_t bytesToWrite, uint8_t bytesToRead);
+TWI_MASTER_BUSSTATE_t TwiMaster_State(TWI_Master_t *twi);
+uint8_t TwiMaster_IsReady(TWI_Master_t *twi);
+uint8_t TwiMaster_Write(TWI_Master_t *twi, uint8_t address, uint8_t * writeData, uint8_t bytesToWrite);
+uint8_t TwiMaster_ReadWrite(TWI_Master_t *twi, uint8_t address, uint8_t bytesToRead);
+uint8_t TwiMaster_Read(TWI_Master_t *twi, uint8_t address, uint8_t *writeData, uint8_t bytesToWrite, uint8_t bytesToRead);
 
-void TWI_MasterInterruptHandler(TWI_Master_t *twi);
+void TwiMaster_Irq(TWI_Master_t *twi);
 
 
 /*! TWI master interrupt service routine.
