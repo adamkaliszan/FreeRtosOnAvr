@@ -66,10 +66,11 @@ const char cmd_hc12stop[]         PROGMEM = "hstop";     const char cmd_help_hc1
 
 const char cmd_twiWriteAndRead[]  PROGMEM = "twiwr";     const char cmd_help_twiWriteAndStop[]   PROGMEM = "[ADDR] [Rd dta len] [data HEX str]";
 
+#if USE_SIM900
 const char cmd_sim900on[]         PROGMEM = "son";       const char cmd_help_sim900on[]          PROGMEM = "Sim 900 power on";
 const char cmd_sim900off[]        PROGMEM = "soff";      const char cmd_help_sim900off[]         PROGMEM = "Sim 900 power off";
 const char cmd_sim900at[]         PROGMEM = "sat";       const char cmd_help_sim900at[]          PROGMEM = "Foreword Sim 900 port";
-
+#endif
 const char cmd_conf_save[]    PROGMEM = "save";     const char cmd_help_conf_save[]     PROGMEM = "Save configuration";
 
 #endif

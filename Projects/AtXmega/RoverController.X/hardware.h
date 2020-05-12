@@ -5,7 +5,7 @@
 
 #include <avr/io.h>
 //#include <avr/interrupt.h>
-#include "../../../LibRtos/include/twi.h"
+#include "twi.h"
 
 #include "hardwareConfig.h"
 //#include "softwareConfig.h"

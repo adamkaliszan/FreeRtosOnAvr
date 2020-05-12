@@ -4,6 +4,10 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <logicalFolder name="f4" displayName="drv" projectFiles="true">
+        <itemPath>../../../drv/include/twi.h</itemPath>
+        <itemPath>../../../drv/include/ibus.h</itemPath>
+      </logicalFolder>
       <logicalFolder name="f1" displayName="FreeRTOS" projectFiles="true">
         <itemPath>../../../FreeRtosCore/Source/include/FreeRTOS.h</itemPath>
         <itemPath>../../../FreeRtosCore/Source/include/StackMacros.h</itemPath>
@@ -20,10 +24,6 @@
         <itemPath>../../../Lib/include/cmdline.h</itemPath>
         <itemPath>../../../Lib/include/tlvProt.h</itemPath>
         <itemPath>../../../Lib/include/adxl345.h</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f4" displayName="LibRtos" projectFiles="true">
-        <itemPath>../../../LibRtos/include/sim900.h</itemPath>
-        <itemPath>../../../LibRtos/include/twi.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Port" projectFiles="true">
         <itemPath>../../../FreeRtosCore/portable/GCC/ATXmega/portmacro.h</itemPath>
@@ -47,7 +47,6 @@
       <itemPath>vty_pl.h</itemPath>
       <itemPath>taskSensors.h</itemPath>
       <itemPath>sensors.h</itemPath>
-      <itemPath>../../../LibRtos/include/ibus.h</itemPath>
       <itemPath>hardwareBsp.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
@@ -57,6 +56,10 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <logicalFolder name="f4" displayName="drv" projectFiles="true">
+        <itemPath>../../../drv/twi.c</itemPath>
+        <itemPath>../../../drv/ibus.c</itemPath>
+      </logicalFolder>
       <logicalFolder name="f1" displayName="FreeRTOS" projectFiles="true">
         <itemPath>../../../FreeRtosCore/Source/croutine.c</itemPath>
         <itemPath>../../../FreeRtosCore/Source/list.c</itemPath>
@@ -67,10 +70,6 @@
         <itemPath>../../../Lib/tlvProt.c</itemPath>
         <itemPath>../../../Lib/cmdline.c</itemPath>
         <itemPath>../../../Lib/adxl345.c</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f4" displayName="LibRtos" projectFiles="true">
-        <itemPath>../../../LibRtos/sim900.c</itemPath>
-        <itemPath>../../../LibRtos/twi.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Port" projectFiles="true">
         <itemPath>../../../FreeRtosCore/portable/MemMang/heap_avr.c</itemPath>
@@ -87,7 +86,6 @@
       <itemPath>vty.c</itemPath>
       <itemPath>hc12.c</itemPath>
       <itemPath>taskSensors.c</itemPath>
-      <itemPath>../../../LibRtos/ibus.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -104,9 +102,10 @@
     <Elem>../../../FreeRtosCore/portable/MemMang</Elem>
     <Elem>../../../Lib</Elem>
     <Elem>../../../Lib/include</Elem>
-    <Elem>../../../LibRtos</Elem>
+    <Elem>../../../drvRtos</Elem>
     <Elem>../../../LibXc</Elem>
-    <Elem>../../../LibRtos/include</Elem>
+    <Elem>../../../drvRtos/include</Elem>
+    <Elem>../../../drv</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -116,7 +115,7 @@
         <targetDevice>ATxmega128A4U</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>snap</platformTool>
+        <platformTool>noID</platformTool>
         <languageToolchain>XC8</languageToolchain>
         <languageToolchainVersion>2.10</languageToolchainVersion>
         <platform>2</platform>
@@ -157,7 +156,7 @@
         <property key="define-macros" value="USE_XC8"/>
         <property key="disable-optimizations" value="false"/>
         <property key="extra-include-directories"
-                  value="./;drvPAL;../../../FreeRtosCore/Source/include;../../../FreeRtosCore;../../../Lib;../../../Lib/include;../../../LibRtos;../../../LibRtos/include;../../../FreeRtosCore/portable/GCC/ATXmega;../../../FreeRtosCore/portable/MemMang;../../../LibRtos;../../../LibRtos/include;../../../LibXc"/>
+                  value="./;drvPAL;../../../FreeRtosCore/Source/include;../../../FreeRtosCore;../../../Lib;../../../Lib/include;../../../drv;../../../drv/include;../../../FreeRtosCore/portable/GCC/ATXmega;../../../FreeRtosCore/portable/MemMang;../../../LibRtos;../../../LibRtos/include;../../../LibXc"/>
         <property key="favor-optimization-for" value="-speed,+space"/>
         <property key="garbage-collect-data" value="true"/>
         <property key="garbage-collect-functions" value="true"/>

@@ -44,6 +44,8 @@
 #include "vt100.h"          // vty100 constans
 
 
+
+
 // Constans Strings
 const char cmdlinePromptNormal[]    PROGMEM  = "DomOs>";
 const char cmdlinePromptEnable[]    PROGMEM  = "DomOs#";
@@ -1096,25 +1098,17 @@ void cliMainLoop(CliState_t *state)
             
         case SYNTAX_ERROR:
             cliHistoryDontSave(state);
-#if USE_XC8
-            fprintf(state->myStdInOut, "Syntax Error. Use: ");
-            fprintf(state->myStdInOut, state->internalData.cmd.commandStr);
-            fprintf(state->myStdInOut, " ");
-            fprintf(state->myStdInOut, state->internalData.cmd.commandHelpStr);
-            fprintf(state->myStdInOut, "\r\n");
-#else
-            fprintf_P(state->myStdInOut, PSTR("Syntax Error. Use: "));
-            fprintf_P(state->myStdInOut, state->command_str);
-            fprintf_P(state->myStdInOut, PSTR(" "));
-            fprintf_P(state->myStdInOut, state->command_help_str);
-            fprintf_P(state->myStdInOut, PSTR("\r\n"));
-#endif
+            CMD_msg("Syntax Error. Use: ");
+            CMD_msg_const(state->internalData.cmd.commandStr);
+            CMD_msg(" ");
+            CMD_msg_const(state->internalData.cmd.commandHelpStr);
+            CMD_msg("\r\n");
             break;
             
         case ERROR_INFORM:
             cliHistoryDontSave(state);
 #if USE_XC8
-            fprintf(state->myStdInOut, "Operation failed\r\n");
+            CMD_msg("Operation failed\r\n");
 #else
             fprintf_P(state->myStdInOut, PSTR("Operation failed\r\n"));
 #endif
@@ -1122,11 +1116,7 @@ void cliMainLoop(CliState_t *state)
             
         case ERROR_OPERATION_NOT_ALLOWED:
             cliHistoryDontSave(state);
-#if USE_XC8
-            fprintf(state->myStdInOut, "Operation not allowed\r\n");
-#else
-            fprintf_P(state->myStdInOut, PSTR("Operation not allowed\r\n"));
-#endif
+            CMD_msg("Operation not allowed\r\n");
             break;
 
         default:
@@ -1144,25 +1134,22 @@ void cliMainLoop(CliState_t *state)
 
 void cliPrintPrompt(CliState_t *state)
 {
-  const char* ptr;
   // print a new command prompt
   switch (state->internalData.cliMode)
   {
     case NR_NORMAL:
-      ptr = cmdlinePromptNormal;
+      CMD_msg_const(cmdlinePromptNormal);
       break;
     case NR_ENABLE:
-      ptr = cmdlinePromptEnable;
+      CMD_msg_const(cmdlinePromptEnable);
       break;
     case NR_CONFIGURE:
-      ptr = cmdlinePromptConfigure;
+      CMD_msg_const(cmdlinePromptConfigure);
       break;
     default:
-      ptr = cmdlinePromptNormal;
+      CMD_msg_const(cmdlinePromptNormal);
       break;
   }
-  while(pgm_read_byte(ptr))
-    fputc(pgm_read_byte(ptr++)    , state->myStdInOut);
 }
 
 void cliPrintCommandNotFound(CliState_t *state)
@@ -1174,9 +1161,7 @@ void cliPrintCommandNotFound(CliState_t *state)
 #endif
 // print a notice header
 // (uint8_t*) cast used to avoid compiler warning
-    ptr = cmdlineNotice;
-    while(pgm_read_byte(ptr))
-        fputc(pgm_read_byte(ptr++)    , state->myStdInOut);
+    CMD_msg_const(cmdlineNotice);
 
   // print the offending command
 #if CLI_SHARE_CMD_AND_HIST_BUF <= 0
@@ -1187,45 +1172,25 @@ void cliPrintCommandNotFound(CliState_t *state)
     while((*ptr) && (*ptr != ' '))
         fputc(*ptr++    , state->myStdInOut);
 
-    fputc(':'         , state->myStdInOut);
-    fputc(' '         , state->myStdInOut);
-
-// print the not-found message
-// (uint8_t*) cast used to avoid compiler warning
-    ptr = cmdlineCmdNotFound;
-#if USE_XC8
-    while(*ptr)
-    {
-        fputc(*ptr    , state->myStdInOut);
-        ptr++;
-    }
-#else
-    while(pgm_read_byte(ptr))
-        fputc(pgm_read_byte(ptr++)    , state->myStdInOut);
-#endif
-    fputc('\r'        , state->myStdInOut);
-    fputc('\n'        , state->myStdInOut);
+    CMD_msg(": ");
+    CMD_msg_const(cmdlineCmdNotFound);
+    CMD_msg("\r\n");
 }
 
 
 void cmdPrintHistory(CliState_t *state)
 {
 #if CLI_SHARE_CMD_AND_HIST_BUF <= 0
-#if CLI_STATE_HISTORY_LEN <= 256
-    uint8_t rdIdxOld;
-    uint8_t cmdOldIdx;
-#else
-    uint16_t rdIdxOld;
-    uint16_t cmdOldIdx;
-#endif
+    uintBuf_t rdIdxOld;
+    uintBuf_t cmdOldIdx;
 
     rdIdxOld = state->internalData.buffer.history.rdIdx;
 
-    int tmp = 0;
+    uintBuf_t tmp = 0;
     do
     {
         cmdOldIdx = state->internalData.buffer.history.rdIdx;
-//        fprintf(state->myStdInOut, "\t Idx = %d\n", state->internalData.history.rdIdx);
+//      CMD_  fprintf(state->myStdInOut, "\t Idx = %d\n", state->internalData.history.rdIdx);
         fputc('\t', state->myStdInOut);
         while (state->internalData.buffer.history.data[state->internalData.buffer.history.rdIdx] != '\0')
         {
@@ -1235,44 +1200,37 @@ void cmdPrintHistory(CliState_t *state)
             if (tmp >= CLI_STATE_HISTORY_LEN)
                 break;
         }
-        fputc('\r', state->myStdInOut);
-        fputc('\n', state->myStdInOut);
+        CMD_msg("\r\n");
                  
         state->internalData.buffer.history.rdIdx = cmdOldIdx;
         cliHistoryDecRdPointerItem(state);
         
+        if (tmp >= CLI_STATE_HISTORY_LEN-1)
+            break;
         tmp++;
-            if (tmp >= CLI_STATE_HISTORY_LEN)
-                break;
     }
     while (rdIdxOld != state->internalData.buffer.history.rdIdx);
     
     state->internalData.buffer.history.rdIdx = rdIdxOld;
 #endif
 #if CLI_SHARE_CMD_AND_HIST_BUF > 0
-#if CLI_STATE_HISTORY_LEN <= 256
-//    uint8_t i;
-    uint8_t rdIdxOld;
-#else
-//    uint16_t i;
-    uint16_t rdIdxOld;
-#endif
+//  uintBuf_t i;
+    uintBuf_t rdIdxOld;
 
-    uint8_t i;
     
     rdIdxOld = CLI_STATE_INP_CMD_LEN -1;
     
-    fprintf(state->myStdInOut, "History length (%d/%d) rdIdx %d wrIdx 0x%02x\r\n", state->internalData.buffer.history.depthLength, state->internalData.buffer.history.depthIdx, state->internalData.buffer.history.rdIdx, state->internalData.buffer.history.wrIdx);
+    CMD_printf("History length (%d/%d) rdIdx %d wrIdx 0x%02x\r\n", state->internalData.buffer.history.depthLength, state->internalData.buffer.history.depthIdx, state->internalData.buffer.history.rdIdx, state->internalData.buffer.history.wrIdx);
     
     for (i=0; i < state->internalData.buffer.history.depthLength; i++)
     {
-        fprintf(state->myStdInOut, "%2d (0X%02x) ", i+1, rdIdxOld);
+        CMD_printf("%2d (0X%02x) ", i+1, rdIdxOld);
         while (state->internalData.buffer.data[rdIdxOld] != '\0')
         {
             fputc(state->internalData.buffer.data[rdIdxOld--], state->myStdInOut);
         }
         rdIdxOld--;
-        fprintf(state->myStdInOut, "\r\n");
+        CMD_printf("\r\n");
     }
 #endif
 }
@@ -1280,34 +1238,27 @@ void cmdPrintHistory(CliState_t *state)
 void cmdPrintHelp(CliState_t *state)
 {
 #if USE_XC8
-     const Command_t *tmpPtr = state->internalData.cmdList;
-    do
-    {
-        fprintf(state->myStdInOut, tmpPtr->commandStr);
-        fprintf(state->myStdInOut, "\t");
-        fprintf(state->myStdInOut, tmpPtr->commandHelpStr);
-        fprintf(state->myStdInOut, "\r\n");
-
-        tmpPtr++;
-    }
-    while (tmpPtr->commandFun != NULL);
+    const Command_t *tmpPtr = state->internalData.cmdList;
 #else
     Command_t  tmp;
-    const Command_t *tmpPtr = state->internalData.cmdList;
-
-    memcpy_P(&tmp, tmpPtr, sizeof(Command_t));
+    const Command_t *tmpPtr2 = state->internalData.cmdList;
+    memcpy_P(&tmp, tmpPtr2, sizeof(Command_t));
+    const Command_t *tmpPtr = &tmp;
+#endif
     do
     {
-        fprintf_P(state->myStdInOut, tmp.commandStr);
-        fprintf_P(state->myStdInOut, PSTR("\t"));
-        fprintf_P(state->myStdInOut, tmp.commandHelpStr);
-        fprintf_P(state->myStdInOut, PSTR("\r\n"));
-
+        CMD_msg_const(tmpPtr->commandStr);
+        CMD_msg("\t");
+        CMD_msg_const(tmpPtr->commandHelpStr);
+        CMD_msg("\r\n");
+#if USE_XC8
         tmpPtr++;
-        memcpy_P(&tmp, tmpPtr, sizeof(Command_t));
-    }
-    while (tmp.commandFun != NULL);
+#else
+        tmpPtr2++;
+        memcpy_P(&tmp, tmpPtr2, sizeof(Command_t));
 #endif
+    }
+    while (tmpPtr->commandFun != NULL);
 }
 
 #if CLI_SHARE_CMD_AND_HIST_BUF > 0
@@ -1338,11 +1289,8 @@ static void cliHistoryRemoveOldest(CliState_t *state)
 #if CLI_SHARE_CMD_AND_HIST_BUF <= 0
 static void cliHistoryDecRdPointerItem(CliState_t *state)
 {
-#if CLI_STATE_HISTORY_LEN <= 256
-    uint8_t noOfMoves;
-#else
-    uint16_t noOfMoves;    
-#endif
+    uintBuf_t noOfMoves;
+
     noOfMoves = 0;
     
     state->internalData.buffer.history.rdIdx = (state->internalData.buffer.history.rdIdx == 0) ? 
@@ -1389,11 +1337,7 @@ static void cliHistoryIncRdPointerCharacter(CliState_t *state)
 
 static void cliHistoryFreeIfNoSpace(CliState_t *state)
 {
-#if CLI_STATE_HISTORY_LEN > 255
-    uint16_t tmpIdx = state->internalData.history.wrIdx;
-#else
-    uint8_t tmpIdx = state->internalData.buffer.history.wrIdx;    
-#endif
+    uintBuf_t tmpIdx = state->internalData.buffer.history.wrIdx;
     while (state->internalData.buffer.history.data[tmpIdx] != '\0')    // Check if the previous command need to be overwritten
     {
         state->internalData.buffer.history.data[tmpIdx] = '\0';

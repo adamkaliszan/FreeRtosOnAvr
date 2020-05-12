@@ -21,9 +21,10 @@
                 <sourceRootElem>../../../FreeRtosCore/portable/MemMang</sourceRootElem>
                 <sourceRootElem>../../../Lib</sourceRootElem>
                 <sourceRootElem>../../../Lib/include</sourceRootElem>
-                <sourceRootElem>../../../LibRtos</sourceRootElem>
+                <sourceRootElem>../../../drvRtos</sourceRootElem>
                 <sourceRootElem>../../../LibXc</sourceRootElem>
-                <sourceRootElem>../../../LibRtos/include</sourceRootElem>
+                <sourceRootElem>../../../drvRtos/include</sourceRootElem>
+                <sourceRootElem>../../../drv</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

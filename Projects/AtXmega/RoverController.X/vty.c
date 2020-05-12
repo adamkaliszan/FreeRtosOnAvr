@@ -56,10 +56,11 @@ static CliExRes_t hc12sendRotateLeftFunction (CliState_t *state);
 static CliExRes_t hc12sendRotateRightFunction(CliState_t *state);
 static CliExRes_t hc12sendStopFunction       (CliState_t *state);
 
+#if USE_SIM900
 static CliExRes_t sim900OnFunction           (CliState_t *state);
 static CliExRes_t sim900OffFunction          (CliState_t *state);
 static CliExRes_t sim900atMode               (CliState_t *state);
-
+#endif
 static CliExRes_t twiWtiteAndRead            (CliState_t *state);
 
 
@@ -131,11 +132,11 @@ const Command_t cmdListEnable[] PROGMEM =
   {cmd_hc12rotateLeft,  cmd_help_hc12rotateLeft,  hc12sendRotateLeftFunction},
   {cmd_hc12rotateRight, cmd_help_hc12rotateRight, hc12sendRotateRightFunction},
   {cmd_hc12stop,        cmd_help_hc12stop,        hc12sendStopFunction},
-
+#if USE_SIM900
   {cmd_sim900on,        cmd_help_sim900on,        sim900OnFunction},
   {cmd_sim900off,       cmd_help_sim900off,       sim900OffFunction},
   {cmd_sim900at,        cmd_help_sim900at,        sim900atMode},
-
+#endif
   {NULL, NULL, NULL}
 };
 
@@ -649,6 +650,7 @@ static CliExRes_t hc12statusFunction     (CliState_t *state)
     return sendHC12AtCmd(state, PSTR("AT+RX\r\n"));
 }
 
+#if USE_SIM900
 static CliExRes_t sim900OnFunction           (CliState_t *state)
 {
     (void) state;
@@ -684,6 +686,7 @@ static CliExRes_t sim900atMode               (CliState_t *state)
     }
     return OK_INFORM;
 }
+#endif
 
 /*
 static void printTable(FILE *stream)

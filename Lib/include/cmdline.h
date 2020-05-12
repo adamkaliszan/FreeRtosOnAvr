@@ -33,7 +33,24 @@
 
 //@{
 
-  
+#if USE_XC8
+#define CMD_printf(format, args...) fprintf(state->myStdInOut, format, args)
+#define CMD_msg(msg) fprintf(state->myStdInOut, msg)
+#define CMD_msg_const(msg) fprintf(state->myStdInOut, msg)
+
+
+#else
+#define CMD_printf(format, args...) fprintf_P(state->myStdInOut, PSTR(format), args)
+#define CMD_msg(msg) fprintf_P(state->myStdInOut, PSTR(msg))
+#define CMD_msg_const(msg) fprintf_P(state->myStdInOut, msg)
+#endif
+
+#if CLI_STATE_HISTORY_LEN <= 256
+#define uintBuf_t uint8_t
+#else
+#define uintBuf_t uint16_t
+#endif
+
 // constants/macros/typdefs
 struct CmdState;
 struct Command;
