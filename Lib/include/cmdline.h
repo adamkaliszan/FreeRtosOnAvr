@@ -37,15 +37,13 @@
 #define CMD_printf(format, args...) fprintf(state->myStdInOut, format, args)
 #define CMD_msg(msg) fprintf(state->myStdInOut, msg)
 #define CMD_msg_const(msg) fprintf(state->myStdInOut, msg)
-
-
 #else
 #define CMD_printf(format, args...) fprintf_P(state->myStdInOut, PSTR(format), args)
 #define CMD_msg(msg) fprintf_P(state->myStdInOut, PSTR(msg))
 #define CMD_msg_const(msg) fprintf_P(state->myStdInOut, msg)
 #endif
 
-#if CLI_STATE_HISTORY_LEN <= 256
+#if CLI_STATE_BUF_LEN <= 256
 #define uintBuf_t uint8_t
 #else
 #define uintBuf_t uint16_t
@@ -133,38 +131,19 @@ struct CmdState
       
         struct
         {
-#if CLI_SHARE_CMD_AND_HIST_BUF > 0
-            char data [CLI_STATE_INP_CMD_LEN];
-#endif        
+            char data [CLI_STATE_BUF_LEN];
             struct
             {
-#if CLI_STATE_INP_CMD_LEN < 256
-                uint8_t length;               ///< Number of writen chars in buffer
-                uint8_t editPos;              ///< Edit position in the buffer
-#else                            
-                uint16_t length;              ///< Number of writen chars in buffer
-                uint16_t editPos;             ///< Edit position in the buffer
-#endif
-#if CLI_SHARE_CMD_AND_HIST_BUF <= 0
-                char data [CLI_STATE_INP_CMD_LEN];
-#endif
-
+                uintBuf_t length;               ///< Number of writen chars in buffer
+                uintBuf_t editPos;              ///< Edit position in the buffer
             } input;
             
             struct
             {
-#if CLI_STATE_INP_CMD_LEN < 256
-                uint8_t rdIdx;                ///< Read index
-                uint8_t wrIdx;                ///< Write Index
-#else
-                uint16_t length;              ///< Read index
-                uint16_t editPos;             ///< Write index
-#endif
+                uintBuf_t rdIdx;                ///< Read index
+                uintBuf_t wrIdx;                ///< Write Index
                 uint8_t depthLength;          ///< Number of commands, that are stored
                 uint8_t depthIdx;             ///< Current cmd idx. 0: last command in history buffer                
-#if CLI_SHARE_CMD_AND_HIST_BUF <= 0
-                char data [CLI_STATE_INP_CMD_LEN];
-#endif
             } history;            
         } buffer;
         

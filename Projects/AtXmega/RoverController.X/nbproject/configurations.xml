@@ -24,6 +24,7 @@
         <itemPath>../../../Lib/include/cmdline.h</itemPath>
         <itemPath>../../../Lib/include/tlvProt.h</itemPath>
         <itemPath>../../../Lib/include/adxl345.h</itemPath>
+        <itemPath>../../../Lib/include/vt100.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Port" projectFiles="true">
         <itemPath>../../../FreeRtosCore/portable/GCC/ATXmega/portmacro.h</itemPath>
@@ -115,7 +116,7 @@
         <targetDevice>ATxmega128A4U</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>noID</platformTool>
+        <platformTool>snap</platformTool>
         <languageToolchain>XC8</languageToolchain>
         <languageToolchainVersion>2.10</languageToolchainVersion>
         <platform>2</platform>
