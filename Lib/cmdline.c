@@ -368,6 +368,8 @@ static void cliHint(CliState_t *state)
     uint8_t noOfMatchingCommands = 0;
     const Command_t *tmpCmd = state->internalData.cmdList;
     const Command_t *bestCmd = NULL;
+
+#if USE_XC8
     
     while (tmpCmd->commandStr != NULL)
     {
@@ -378,22 +380,47 @@ static void cliHint(CliState_t *state)
         }
         tmpCmd++;        
     }
-    
+#else
+    Command_t tmpCmdVal;
+ 
+    memcpy_P(&tmpCmdVal, tmpCmd, sizeof (Command_t));
+    while (tmpCmdVal.commandStr != NULL)
+    {
+        if (strncmp_P(state->internalData.buffer.data, tmpCmdVal.commandStr, state->internalData.buffer.input.length) == 0)
+        {
+            noOfMatchingCommands++;
+            bestCmd = tmpCmd;
+        }
+        tmpCmd++;    
+        memcpy_P(&tmpCmdVal, tmpCmd, sizeof (Command_t));
+    }
+#endif
+
     if (noOfMatchingCommands == 1)
     {
+#if !USE_XC8
+        memcpy_P(&tmpCmdVal, bestCmd, sizeof (Command_t));
+#endif
+
         state->internalData.buffer.input.editPos = state->internalData.buffer.input.length;
         while ('\0' != bestCmd->commandStr[state->internalData.buffer.input.length])
         {
+#if USE_XC8    
             state->internalData.buffer.data[state->internalData.buffer.input.length] = bestCmd->commandStr[state->internalData.buffer.input.length];
+#else        
+            state->internalData.buffer.data[state->internalData.buffer.input.length] = pgm_read_byte(tmpCmdVal.commandStr + state->internalData.buffer.input.length);
+#endif
             state->internalData.buffer.input.length++;
             state->internalData.buffer.input.editPos++;
-        }
+       }
+
         cliRepaint(state);
     }
     if (noOfMatchingCommands > 1)
     {
         CMD_msg("\r\n");
         tmpCmd = state->internalData.cmdList;
+#if USE_XC8            
         while (tmpCmd->commandStr != NULL)
         {
             if (strncmp(state->internalData.buffer.data, tmpCmd->commandStr, state->internalData.buffer.input.length) == 0)
@@ -403,6 +430,20 @@ static void cliHint(CliState_t *state)
             }
             tmpCmd++;
         }
+#else
+        memcpy_P(&tmpCmdVal, tmpCmd, sizeof (Command_t));
+        while (tmpCmdVal.commandStr != NULL)
+        {
+            if (strncmp_P(state->internalData.buffer.data, tmpCmd->commandStr, state->internalData.buffer.input.length) == 0)
+            {
+                CMD_msg_const(tmpCmd->commandStr);
+                CMD_msg(" ");
+            }
+            tmpCmd++;
+            memcpy_P(&tmpCmdVal, tmpCmd, sizeof (Command_t));
+        }
+    #warning not yet implemented for avrgcc    
+#endif        
         CMD_msg("\r\n");
         cliRepaint(state);
     }
