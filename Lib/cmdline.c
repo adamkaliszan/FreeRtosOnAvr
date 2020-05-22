@@ -53,6 +53,7 @@ const char cmdlineNotice[]          PROGMEM  = "cmdline: ";
 const char cmdlineCmdNotFound[]     PROGMEM  = "# nk";
 
 
+static void cliHint(CliState_t *state);
 static uint8_t hexToInt(uint8_t hex);
 inline static void vt100procCmd(char c, CliState_t *state);
 
@@ -237,7 +238,7 @@ inline static void vt100procCmd(char c, CliState_t *state)
             }
         }
         break;
-
+        
     default:
         break;
     }
@@ -362,6 +363,51 @@ inline static void cliAddInputDelete(char c, CliState_t *state)
     }
 }
 
+static void cliHint(CliState_t *state)
+{
+    uint8_t noOfMatchingCommands = 0;
+    const Command_t *tmpCmd = state->internalData.cmdList;
+    const Command_t *bestCmd = NULL;
+    
+    while (tmpCmd->commandStr != NULL)
+    {
+        if (strncmp(state->internalData.buffer.data, tmpCmd->commandStr, state->internalData.buffer.input.length) == 0)
+        {
+            noOfMatchingCommands++;
+            bestCmd = tmpCmd;
+        }
+        tmpCmd++;        
+    }
+    
+    if (noOfMatchingCommands == 1)
+    {
+        state->internalData.buffer.input.editPos = state->internalData.buffer.input.length;
+        while ('\0' != bestCmd->commandStr[state->internalData.buffer.input.length])
+        {
+            state->internalData.buffer.data[state->internalData.buffer.input.length] = bestCmd->commandStr[state->internalData.buffer.input.length];
+            state->internalData.buffer.input.length++;
+            state->internalData.buffer.input.editPos++;
+        }
+        cliRepaint(state);
+    }
+    if (noOfMatchingCommands > 1)
+    {
+        CMD_msg("\r\n");
+        tmpCmd = state->internalData.cmdList;
+        while (tmpCmd->commandStr != NULL)
+        {
+            if (strncmp(state->internalData.buffer.data, tmpCmd->commandStr, state->internalData.buffer.input.length) == 0)
+            {
+                CMD_msg_const(tmpCmd->commandStr);
+                CMD_msg(" ");
+            }
+            tmpCmd++;
+        }
+        CMD_msg("\r\n");
+        cliRepaint(state);
+    }
+}
+
 inline static void cliAddInputCR(char c, CliState_t *state)
 {
     if (state->internalData.state == CLI_ST_HISTORY)
@@ -405,10 +451,16 @@ void cmdlineInputFunc(char c, CliState_t *state)
         fputc(ASCII_BEL, state->myStdInOut);
         fputc(ASCII_BS, state->myStdInOut);
     }
-       
+
     if( (c >= 0x20) && (c < 0x7D) )
     {
         cliAddInputData(c, state);
+        goto exit;
+    }
+    
+    if (c == ASCII_TAB)
+    {
+        cliHint(state);
         goto exit;
     }
 
