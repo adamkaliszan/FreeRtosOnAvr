@@ -1,9 +1,8 @@
 /*
-ADXL345.h - Header file for the ADXL345 Triple Axis Accelerometer Arduino Library.
-Version: 1.1.0
-(c) 2014 Korneliusz Jarzebski
-2020 Adam Kaliszan
-www.jarzebski.pl
+ADXL345.h - Header file for the ADXL345 Triple Axis Accelerometer.
+Version: 0.9.0
+(c) 2020 Adam Kaliszan adam.kaliszan@gmail.com
+(c) 2014 Korneliusz Jarzebski www.jarzebski.pl
 This program is free software: you can redistribute it and/or modify
 it under the terms of the version 3 GNU General Public License as
 published by the Free Software Foundation.
@@ -15,9 +14,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <stdio.h>
+#include "twi.h"
+
+
 #ifndef ADXL345_h
 #define ADXL345_h
-
 
 #define ADXL345_ADDRESS              (0x53)
 #define ADXL345_REG_DEVID            (0x00)
@@ -103,15 +105,19 @@ typedef enum
     ADXL345_RANGE_2G           = 0b00
 } adxl345_range_t;
 
-#ifndef VECTOR_STRUCT_H
-#define VECTOR_STRUCT_H
-struct Vector
+struct VectorFloat
 {
     float XAxis;
     float YAxis;
     float ZAxis;
 };
-#endif
+
+struct VectorUint16_t
+{
+    uint16_t XAxis;
+    uint16_t YAxis;
+    uint16_t ZAxis;
+};
 
 struct Activites
 {
@@ -146,83 +152,81 @@ struct Activites
     };
 };
 
+typedef struct ADXL345
+{
+    TWI_Master_t *twi;
+    struct VectorFloat data;
+} ADXL345_t;
 
-uint8_t adxl345_begin(void);
-void adxl345_clearSettings(void);
+void adxl345_init(ADXL345_t *adxl, TWI_Master_t *twi, adxl345_range_t range, FILE *io);
 
-struct Vector adxl345_readRaw(void);
-struct Vector adxl345_readNormalize(float gravityFactor); // = ADXL345_GRAVITY_EARTH
-struct Vector adxl345_readScaled(void);
+void adxl345_clearSettings(ADXL345_t *adxl);
 
-struct Activites adxl345_readActivites(void);
+void adxl345_readRaw(ADXL345_t *adxl, struct VectorUint16_t *result);
+void adxl345_readNormalize(ADXL345_t *adxl, struct VectorFloat *result, float gravityFactor);
+void adxl345_readScaled(ADXL345_t *adxl, struct VectorFloat *result);
 
-struct Vector adxl345_lowPassFilter(struct Vector *vector, float alpha); // = 0.5
+void adxl345_readActivites(ADXL345_t *adxl, struct Activites *result);
 
-void adxl345_setRange(adxl345_range_t range);
-adxl345_range_t adxl345_getRange(void);
+void adxl345_lowPassFilter(ADXL345_t *adxl, const struct VectorFloat *vector, float alpha); // = 0.5
 
-void  adxl345_setDataRate(adxl345_dataRate_t dataRate);
-adxl345_dataRate_t adxl345_getDataRate(void);
+void adxl345_setRange(ADXL345_t *adxl, adxl345_range_t range);
+adxl345_range_t adxl345_getRange(ADXL345_t *adxl);
 
-void adxl345_setTapThreshold(float threshold);
-float adxl345_getTapThreshold(void);
+void  adxl345_setSampleRate(ADXL345_t *adxl, adxl345_dataRate_t dataRate);
+adxl345_dataRate_t adxl345_getSampleRate(ADXL345_t *adxl);
 
-void adxl345_setTapDuration(float duration);
-float adxl345_getTapDuration(void);
+void adxl345_setTapThreshold(ADXL345_t *adxl, float threshold);
+float adxl345_getTapThreshold(ADXL345_t *adxl);
 
-void adxl345_setDoubleTapLatency(float latency);
-float adxl345_getDoubleTapLatency(void);
+void adxl345_setTapDuration(ADXL345_t *adxl, float duration);
+float adxl345_getTapDuration(ADXL345_t *adxl);
 
-void adxl345_setDoubleTapWindow(float window);
-float adxl345_getDoubleTapWindow(void);
+void adxl345_setDoubleTapLatency(ADXL345_t *adxl, float latency);
+float adxl345_getDoubleTapLatency(ADXL345_t *adxl);
 
-void adxl345_setActivityThreshold(float threshold);
-float adxl345_getActivityThreshold(void);
+void adxl345_setDoubleTapWindow(ADXL345_t *adxl, float window);
+float adxl345_getDoubleTapWindow(ADXL345_t *adxl);
 
-void adxl345_setInactivityThreshold(float threshold);
-float adxl345_getInactivityThreshold(void);
+void adxl345_setActivityThreshold(ADXL345_t *adxl, float threshold);
+float adxl345_getActivityThreshold(ADXL345_t *adxl);
 
-void adxl345_setTimeInactivity(uint8_t time);
-uint8_t adxl345_getTimeInactivity(void);
+void adxl345_setInactivityThreshold(ADXL345_t *adxl, float threshold);
+float adxl345_getInactivityThreshold(ADXL345_t *adxl);
 
-void adxl345_setFreeFallThreshold(float threshold);
-float adxl345_getFreeFallThreshold(void);
+void adxl345_setTimeInactivity(ADXL345_t *adxl, uint8_t time);
+uint8_t adxl345_getTimeInactivity(ADXL345_t *adxl);
 
-void adxl345_setFreeFallDuration(float duration);
-float adxl345_getFreeFallDuration();
+void adxl345_setFreeFallThreshold(ADXL345_t *adxl, float threshold);
+float adxl345_getFreeFallThreshold(ADXL345_t *adxl);
 
-void adxl345_setActivityX(uint8_t state);
-uint8_t adxl345_getActivityX(void);
-void adxl345_setActivityY(uint8_t state);
-uint8_t adxl345_getActivityY(void);
-void adxl345_setActivityZ(uint8_t state);
-uint8_t adxl345_getActivityZ(void);
-void adxl345_setActivityXYZ(uint8_t state);
+void adxl345_setFreeFallDuration(ADXL345_t *adxl, float duration);
+float adxl345_getFreeFallDuration(ADXL345_t *adxl);
 
-void adxl345_setInactivityX(uint8_t state);
-uint8_t adxl345_getInactivityX(void);
-void adxl345_setInactivityY(uint8_t state);
-uint8_t adxl345_getInactivityY(void);
-void adxl345_setInactivityZ(uint8_t state);
-uint8_t adxl345_getInactivityZ(void);
-void adxl345_setInactivityXYZ(uint8_t state);
+void adxl345_setActivityX(ADXL345_t *adxl, uint8_t state);
+uint8_t adxl345_getActivityX(ADXL345_t *adxl);
+void adxl345_setActivityY(ADXL345_t *adxl, uint8_t state);
+uint8_t adxl345_getActivityY(ADXL345_t *adxl);
+void adxl345_setActivityZ(ADXL345_t *adxl, uint8_t state);
+uint8_t adxl345_getActivityZ(ADXL345_t *adxl);
+void adxl345_setActivityXYZ(ADXL345_t *adxl, uint8_t state);
 
-void adxl345_setTapDetectionX(uint8_t state);
-uint8_t adxl345_getTapDetectionX(void);
-void adxl345_setTapDetectionY(uint8_t state);
-uint8_t adxl345_getTapDetectionY(void);
-void adxl345_setTapDetectionZ(uint8_t state);
-uint8_t adxl345_getTapDetectionZ(void);
-void adxl345_setTapDetectionXYZ(uint8_t state);
+void adxl345_setInactivityX(ADXL345_t *adxl, uint8_t state);
+uint8_t adxl345_getInactivityX(ADXL345_t *adxl);
+void adxl345_setInactivityY(ADXL345_t *adxl, uint8_t state);
+uint8_t adxl345_getInactivityY(ADXL345_t *adxl);
+void adxl345_setInactivityZ(ADXL345_t *adxl, uint8_t state);
+uint8_t adxl345_getInactivityZ(ADXL345_t *adxl);
+void adxl345_setInactivityXYZ(ADXL345_t *adxl, uint8_t state);
 
-void adxl345_useInterrupt(adxl345_int_t interrupt);
+void adxl345_setTapDetectionX(ADXL345_t *adxl, uint8_t state);
+uint8_t adxl345_getTapDetectionX(ADXL345_t *adxl);
+void adxl345_setTapDetectionY(ADXL345_t *adxl, uint8_t state);
+uint8_t adxl345_getTapDetectionY(ADXL345_t *adxl);
+void adxl345_setTapDetectionZ(ADXL345_t *adxl, uint8_t state);
+uint8_t adxl345_getTapDetectionZ(ADXL345_t *adxl);
+void adxl345_setTapDetectionXYZ(ADXL345_t *adxl, uint8_t state);
 
-
-struct Vector adxl345_r;
-struct Vector adxl345_n;
-struct Vector adxl345_f;
-struct Activites adxl345_a;
-adxl345_range_t adxl345_range;
-
+void adxl345_useInterrupt(ADXL345_t *adxl, adxl345_int_t interrupt);
 
 #endif

@@ -98,7 +98,7 @@ uint8_t TwiMaster_IsReady(TWI_Master_t *twi)
  */
 uint8_t TwiMaster_Write(TWI_Master_t *twi, uint8_t address, uint8_t *writeData, uint8_t bytesToWrite)
 {
-	uint8_t twi_status = TwiMaster_Read(twi, address, writeData, bytesToWrite, 0);
+	uint8_t twi_status = TwiMaster_ReadAndWrite(twi, address, bytesToWrite, writeData, 0, NULL);
 	return twi_status;
 }
 
@@ -114,11 +114,9 @@ uint8_t TwiMaster_Write(TWI_Master_t *twi, uint8_t address, uint8_t *writeData, 
  *  \retval true  If transaction could be started.
  *  \retval false If transaction could not be started.
  */
-uint8_t TwiMaster_ReadWrite(TWI_Master_t *twi,
-                    uint8_t address,
-                    uint8_t bytesToRead)
+uint8_t TwiMaster_Read(TWI_Master_t *twi, uint8_t address, uint8_t bytesToRead, uint8_t *rdDta)
 {
-	uint8_t twi_status = TwiMaster_Read(twi, address, 0, 0, bytesToRead);
+	uint8_t twi_status = TwiMaster_ReadAndWrite(twi, address, 0, NULL, bytesToRead, rdDta);
 	return twi_status;
 }
 
@@ -138,7 +136,7 @@ uint8_t TwiMaster_ReadWrite(TWI_Master_t *twi,
  *  \retval true  If transaction could be started.
  *  \retval false If transaction could not be started.
  */
-uint8_t TwiMaster_Read(TWI_Master_t *twi, uint8_t address, uint8_t *writeData, uint8_t bytesToWrite, uint8_t bytesToRead)
+uint8_t TwiMaster_ReadAndWrite(TWI_Master_t *twi, uint8_t address, uint8_t bytesToWrite, const uint8_t *writeData,  uint8_t bytesToRead, uint8_t *rdData)
 {
     uint8_t result = 0;
 	/*Parameter sanity check. */
@@ -187,8 +185,13 @@ uint8_t TwiMaster_Read(TWI_Master_t *twi, uint8_t address, uint8_t *writeData, u
         twi->interface->MASTER.ADDR = readAddress;
     }
 
-    if (xSemaphoreTake(twi->busy, 200) == pdTRUE)
+    if (xSemaphoreTake(twi->busy, 200) == pdTRUE) //Possible race condition. Release Semapthore after reading receive data.
     {
+        
+        if (rdData != NULL)
+        {
+            memcpy(rdData, twi->readData, bytesToRead);
+        }
         result = twi->result;
         xSemaphoreGive(twi->busy);
     }

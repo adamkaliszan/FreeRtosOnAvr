@@ -25,6 +25,7 @@
         <itemPath>../../../Lib/include/tlvProt.h</itemPath>
         <itemPath>../../../Lib/include/adxl345.h</itemPath>
         <itemPath>../../../Lib/include/vt100.h</itemPath>
+        <itemPath>../../../Lib/include/bmp085.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Port" projectFiles="true">
         <itemPath>../../../FreeRtosCore/portable/GCC/ATXmega/portmacro.h</itemPath>
@@ -71,6 +72,7 @@
         <itemPath>../../../Lib/tlvProt.c</itemPath>
         <itemPath>../../../Lib/cmdline.c</itemPath>
         <itemPath>../../../Lib/adxl345.c</itemPath>
+        <itemPath>../../../Lib/bmp085.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Port" projectFiles="true">
         <itemPath>../../../FreeRtosCore/portable/MemMang/heap_avr.c</itemPath>

@@ -442,7 +442,7 @@ static void cliHint(CliState_t *state)
             tmpCmd++;
             memcpy_P(&tmpCmdVal, tmpCmd, sizeof (Command_t));
         }
-    #warning not yet implemented for avrgcc    
+    #warning not tested
 #endif        
         CMD_msg("\r\n");
         cliRepaint(state);

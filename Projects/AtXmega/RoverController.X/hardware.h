@@ -8,6 +8,8 @@
 #include "twi.h"
 
 #include "hardwareConfig.h"
+#include "adxl345.h"
+#include "bmp085.h"
 //#include "softwareConfig.h"
 
 
@@ -21,6 +23,8 @@
 
 typedef struct HardwarePAL
 {
+    ADXL345_t adxl;
+    Bmp085_t bmp;
     TWI_Master_t twiSensors;
 } HardwarePAL_t;
 

@@ -71,8 +71,8 @@ void TwiMaster_Restart(TWI_Master_t *twi);
 TWI_MASTER_BUSSTATE_t TwiMaster_State(TWI_Master_t *twi);
 uint8_t TwiMaster_IsReady(TWI_Master_t *twi);
 uint8_t TwiMaster_Write(TWI_Master_t *twi, uint8_t address, uint8_t * writeData, uint8_t bytesToWrite);
-uint8_t TwiMaster_ReadWrite(TWI_Master_t *twi, uint8_t address, uint8_t bytesToRead);
-uint8_t TwiMaster_Read(TWI_Master_t *twi, uint8_t address, uint8_t *writeData, uint8_t bytesToWrite, uint8_t bytesToRead);
+uint8_t TwiMaster_Read(TWI_Master_t *twi, uint8_t address, uint8_t bytesToRead, uint8_t *rdDta);
+uint8_t TwiMaster_ReadAndWrite(TWI_Master_t *twi, uint8_t address, uint8_t bytesToWrite, const uint8_t *writeData,  uint8_t bytesToRead, uint8_t *rdData);
 
 void TwiMaster_Irq(TWI_Master_t *twi);
 

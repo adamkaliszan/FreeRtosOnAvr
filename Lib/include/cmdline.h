@@ -34,10 +34,16 @@
 //@{
 
 #if USE_XC8
+#define IO_printf(format, args...) fprintf(io, format, args)
+#define IO_msg(msg) fprintf(io, msg)
+#define IO_msg_const(msg) fprintf(io, msg)
 #define CMD_printf(format, args...) fprintf(state->myStdInOut, format, args)
 #define CMD_msg(msg) fprintf(state->myStdInOut, msg)
 #define CMD_msg_const(msg) fprintf(state->myStdInOut, msg)
 #else
+#define IO_printf(format, args...) fprintf_P(io, PSTR(format), args)
+#define IO_msg(msg) fprintf_P(io, PSTR(msg))
+#define IO_msg_const(msg) fprintf_P(io, msg)
 #define CMD_printf(format, args...) fprintf_P(state->myStdInOut, PSTR(format), args)
 #define CMD_msg(msg) fprintf_P(state->myStdInOut, PSTR(msg))
 #define CMD_msg_const(msg) fprintf_P(state->myStdInOut, msg)

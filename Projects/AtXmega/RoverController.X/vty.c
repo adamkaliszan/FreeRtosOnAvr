@@ -14,6 +14,9 @@
 
 #include "twi.h"
 
+#include "adxl345.h"
+#include "bmp085.h"
+
 #if LANG_EN
 #include "vty_en.h"
 #endif
@@ -62,6 +65,8 @@ static CliExRes_t sim900OffFunction          (CliState_t *state);
 static CliExRes_t sim900atMode               (CliState_t *state);
 #endif
 static CliExRes_t twiWtiteAndRead            (CliState_t *state);
+static CliExRes_t adxlTest                   (CliState_t *state);
+static CliExRes_t bmpTest                    (CliState_t *state);
 
 
 static CliExRes_t sendHC12(CliState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[]);
@@ -107,6 +112,8 @@ const Command_t cmdListNormal[] PROGMEM =
   {cmd_hc12rotateRight, cmd_help_hc12rotateRight, hc12sendRotateRightFunction},
   {cmd_hc12stop,        cmd_help_hc12stop,        hc12sendStopFunction},
   {cmd_twiWriteAndRead, cmd_help_twiWriteAndStop, twiWtiteAndRead},
+  {cmd_adxlTest       , cmd_help_adxlTest,        adxlTest},
+  {cmd_bmpTest        , cmd_help_bmpTest,         bmpTest},
   {NULL, NULL, NULL}
 };
 
@@ -553,11 +560,39 @@ static CliExRes_t sendHC12loopback(CliState_t *state, uint8_t addr, uint8_t type
 }
 
 
+static CliExRes_t bmpTest(CliState_t *state)
+{
+    float temperature = bmp085_readTemperature(&hardwarePAL.bmp);
+    uint16_t tmp = bmp085_readRawTemperature(&hardwarePAL.bmp);
+    CMD_printf("Temperature: %f (%d) \r\n", temperature, tmp);
+
+    int32_t preassure = bmp085_readPressure(&hardwarePAL.bmp);
+    CMD_printf("Preassure: %ld\r\n", preassure);
+
+    return OK_SILENT;    
+}
+
+static CliExRes_t adxlTest(CliState_t *state)
+{
+
+    
+//  adxl345_s
+    
+    
+    struct VectorUint16_t tmpVect;
+    adxl345_readRaw(&hardwarePAL.adxl, &tmpVect);
+    CMD_printf("RAW result: %d %d %d\r\n", tmpVect.XAxis, tmpVect.YAxis, tmpVect.ZAxis);
+
+    struct VectorFloat tmpVect2;
+    adxl345_readNormalize(&hardwarePAL.adxl, &tmpVect2, ADXL345_GRAVITY_EARTH);
+
+    return OK_SILENT;
+}
+
 static CliExRes_t twiWtiteAndRead(CliState_t *state)
 {
     uint8_t result = 1;
     uint8_t tmpDta[8];
-    
     
     uint8_t address = atoi(state->argv[1]);
     uint8_t rdDtaLen = atoi(state->argv[2]);
@@ -566,7 +601,7 @@ static CliExRes_t twiWtiteAndRead(CliState_t *state)
 
 
     fprintf(state->myStdInOut, "Sending %d bytes\r\n", wrDtaLen);
-    result = TwiMaster_Read(&hardwarePAL.twiSensors, address, tmpDta, wrDtaLen, rdDtaLen);    
+    result = TwiMaster_ReadAndWrite(&hardwarePAL.twiSensors, address, wrDtaLen, tmpDta, rdDtaLen, NULL);    
     
     fprintf(state->myStdInOut, "Result: 0x%02x", result);
     if (result & TWI_REZ_OVERFLOW)        
