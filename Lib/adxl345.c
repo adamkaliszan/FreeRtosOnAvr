@@ -146,7 +146,7 @@ void adxl345_lowPassFilter(ADXL345_t *adxl, const struct VectorFloat *vector, fl
 }
 
 // Read raw values
-void adxl345_readRaw(ADXL345_t *adxl, struct VectorUint16_t *result)
+void adxl345_readRaw(ADXL345_t *adxl, struct VectorUint16 *result)
 {
     result->XAxis = adxl345_readRegister16(adxl->twi, ADXL345_REG_DATAX0);
     result->YAxis = adxl345_readRegister16(adxl->twi, ADXL345_REG_DATAY0);
@@ -156,7 +156,7 @@ void adxl345_readRaw(ADXL345_t *adxl, struct VectorUint16_t *result)
 // Read normalized values
 void adxl345_readNormalize(ADXL345_t *adxl, struct VectorFloat *result, float gravityFactor)
 {
-    struct VectorUint16_t *tmp = (struct VectorUint16_t*) result;
+    struct VectorUint16 *tmp = (struct VectorUint16*) result;
     adxl345_readRaw(adxl, tmp);
 
     // (4 mg/LSB scale factor in Full Res) * gravity factor
@@ -168,7 +168,7 @@ void adxl345_readNormalize(ADXL345_t *adxl, struct VectorFloat *result, float gr
 // Read scaled values
 void adxl345_readScaled(ADXL345_t *adxl, struct VectorFloat *result)
 {
-    struct VectorUint16_t *tmp = (struct VectorUint16_t*) result;
+    struct VectorUint16 *tmp = (struct VectorUint16*) result;
     adxl345_readRaw(adxl, tmp);
 
     // (4 mg/LSB scale factor in Full Res)

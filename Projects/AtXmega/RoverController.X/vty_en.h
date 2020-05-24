@@ -65,8 +65,9 @@ const char cmd_hc12rotateRight[]  PROGMEM = "hrr";       const char cmd_help_hc1
 const char cmd_hc12stop[]         PROGMEM = "hstop";     const char cmd_help_hc12stop[]          PROGMEM = "Disable H-bridges";
 
 const char cmd_twiWriteAndRead[]  PROGMEM = "twiwr";     const char cmd_help_twiWriteAndStop[]   PROGMEM = "[ADDR] [Rd dta len] [data HEX str]";
-const char cmd_adxlTest[]         PROGMEM = "adxl";      const char cmd_help_adxlTest[]          PROGMEM = "No Arg. Just demo";
-const char cmd_bmpTest[]          PROGMEM = "bmp";       const char cmd_help_bmpTest[]           PROGMEM = "No Arg. Just demo";
+const char cmd_adxlTest[]         PROGMEM = "adxl";      const char cmd_help_adxlTest[]          PROGMEM = "Accelerometer No Arg. Just demo";
+const char cmd_bmpTest[]          PROGMEM = "bmp";       const char cmd_help_bmpTest[]           PROGMEM = "Barometer No Arg. Just demo";
+const char cmd_mhcTest[]          PROGMEM = "mhc";       const char cmd_help_mhcTest[]           PROGMEM = "Magnetometer No Arg. Just demo";
 
 
 #if USE_SIM900

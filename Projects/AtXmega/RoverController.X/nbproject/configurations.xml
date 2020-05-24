@@ -26,6 +26,8 @@
         <itemPath>../../../Lib/include/adxl345.h</itemPath>
         <itemPath>../../../Lib/include/vt100.h</itemPath>
         <itemPath>../../../Lib/include/bmp085.h</itemPath>
+        <itemPath>../../../Lib/include/mhc5883l.h</itemPath>
+        <itemPath>../../../Lib/include/cVector.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Port" projectFiles="true">
         <itemPath>../../../FreeRtosCore/portable/GCC/ATXmega/portmacro.h</itemPath>
@@ -73,6 +75,7 @@
         <itemPath>../../../Lib/cmdline.c</itemPath>
         <itemPath>../../../Lib/adxl345.c</itemPath>
         <itemPath>../../../Lib/bmp085.c</itemPath>
+        <itemPath>../../../Lib/mhc5883l.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Port" projectFiles="true">
         <itemPath>../../../FreeRtosCore/portable/MemMang/heap_avr.c</itemPath>

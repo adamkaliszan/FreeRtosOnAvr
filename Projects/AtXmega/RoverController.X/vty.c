@@ -16,6 +16,7 @@
 
 #include "adxl345.h"
 #include "bmp085.h"
+#include "mhc5883l.h"
 
 #if LANG_EN
 #include "vty_en.h"
@@ -67,6 +68,7 @@ static CliExRes_t sim900atMode               (CliState_t *state);
 static CliExRes_t twiWtiteAndRead            (CliState_t *state);
 static CliExRes_t adxlTest                   (CliState_t *state);
 static CliExRes_t bmpTest                    (CliState_t *state);
+static CliExRes_t mhcTest                    (CliState_t *state);
 
 
 static CliExRes_t sendHC12(CliState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[]);
@@ -114,6 +116,7 @@ const Command_t cmdListNormal[] PROGMEM =
   {cmd_twiWriteAndRead, cmd_help_twiWriteAndStop, twiWtiteAndRead},
   {cmd_adxlTest       , cmd_help_adxlTest,        adxlTest},
   {cmd_bmpTest        , cmd_help_bmpTest,         bmpTest},
+  {cmd_mhcTest        , cmd_help_mhcTest,         mhcTest},
   {NULL, NULL, NULL}
 };
 
@@ -562,13 +565,23 @@ static CliExRes_t sendHC12loopback(CliState_t *state, uint8_t addr, uint8_t type
 
 static CliExRes_t bmpTest(CliState_t *state)
 {
-    float temperature = bmp085_readTemperature(&hardwarePAL.bmp);
+    double temperature = bmp085_readTemperature(&hardwarePAL.bmp);
     uint16_t tmp = bmp085_readRawTemperature(&hardwarePAL.bmp);
-    CMD_printf("Temperature: %f (%d) \r\n", temperature, tmp);
+    CMD_printf("Temperature: %lf (%u) \r\n", temperature, tmp);
 
+    uint32_t preassureRaw = bmp085_readRawPressure(&hardwarePAL.bmp);
     int32_t preassure = bmp085_readPressure(&hardwarePAL.bmp);
-    CMD_printf("Preassure: %ld\r\n", preassure);
+    CMD_printf("Preassure: %ld (%lu)\r\n", preassure, preassureRaw);
 
+    return OK_SILENT;    
+}
+
+static CliExRes_t mhcTest(CliState_t *state)
+{
+    mhc5883l_readRaw(&hardwarePAL.mhc);
+    CMD_printf("Raw data: %u %u %u\r\n", hardwarePAL.mhc.v.XAxis, hardwarePAL.mhc.v.YAxis, hardwarePAL.mhc.v.ZAxis);
+
+    
     return OK_SILENT;    
 }
 
@@ -579,7 +592,7 @@ static CliExRes_t adxlTest(CliState_t *state)
 //  adxl345_s
     
     
-    struct VectorUint16_t tmpVect;
+    struct VectorUint16 tmpVect;
     adxl345_readRaw(&hardwarePAL.adxl, &tmpVect);
     CMD_printf("RAW result: %d %d %d\r\n", tmpVect.XAxis, tmpVect.YAxis, tmpVect.ZAxis);
 

@@ -2,6 +2,7 @@
 
 #include "adxl345.h"
 #include "bmp085.h"
+#include "mhc5883l.h"
 #include "hardware.h"
 
 extern HardwarePAL_t hardwarePAL;
@@ -15,6 +16,8 @@ void vTaskVTYusb(void *cliStatePtr)
   
   bmp085_init(&hardwarePAL.bmp, &hardwarePAL.twiSensors,  state->myStdInOut, BMP085_ULTRAHIGHRES);
 
+  mhc5883l_init(&hardwarePAL.mhc, &hardwarePAL.twiSensors,  state->myStdInOut);
+  
   cmdlineInputFunc('\r', state);
 
   char recSymbol;

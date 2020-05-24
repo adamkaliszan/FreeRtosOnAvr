@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
 #include "twi.h"
-
+#include "cVector.h"
 
 #ifndef ADXL345_h
 #define ADXL345_h
@@ -105,19 +105,7 @@ typedef enum
     ADXL345_RANGE_2G           = 0b00
 } adxl345_range_t;
 
-struct VectorFloat
-{
-    float XAxis;
-    float YAxis;
-    float ZAxis;
-};
 
-struct VectorUint16_t
-{
-    uint16_t XAxis;
-    uint16_t YAxis;
-    uint16_t ZAxis;
-};
 
 struct Activites
 {
@@ -162,7 +150,7 @@ void adxl345_init(ADXL345_t *adxl, TWI_Master_t *twi, adxl345_range_t range, FIL
 
 void adxl345_clearSettings(ADXL345_t *adxl);
 
-void adxl345_readRaw(ADXL345_t *adxl, struct VectorUint16_t *result);
+void adxl345_readRaw(ADXL345_t *adxl, struct VectorUint16 *result);
 void adxl345_readNormalize(ADXL345_t *adxl, struct VectorFloat *result, float gravityFactor);
 void adxl345_readScaled(ADXL345_t *adxl, struct VectorFloat *result);
 

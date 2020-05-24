@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "twi.h"
 #include "FreeRTOS.h"
 #include "task.h"
