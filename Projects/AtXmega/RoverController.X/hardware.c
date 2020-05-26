@@ -5,7 +5,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "twi.h"
+#include "../../drv/include/twi.h"
 
 #define BAUDRATE	100000
 #define TWI_BAUDSETTING TWI_BAUD(F_SYS, BAUDRATE)

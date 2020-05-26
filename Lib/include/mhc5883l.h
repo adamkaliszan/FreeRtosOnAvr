@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "cVector.h"
 
-#include "twi.h"
+#include "../../drv/include/twi.h"
 
 
 #define HMC5883L_ADDRESS              (0x1E)

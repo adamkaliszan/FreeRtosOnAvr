@@ -46,8 +46,8 @@ OPT = s
 
 # List C source files here. (C dependencies are automatically generated.)
 RTOS_SRC_DIR  = ../../../FreeRtosCore/Source
+DRV_DIR       = ../../../drv
 LIB_DIR       = ../../../Lib
-LIB_GCC_DIR   = ../../../LibGcc
 LIB_NET_DIR   = ../../../Lib/net
 LIB_RTOS_DIR  = ../../../LibRtos
 PORT_DIR      = ../../../FreeRtosCore/portable/GCC/ATXmega
@@ -61,14 +61,17 @@ hardware.c \
 vty.c \
 cli_task.c \
 tlv_task.c\
-$(LIB_RTOS_DIR)/sim900.c\
 tlv.c\
+hc12.c \
 $(LIB_DIR)/memory_x.c \
 $(LIB_DIR)/ramdysk.c \
-$(LIB_GCC_DIR)/cmdline.c \
-$(LIB_DIR)/vt100.c \
+$(LIB_DIR)/cmdline.c \
+$(LIB_DIR)/adxl345.c \
+$(LIB_DIR)/bmp085.c \
+$(LIB_DIR)/mhc5883l.c \
 $(LIB_DIR)/queueStream.c \
 $(LIB_DIR)/tlvProt.c \
+$(DRV_DIR)/twi.c \
 $(RTOS_SRC_DIR)/tasks.c \
 $(RTOS_SRC_DIR)/queue.c \
 $(RTOS_SRC_DIR)/list.c \
@@ -135,7 +138,7 @@ DEBUG_LEVEL=-g
 WARNINGS=-Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare \
 		-Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wunused -Wattributes
 
-CFLAGS = -D GCC_MEGA_AVR -I. -I$(RTOS_SRC_DIR)/include -I$(LIB_DIR)/include -I$(LIB_NET_DIR)/include -I$(LIB_RTOS_DIR)\
+CFLAGS = -D GCC_MEGA_AVR -I. -I$(RTOS_SRC_DIR)/include -I$(LIB_DIR)/include -I$(DRV_DIR)/include -I$(LIB_NET_DIR)/include -I$(LIB_RTOS_DIR)\
 $(DEBUG_LEVEL) -O$(OPT) \
 -fsigned-char -funsigned-bitfields -fpack-struct -fshort-enums \
 $(WARNINGS) \

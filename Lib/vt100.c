@@ -19,15 +19,14 @@
 //
 //*****************************************************************************
 
-#ifndef WIN32
-	#include <avr/io.h>
-	#include <avr/interrupt.h>
-	#include <avr/pgmspace.h>
-#endif
+#include <avr/pgmspace.h>
+#include <stdint.h>
+#include <stdio.h>
 
+#include "include/cmdline.h"
 #include "main.h"
 #include "vt100.h"
-#include <stdio.h>
+
 
 // Program ROM constants
 

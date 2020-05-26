@@ -5,7 +5,7 @@
 
 #include <avr/io.h>
 //#include <avr/interrupt.h>
-#include "twi.h"
+#include "../../../drv/include/twi.h"
 
 #include "hardwareConfig.h"
 #include "adxl345.h"
@@ -33,7 +33,7 @@ typedef struct HardwarePAL
 uint8_t ReadCalibrationByte(uint8_t index);
 
 
-void hardwareInit();
+void hardwareInit(void);
 
 void offHbridge(void);
 

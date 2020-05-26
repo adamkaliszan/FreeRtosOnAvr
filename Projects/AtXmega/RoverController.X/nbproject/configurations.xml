@@ -98,6 +98,7 @@
                    projectFiles="false">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
+    <itemPath>MakefileGcc</itemPath>
   </logicalFolder>
   <sourceRootList>
     <Elem>.</Elem>
@@ -738,6 +739,8 @@
                   value="${memories.instruction.ram.ranges}"/>
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-10fff"/>
+        <property key="programmerToGoFilePath"
+                  value="/home/adam/github/FreeRtosOnAvr/Projects/AtXmega/RoverController.X/debug/default/RoverController_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.pgmentry.voltage" value="low"/>
@@ -764,7 +767,7 @@
         <targetDevice>ATxmega128A4U</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool></platformTool>
+        <platformTool>snap</platformTool>
         <languageToolchain>XC8</languageToolchain>
         <languageToolchainVersion>2.10</languageToolchainVersion>
         <platform>2</platform>

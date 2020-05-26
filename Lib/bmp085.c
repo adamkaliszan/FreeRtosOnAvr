@@ -17,6 +17,8 @@
  ***************************************************
  
  */
+#include <float.h>
+#include <math.h>
 
 #include "bmp085.h"
 #include "task.h"

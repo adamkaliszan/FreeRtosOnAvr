@@ -15,7 +15,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <stdio.h>
-#include "twi.h"
+#include <float.h>
+
+#include "../../drv/include/twi.h"
 #include "cVector.h"
 
 #ifndef ADXL345_h

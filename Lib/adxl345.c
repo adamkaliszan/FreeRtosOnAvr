@@ -17,9 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdint.h>
 #include <stdio.h>
+#include <float.h>
 
 #include "adxl345.h"
-#include "twi.h"
+#include "../drv/include/twi.h"
 #include "cmdline.h"
 
 static void adxl345_writeRegister8(TWI_Master_t *twi, uint8_t reg, uint8_t value);
@@ -28,7 +29,8 @@ static uint8_t adxl345_fastRegister8(TWI_Master_t *twi, uint8_t reg);
 static int16_t adxl345_readRegister16(TWI_Master_t *twi, uint8_t reg);
 static void adxl345_writeRegisterBit(TWI_Master_t *twi, uint8_t reg, uint8_t pos, uint8_t state);
 static uint8_t adxl345_readRegisterBit(TWI_Master_t *twi, uint8_t reg, uint8_t pos);
-
+static float constrain (float x, float min, float max);
+void setDoubleTapLatency(ADXL345_t *adxl, float latency);
 
 void adxl345_init(ADXL345_t *adxl, TWI_Master_t *twi, adxl345_range_t range, FILE *io)
 {
@@ -91,7 +93,7 @@ void adxl345_init(ADXL345_t *adxl, TWI_Master_t *twi, adxl345_range_t range, FIL
         IO_msg("\r\n");        
 }
 
-float constrain (float x, float min, float max)
+static float constrain (float x, float min, float max)
 {
     if (x < min)
         return min;

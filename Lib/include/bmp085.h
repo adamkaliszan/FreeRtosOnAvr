@@ -20,9 +20,10 @@
 #define BMP085_H
 
 #include <stdint.h>
+#include <float.h>
 #include <stdio.h>
 
-#include "twi.h"
+#include "../../drv/include/twi.h"
 #include "cmdline.h"
 
 #define BMP085_DEBUG 1

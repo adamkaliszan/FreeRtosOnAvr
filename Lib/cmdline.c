@@ -306,13 +306,9 @@ inline static void cliAddInputData(char c, CliState_t *state)
     state->internalData.state = CLI_ST_READING_CMD;
 }
 
-inline static void cliAddInputBS(char c, CliState_t *state)
+inline static void cliAddInputBS(CliState_t *state)
 {
-#if CLI_STATE_INP_CMD_LEN > 255
-    uint16_t i;
-#else
-    uint8_t i;
-#endif
+    uintBuf_t i;
     if(state->internalData.buffer.input.editPos > 0)
     {
         state->internalData.buffer.input.length--;
@@ -342,7 +338,7 @@ inline static void cliAddInputBS(char c, CliState_t *state)
     }
 }
 
-inline static void cliAddInputDelete(char c, CliState_t *state)
+inline static void cliAddInputDelete(CliState_t *state)
 {
     uintBuf_t i;
     for (i = state->internalData.buffer.input.editPos; i<state->internalData.buffer.input.length; i++)
@@ -398,12 +394,14 @@ static void cliHint(CliState_t *state)
 
     if (noOfMatchingCommands == 1)
     {
+        state->internalData.buffer.input.editPos = state->internalData.buffer.input.length;
+
 #if !USE_XC8
         memcpy_P(&tmpCmdVal, bestCmd, sizeof (Command_t));
-#endif
-
-        state->internalData.buffer.input.editPos = state->internalData.buffer.input.length;
+        while ('\0' != pgm_read_byte(tmpCmdVal.commandStr + state->internalData.buffer.input.length))
+#else
         while ('\0' != bestCmd->commandStr[state->internalData.buffer.input.length])
+#endif
         {
 #if USE_XC8    
             state->internalData.buffer.data[state->internalData.buffer.input.length] = bestCmd->commandStr[state->internalData.buffer.input.length];
@@ -412,8 +410,7 @@ static void cliHint(CliState_t *state)
 #endif
             state->internalData.buffer.input.length++;
             state->internalData.buffer.input.editPos++;
-       }
-
+        }
         cliRepaint(state);
     }
     if (noOfMatchingCommands > 1)
@@ -434,22 +431,21 @@ static void cliHint(CliState_t *state)
         memcpy_P(&tmpCmdVal, tmpCmd, sizeof (Command_t));
         while (tmpCmdVal.commandStr != NULL)
         {
-            if (strncmp_P(state->internalData.buffer.data, tmpCmd->commandStr, state->internalData.buffer.input.length) == 0)
+            if (strncmp_P(state->internalData.buffer.data, tmpCmdVal.commandStr, state->internalData.buffer.input.length) == 0)
             {
-                CMD_msg_const(tmpCmd->commandStr);
+                CMD_msg_const(tmpCmdVal.commandStr);
                 CMD_msg(" ");
             }
             tmpCmd++;
             memcpy_P(&tmpCmdVal, tmpCmd, sizeof (Command_t));
         }
-    #warning not tested
 #endif        
         CMD_msg("\r\n");
         cliRepaint(state);
     }
 }
 
-inline static void cliAddInputCR(char c, CliState_t *state)
+inline static void cliAddInputCR(CliState_t *state)
 {
     if (state->internalData.state == CLI_ST_HISTORY)
     {
@@ -507,20 +503,20 @@ void cmdlineInputFunc(char c, CliState_t *state)
 
     if(c == ASCII_CR)
     {
-        cliAddInputCR(c, state);
+        cliAddInputCR(state);
         cliInputDataProcess(state);         /// command is complete, process it
         goto exit;
     }
     
     if(c == ASCII_BS)
     {
-        cliAddInputBS(c, state);
+        cliAddInputBS(state);
         goto exit;
     }
     
     if(c == 0x7E)  //Delete
     {
-        cliAddInputDelete(c, state);
+        cliAddInputDelete(state);
         goto exit;
     }
 exit:
@@ -643,15 +639,15 @@ void cliInputDataProcess(CliState_t *state)
             {
                 memcpy(&state->internalData.cmd, tmpPtr, sizeof(Command_t));
 #else
-                memcpy_P(&state->internalData.cmd, tmpPtr, sizeof(Command_t));                       // read from flash. We need to copy it before
-                if (state->internalData.cmd.commandStr == NULL)
-                    break;
-                if( !strncmp(state->internalData.buffer.data, tmp.commandStr, firstArgLen) )         // user-entered command matched a command in the list
-                {                                                                 //
+            memcpy_P(&state->internalData.cmd, tmpPtr, sizeof(Command_t));                       // read from flash. We need to copy it before
+            tmpPtr++;
+            if (state->internalData.cmd.commandStr == NULL)
+                break;
+            if( !strncmp_P(state->internalData.buffer.data, state->internalData.cmd.commandStr, firstArgLen) )         // user-entered command matched a command in the list
+            {                                                                 //
 #endif
                 if (state->internalData.cmd.maxArgC == 0)
                     state->internalData.cmd.maxArgC = CLI_STATE_MAX_ARGC;
-
                 break;
             }
 #if USE_XC8

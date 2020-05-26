@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <float.h>
 
 #include "main.h"
 #include "vty.h"
@@ -12,7 +13,7 @@
 
 #include "hc12.h"
 
-#include "twi.h"
+#include "../../drv/include/twi.h"
 
 #include "adxl345.h"
 #include "bmp085.h"
@@ -99,73 +100,70 @@ const char* const errorStrings[] PROGMEM = {
 
 const Command_t cmdListNormal[] PROGMEM =
 {
-  {cmd_help,            cmd_help_help,            helpFunction},
-  {cmd_history,         cmd_help_history,         historyFunction},
-  {cmd_status,          cmd_help_status,          statusFunction},
-  {cmd_enable,          cmd_help_enable,          enableFunction},
-  {cmd_forward,         cmd_help_forward,         forwardFunction},
-  {cmd_backward,        cmd_help_backward,        backwordFunction},
-  {cmd_rotateLeft,      cmd_help_rotateLeft,      rotateLeftFunction},
-  {cmd_rotateRight,     cmd_help_rotateRight,     rotateRightFunction},
-  {cmd_stop,            cmd_help_stop,            stopFunction},
-  {cmd_hc12forward,     cmd_help_hc12forward,     hc12sendForwardFunction},
-  {cmd_hc12backward,    cmd_help_hc12backward,    hc12sendBackwordFunction},
-  {cmd_hc12rotateLeft,  cmd_help_hc12rotateLeft,  hc12sendRotateLeftFunction},
-  {cmd_hc12rotateRight, cmd_help_hc12rotateRight, hc12sendRotateRightFunction},
-  {cmd_hc12stop,        cmd_help_hc12stop,        hc12sendStopFunction},
-  {cmd_twiWriteAndRead, cmd_help_twiWriteAndStop, twiWtiteAndRead},
-  {cmd_adxlTest       , cmd_help_adxlTest,        adxlTest},
-  {cmd_bmpTest        , cmd_help_bmpTest,         bmpTest},
-  {cmd_mhcTest        , cmd_help_mhcTest,         mhcTest},
-  {NULL, NULL, NULL}
+  {cmd_help,            cmd_help_help,            helpFunction,                0},
+  {cmd_history,         cmd_help_history,         historyFunction,             0},
+  {cmd_status,          cmd_help_status,          statusFunction,              0},
+  {cmd_enable,          cmd_help_enable,          enableFunction,              0},
+  {cmd_forward,         cmd_help_forward,         forwardFunction,             0},
+  {cmd_backward,        cmd_help_backward,        backwordFunction,            0},
+  {cmd_rotateLeft,      cmd_help_rotateLeft,      rotateLeftFunction,          0},
+  {cmd_rotateRight,     cmd_help_rotateRight,     rotateRightFunction,         0},
+  {cmd_stop,            cmd_help_stop,            stopFunction,                0},
+  {cmd_hc12forward,     cmd_help_hc12forward,     hc12sendForwardFunction,     0},
+  {cmd_hc12backward,    cmd_help_hc12backward,    hc12sendBackwordFunction,    0},
+  {cmd_hc12rotateLeft , cmd_help_hc12rotateLeft,  hc12sendRotateLeftFunction,  0},
+  {cmd_hc12rotateRight, cmd_help_hc12rotateRight, hc12sendRotateRightFunction, 0},
+  {cmd_hc12stop       , cmd_help_hc12stop,        hc12sendStopFunction,        0},
+  {cmd_twiWriteAndRead, cmd_help_twiWriteAndStop, twiWtiteAndRead,             0},
+  {cmd_adxlTest       , cmd_help_adxlTest,        adxlTest,                    0},
+  {cmd_bmpTest        , cmd_help_bmpTest,         bmpTest,                     0},
+  {cmd_mhcTest        , cmd_help_mhcTest,         mhcTest,                     0},
+  {NULL               , NULL,                     NULL,                        0}
 };
 
 const Command_t cmdListEnable[] PROGMEM =
 {
-  {cmd_help,        cmd_help_help,        helpFunction},
-  {cmd_history,     cmd_help_history,     historyFunction},
-  {cmd_status,      cmd_help_status,      statusFunction},
-  {cmd_disable,     cmd_help_disable,     disableFunction},
-  {cmd_configure,   cmd_help_configure,   configureModeFunction},
-  {cmd_forward,     cmd_help_forward,     forwardFunction},
-  {cmd_backward,    cmd_help_backward,    backwordFunction},
-  {cmd_rotateLeft,  cmd_help_rotateLeft,  rotateLeftFunction},
-  {cmd_rotateRight, cmd_help_rotateRight, rotateRightFunction},
-  {cmd_stop,        cmd_help_stop,        stopFunction},
-
-  {cmd_pwr,         cmd_help_pwr,         pwrFunction},
-
-  {cmd_HC12status,      cmd_help_HC12status,      hc12statusFunction},
-
-  {cmd_hc12forward,     cmd_help_hc12forward,     hc12sendForwardFunction},
-  {cmd_hc12backward,    cmd_help_hc12backward,    hc12sendBackwordFunction},
-  {cmd_hc12rotateLeft,  cmd_help_hc12rotateLeft,  hc12sendRotateLeftFunction},
-  {cmd_hc12rotateRight, cmd_help_hc12rotateRight, hc12sendRotateRightFunction},
-  {cmd_hc12stop,        cmd_help_hc12stop,        hc12sendStopFunction},
+  {cmd_help,            cmd_help_help,            helpFunction,               0},
+  {cmd_history,         cmd_help_history,         historyFunction,            0},
+  {cmd_status,          cmd_help_status,          statusFunction,             0},
+  {cmd_disable,         cmd_help_disable,         disableFunction,            0},
+  {cmd_configure,       cmd_help_configure,       configureModeFunction,      0},
+  {cmd_forward,         cmd_help_forward,         forwardFunction,            0},
+  {cmd_backward,        cmd_help_backward,        backwordFunction,           0},
+  {cmd_rotateLeft,      cmd_help_rotateLeft,      rotateLeftFunction,         0},
+  {cmd_rotateRight,     cmd_help_rotateRight,     rotateRightFunction,        0},
+  {cmd_stop,            cmd_help_stop,            stopFunction,               0},
+  {cmd_pwr,             cmd_help_pwr,             pwrFunction,                0},
+  {cmd_HC12status,      cmd_help_HC12status,      hc12statusFunction,         0},
+  {cmd_hc12forward,     cmd_help_hc12forward,     hc12sendForwardFunction,    0},
+  {cmd_hc12backward,    cmd_help_hc12backward,    hc12sendBackwordFunction,   0},
+  {cmd_hc12rotateLeft,  cmd_help_hc12rotateLeft,  hc12sendRotateLeftFunction, 0},
+  {cmd_hc12rotateRight, cmd_help_hc12rotateRight, hc12sendRotateRightFunction,0},
+  {cmd_hc12stop,        cmd_help_hc12stop,        hc12sendStopFunction,       0},
 #if USE_SIM900
-  {cmd_sim900on,        cmd_help_sim900on,        sim900OnFunction},
-  {cmd_sim900off,       cmd_help_sim900off,       sim900OffFunction},
-  {cmd_sim900at,        cmd_help_sim900at,        sim900atMode},
+  {cmd_sim900on,        cmd_help_sim900on,        sim900OnFunction,           0},
+  {cmd_sim900off,       cmd_help_sim900off,       sim900OffFunction,          0},
+  {cmd_sim900at,        cmd_help_sim900at,        sim900atMode,               0},
 #endif
-  {NULL, NULL, NULL}
+  {NULL, NULL, NULL, 0}
 };
 
 
 const Command_t cmdListConfigure[] PROGMEM =
 {
-  {cmd_help,         cmd_help_help,         helpFunction},
-  {cmd_history,      cmd_help_history,      historyFunction},
-  {cmd_status,       cmd_help_status,       statusFunction},
-  {cmd_HC12mode,     cmd_help_HC12mode,     hc12modeFunction},
-  {cmd_HC12channel,  cmd_help_HC12channel,  hc12channelFunction},
-  {cmd_HC12baudrate, cmd_help_HC12baudrate, hc12baudrateFunction},
-  {cmd_HC12power,    cmd_help_HC12power,    hc12powerFunction},
-  {cmd_HC12status,   cmd_help_HC12status,   hc12statusFunction},
-  {cmd_conf_save,    cmd_help_conf_save,    saveConfigFunction},
-  {cmd_enable,       cmd_help_enable,       enableFunction},
-  {cmd_disable,      cmd_help_disable,      disableFunction},
-  {cmd_pwm_freq,     cmd_help_pwm_freq,     pwmSetFreq},
-  {NULL, NULL, NULL}
+  {cmd_help,            cmd_help_help,         helpFunction,         0},
+  {cmd_history,         cmd_help_history,      historyFunction,      0},
+  {cmd_status,          cmd_help_status,       statusFunction,       0},
+  {cmd_HC12mode,        cmd_help_HC12mode,     hc12modeFunction,     0},
+  {cmd_HC12channel,     cmd_help_HC12channel,  hc12channelFunction,  0},
+  {cmd_HC12baudrate,    cmd_help_HC12baudrate, hc12baudrateFunction, 0},
+  {cmd_HC12power,       cmd_help_HC12power,    hc12powerFunction,    0},
+  {cmd_HC12status,      cmd_help_HC12status,   hc12statusFunction,   0},
+  {cmd_conf_save,       cmd_help_conf_save,    saveConfigFunction,   0},
+  {cmd_enable,          cmd_help_enable,       enableFunction,       0},
+  {cmd_disable,         cmd_help_disable,      disableFunction,      0},
+  {cmd_pwm_freq,        cmd_help_pwm_freq,     pwmSetFreq,           0},
+  {NULL,                NULL,                  NULL,                 0}
 };
 
 void VtyInit(CliState_t* state, FILE *stream)
@@ -507,27 +505,23 @@ static CliExRes_t sendHC12AtCmd(CliState_t *state, const char cmd[])
         vTaskDelay(2);
         HC12setAtMode();
         vTaskDelay(25);
-#ifdef USE_XC8
         fprintf(state->myStdInOut, cmd, state->argv[1]);
         fprintf(&hc12Stream,       cmd, state->argv[1]);
-#else
-    fprintf_P(state->myStdInOut, cmd, cmdlineGetArgStr(1, state));
-    fprintf_P(&hc12Stream,       cmd, cmdlineGetArgStr(1, state));    
-#endif
-    uint8_t val;
-    while (xQueueReceive(xHC12Rec, &val, 100) == pdTRUE)
-    {
-        fputc(val, state->myStdInOut);
-    }
 
-    HC12setTransparentMode();
-    xSemaphoreGive(Hc12semaphore );
-    return OK_SILENT;
-  }
-  else
-  {
-    return ERROR_INFORM;
-  }
+        uint8_t val;
+        while (xQueueReceive(xHC12Rec, &val, 100) == pdTRUE)
+        {
+            fputc(val, state->myStdInOut);
+        }
+
+        HC12setTransparentMode();
+        xSemaphoreGive(Hc12semaphore );
+        return OK_SILENT;
+    }
+    else
+    {
+        return ERROR_INFORM;
+    }
 }
 
 static CliExRes_t sendHC12(CliState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[])
@@ -565,7 +559,8 @@ static CliExRes_t sendHC12loopback(CliState_t *state, uint8_t addr, uint8_t type
 
 static CliExRes_t bmpTest(CliState_t *state)
 {
-    double temperature = bmp085_readTemperature(&hardwarePAL.bmp);
+    float temperature = 0.5;//
+    temperature++;//= bmp085_readTemperature(&hardwarePAL.bmp);
     uint16_t tmp = bmp085_readRawTemperature(&hardwarePAL.bmp);
     CMD_printf("Temperature: %lf (%u) \r\n", temperature, tmp);
 

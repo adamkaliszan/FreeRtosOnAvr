@@ -27,7 +27,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 PROJECTNAME=RoverController.X
 
 # Active Configuration
-DEFAULTCONF=default
+DEFAULTCONF=GccMakefile
 CONF=${DEFAULTCONF}
 
 # All Configurations

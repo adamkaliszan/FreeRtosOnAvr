@@ -41,11 +41,13 @@
 #define CMD_msg(msg) fprintf(state->myStdInOut, msg)
 #define CMD_msg_const(msg) fprintf(state->myStdInOut, msg)
 #else
+#include <avr/pgmspace.h>
+
 #define IO_printf(format, args...) fprintf_P(io, PSTR(format), args)
 #define IO_msg(msg) fprintf_P(io, PSTR(msg))
 #define IO_msg_const(msg) fprintf_P(io, msg)
 #define CMD_printf(format, args...) fprintf_P(state->myStdInOut, PSTR(format), args)
-#define CMD_msg(msg) fprintf_P(state->myStdInOut, PSTR(msg))
+#define CMD_msg(msg) fprintf_P(state->myStdInOut, (__extension__({static const char __c[] PROGMEM = (msg); &__c[0];})))
 #define CMD_msg_const(msg) fprintf_P(state->myStdInOut, msg)
 #endif
 
