@@ -26,7 +26,7 @@
 #include "../../drv/include/twi.h"
 #include "cmdline.h"
 
-#define BMP085_DEBUG 1
+#define BMP085_DEBUG 0
 
 #define BMP085_I2CADDR 0x77
 

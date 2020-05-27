@@ -11,16 +11,11 @@ void vTaskVTYusb(void *cliStatePtr)
 {
   CliState_t *state = (CliState_t *)(cliStatePtr);
 
-#if USE_XC8
-  CMD_msg("Restart XC 8 compiller\r\n");
-#else
-  CMD_msg("Restart XC 8 AvrGss compiller\r\n");  
-#endif
-  //adxl345_init(&hardwarePAL.adxl, &hardwarePAL.twiSensors, ADXL345_RANGE_16G, state->myStdInOut);
-  
-  //bmp085_init(&hardwarePAL.bmp, &hardwarePAL.twiSensors,  state->myStdInOut, BMP085_ULTRAHIGHRES);
+  CMD_msg("Restart\r\n");  
 
-  //mhc5883l_init(&hardwarePAL.mhc, &hardwarePAL.twiSensors,  state->myStdInOut);
+  adxl345_init(&hardwarePAL.adxl, &hardwarePAL.twiSensors, ADXL345_RANGE_16G, state->myStdInOut);
+  bmp085_init(&hardwarePAL.bmp, &hardwarePAL.twiSensors,  state->myStdInOut, BMP085_ULTRALOWPOWER);
+  mhc5883l_init(&hardwarePAL.mhc, &hardwarePAL.twiSensors,  state->myStdInOut);
   
   cmdlineInputFunc('\r', state);
 

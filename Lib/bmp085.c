@@ -111,10 +111,9 @@ uint32_t bmp085_readRawPressure(Bmp085_t *bmp)
         vTaskDelay(10);
 
     raw = bmp085_read16(bmp, BMP085_PRESSUREDATA);
-
-    raw<<= 8;
+    raw<<=8;
     raw |= bmp085_read8(bmp, BMP085_PRESSUREDATA+2);
-    raw >>= (8 - bmp->oversampling);
+    raw = raw >> (8 - bmp->oversampling);
 
     return raw;
 }

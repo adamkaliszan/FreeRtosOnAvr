@@ -559,10 +559,9 @@ static CliExRes_t sendHC12loopback(CliState_t *state, uint8_t addr, uint8_t type
 
 static CliExRes_t bmpTest(CliState_t *state)
 {
-    float temperature = 0.5;//
-    temperature++;//= bmp085_readTemperature(&hardwarePAL.bmp);
+    float temperature = bmp085_readTemperature(&hardwarePAL.bmp);
     uint16_t tmp = bmp085_readRawTemperature(&hardwarePAL.bmp);
-    CMD_printf("Temperature: %lf (%u) \r\n", temperature, tmp);
+    CMD_printf("Temperature: %f (%u) \r\n", temperature, tmp);
 
     uint32_t preassureRaw = bmp085_readRawPressure(&hardwarePAL.bmp);
     int32_t preassure = bmp085_readPressure(&hardwarePAL.bmp);
