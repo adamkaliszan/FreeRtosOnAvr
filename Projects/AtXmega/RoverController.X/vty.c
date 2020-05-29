@@ -70,6 +70,7 @@ static CliExRes_t twiWtiteAndRead            (CliState_t *state);
 static CliExRes_t adxlTest                   (CliState_t *state);
 static CliExRes_t bmpTest                    (CliState_t *state);
 static CliExRes_t mhcTest                    (CliState_t *state);
+static CliExRes_t l3gTest                    (CliState_t *state);
 
 
 static CliExRes_t sendHC12(CliState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[]);
@@ -118,6 +119,7 @@ const Command_t cmdListNormal[] PROGMEM =
   {cmd_adxlTest       , cmd_help_adxlTest,        adxlTest,                    0},
   {cmd_bmpTest        , cmd_help_bmpTest,         bmpTest,                     0},
   {cmd_mhcTest        , cmd_help_mhcTest,         mhcTest,                     0},
+  {cmd_l3gTest        , cmd_help_l3gTest,         l3gTest,                     0},
   {NULL               , NULL,                     NULL,                        0}
 };
 
@@ -577,6 +579,14 @@ static CliExRes_t mhcTest(CliState_t *state)
 
     
     return OK_SILENT;    
+}
+
+static CliExRes_t l3gTest(CliState_t *state)
+{
+    l3g_readNormalize(&hardwarePAL.l3g);
+
+    CMD_printf("NormalizeData: %f %f %f\r\n", hardwarePAL.l3g.n.XAxis, hardwarePAL.l3g.n.YAxis, hardwarePAL.l3g.n.ZAxis);
+    return OK_SILENT; 
 }
 
 static CliExRes_t adxlTest(CliState_t *state)

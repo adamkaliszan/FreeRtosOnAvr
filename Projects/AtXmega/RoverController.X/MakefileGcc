@@ -69,6 +69,7 @@ $(LIB_DIR)/cmdline.c \
 $(LIB_DIR)/adxl345.c \
 $(LIB_DIR)/bmp085.c \
 $(LIB_DIR)/mhc5883l.c \
+$(LIB_DIR)/l3g4200d.c \
 $(LIB_DIR)/queueStream.c \
 $(LIB_DIR)/tlvProt.c \
 $(DRV_DIR)/twi.c \

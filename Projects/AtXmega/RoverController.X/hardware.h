@@ -11,6 +11,7 @@
 #include "adxl345.h"
 #include "bmp085.h"
 #include "mhc5883l.h"
+#include "l3g4200d.h"
 //#include "softwareConfig.h"
 
 
@@ -27,6 +28,8 @@ typedef struct HardwarePAL
     ADXL345_t adxl;
     Bmp085_t bmp;
     MHC5883L_t mhc;
+    L3G4200D_t l3g;
+    
     TWI_Master_t twiSensors;
 } HardwarePAL_t;
 
