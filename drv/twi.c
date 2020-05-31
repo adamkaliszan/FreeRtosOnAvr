@@ -100,8 +100,49 @@ uint8_t TwiMaster_IsReady(TWI_Master_t *twi)
  */
 uint8_t TwiMaster_Write(TWI_Master_t *twi, uint8_t address, uint8_t *writeData, uint8_t bytesToWrite)
 {
-	uint8_t twi_status = TwiMaster_ReadAndWrite(twi, address, bytesToWrite, writeData, 0, NULL);
-	return twi_status;
+    uint8_t result = 0;
+    if (bytesToWrite == 0)
+        goto exit;
+	/*Parameter sanity check. */
+    
+	/*Initiate transaction if bus is ready. */
+
+    if (xSemaphoreTake(twi->busy, 10) == pdFALSE)
+    {
+        result|= TWI_REZ_MUTEX_TIMEOUT_STAGE1;
+        goto exit;
+    }
+    
+	twi->result = TWI_REZ_UNKNOWN;
+	twi->address = address<<1;
+
+	/* Fill write data buffer. */
+    twi->writeData = writeData;
+	twi->bytesToWrite = bytesToWrite;
+	twi->readData = NULL;
+    twi->bytesToRead = 0;
+    
+	twi->bytesWritten = 0;
+	twi->bytesRead = 0;
+
+		/* If write command, send the START condition + Address +
+		 * 'R/_W = 0'
+		 */
+    uint8_t writeAddress = twi->address & ~0x01;
+	twi->interface->MASTER.ADDR = writeAddress;
+
+    if (xSemaphoreTake(twi->busy, 200) == pdTRUE) //Possible race condition. Release Semapthore after reading receive data.
+    {
+        result = twi->result;
+        xSemaphoreGive(twi->busy);
+    }
+    else
+    {
+        result = twi->result | TWI_REZ_MUTEX_TIMEOUT_STAGE2;
+    }
+    
+    exit:
+    return result;
 }
 
 
@@ -118,8 +159,46 @@ uint8_t TwiMaster_Write(TWI_Master_t *twi, uint8_t address, uint8_t *writeData, 
  */
 uint8_t TwiMaster_Read(TWI_Master_t *twi, uint8_t address, uint8_t bytesToRead, uint8_t *rdDta)
 {
-	uint8_t twi_status = TwiMaster_ReadAndWrite(twi, address, 0, NULL, bytesToRead, rdDta);
-	return twi_status;
+    uint8_t result = 0;
+    if (bytesToRead == 0)
+        goto exit;
+
+    if (xSemaphoreTake(twi->busy, 10) == pdFALSE)
+    {
+        result|= TWI_REZ_MUTEX_TIMEOUT_STAGE1;
+        goto exit;
+    }
+    
+	twi->result = TWI_REZ_UNKNOWN;
+	twi->address = address<<1;
+
+	/* Fill write data buffer. */
+    twi->writeData = NULL;
+	twi->bytesToWrite = 0;
+
+	twi->readData = rdDta;
+    twi->bytesToRead = bytesToRead;
+	twi->bytesWritten = 0;
+	twi->bytesRead = 0;
+
+/* If write command, send the START condition + Address +
+ * 'R/_W = 0'
+ */
+	uint8_t readAddress = twi->address | 0x01;
+    twi->interface->MASTER.ADDR = readAddress;
+
+    if (xSemaphoreTake(twi->busy, 200) == pdTRUE) //Possible race condition. Release Semapthore after reading receive data.
+    {
+        result = twi->result;
+        xSemaphoreGive(twi->busy);
+    }
+    else
+    {
+        result = twi->result | TWI_REZ_MUTEX_TIMEOUT_STAGE2;
+    }
+    
+    exit:
+    return result;
 }
 
 
@@ -142,18 +221,6 @@ uint8_t TwiMaster_ReadAndWrite(TWI_Master_t *twi, uint8_t address, uint8_t bytes
 {
     uint8_t result = 0;
 	/*Parameter sanity check. */
-	if (bytesToWrite > TWIM_WRITE_BUFFER_SIZE)
-    {
-        result = TWI_REZ_OVERFLOW;
-        goto exit;
-    }
-
-	
-	if (bytesToRead > TWIM_READ_BUFFER_SIZE)
-    {
-        result = TWI_REZ_OVERFLOW;
-        goto exit;
-    }
     
 	/*Initiate transaction if bus is ready. */
 
@@ -167,11 +234,11 @@ uint8_t TwiMaster_ReadAndWrite(TWI_Master_t *twi, uint8_t address, uint8_t bytes
 	twi->address = address<<1;
 
 	/* Fill write data buffer. */
-	for (uint8_t bufferIndex=0; bufferIndex < bytesToWrite; bufferIndex++)
-		twi->writeData[bufferIndex] = writeData[bufferIndex];
-
+    twi->writeData = writeData;
 	twi->bytesToWrite = bytesToWrite;
-	twi->bytesToRead = bytesToRead;
+
+	twi->readData = rdData;
+    twi->bytesToRead = bytesToRead;
 	twi->bytesWritten = 0;
 	twi->bytesRead = 0;
 
@@ -189,11 +256,6 @@ uint8_t TwiMaster_ReadAndWrite(TWI_Master_t *twi, uint8_t address, uint8_t bytes
 
     if (xSemaphoreTake(twi->busy, 200) == pdTRUE) //Possible race condition. Release Semapthore after reading receive data.
     {
-        
-        if (rdData != NULL)
-        {
-            memcpy(rdData, twi->readData, bytesToRead);
-        }
         result = twi->result;
         xSemaphoreGive(twi->busy);
     }
@@ -292,16 +354,8 @@ static inline void _twiMasterWriteHandler(TWI_Master_t *twi)
  */
 static inline void _twiMasterReadHandler(TWI_Master_t *twi)
 {
-	if (twi->bytesRead < TWIM_READ_BUFFER_SIZE)  	/* Fetch data if bytes to be read. */
-    {
-		twi->readData[twi->bytesRead] = twi->interface->MASTER.DATA;
-		twi->bytesRead++;
-	}
-	else 	/* If buffer overflow, issue STOP and BUFFER_OVERFLOW condition. */
-    {
-		twi->interface->MASTER.CTRLC = TWI_MASTER_CMD_STOP_gc;
-		_twiMasterTransactionFinished(twi, TWI_REZ_OVERFLOW);
-	}
+    twi->readData[twi->bytesRead] = twi->interface->MASTER.DATA;
+	twi->bytesRead++;
 
 	if (twi->bytesRead < twi->bytesToRead) 	/* If more bytes to read, issue ACK and start a byte read. */
     {

@@ -29,18 +29,15 @@ typedef enum TWI_REZ_enum {
 	TWI_REZ_UNKNOWN                 = 0,
 	TWI_REZ_OK                      = 0x01,
     
-	TWI_REZ_OVERFLOW                = 0x02,
-	TWI_REZ_ARBITRATION_LOST        = 0x04,
-	TWI_REZ_BUS_ERROR               = 0x08,
-	TWI_REX_NACK_RECEIVED           = 0x10,
-	TWI_REZ_FAIL                    = 0x20,
-	TWI_REZ_MUTEX_TIMEOUT_STAGE1    = 0x40,
-	TWI_REZ_MUTEX_TIMEOUT_STAGE2    = 0x80
+	TWI_REZ_ARBITRATION_LOST        = 0x02,
+	TWI_REZ_BUS_ERROR               = 0x04,
+	TWI_REX_NACK_RECEIVED           = 0x08,
+	TWI_REZ_FAIL                    = 0x10,
+	TWI_REZ_MUTEX_TIMEOUT_STAGE1    = 0x20,
+	TWI_REZ_MUTEX_TIMEOUT_STAGE2    = 0x40
 } TWI_REZ_t;
 
 /*! Buffer size defines */
-#define TWIM_WRITE_BUFFER_SIZE         8
-#define TWIM_READ_BUFFER_SIZE          8
 
 
 /*! \brief TWI master driver struct
@@ -54,8 +51,8 @@ typedef struct TWI_Master {
     signed portBASE_TYPE hptw;                  /*!< Higher Priority Task Woken*/
     
 	uint8_t address;                            /*!< Slave address */
-	uint8_t writeData[TWIM_WRITE_BUFFER_SIZE];  /*!< Data to write */
-	uint8_t readData[TWIM_READ_BUFFER_SIZE];    /*!< Read data */
+	const uint8_t *writeData;                         /*!< Data to write */
+	uint8_t *readData;                          /*!< Read data */
 	uint8_t bytesToWrite;                       /*!< Number of bytes to write */
 	uint8_t bytesToRead;                        /*!< Number of bytes to read */
 	uint8_t bytesWritten;                       /*!< Number of bytes written */
