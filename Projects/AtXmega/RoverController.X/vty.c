@@ -71,6 +71,7 @@ static CliExRes_t adxlTest                   (CliState_t *state);
 static CliExRes_t bmpTest                    (CliState_t *state);
 static CliExRes_t mhcTest                    (CliState_t *state);
 static CliExRes_t l3gTest                    (CliState_t *state);
+static CliExRes_t calibrate               (CliState_t *state);
 
 
 static CliExRes_t sendHC12(CliState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[]);
@@ -120,6 +121,7 @@ const Command_t cmdListNormal[] PROGMEM =
   {cmd_bmpTest        , cmd_help_bmpTest,         bmpTest,                     0},
   {cmd_mhcTest        , cmd_help_mhcTest,         mhcTest,                     0},
   {cmd_l3gTest        , cmd_help_l3gTest,         l3gTest,                     0},
+  {cmd_calibrate      , cmd_help_calibrate,       calibrate,                   0},
   {NULL               , NULL,                     NULL,                        0}
 };
 
@@ -583,11 +585,27 @@ static CliExRes_t mhcTest(CliState_t *state)
 
 static CliExRes_t l3gTest(CliState_t *state)
 {
-    l3g_readNormalize(&hardwarePAL.l3g);
-
-    CMD_printf("NormalizeData: %f %f %f\r\n", hardwarePAL.l3g.n.XAxis, hardwarePAL.l3g.n.YAxis, hardwarePAL.l3g.n.ZAxis);
+    uint8_t i;
+    //l3g_calibrate(&HardwarePAL.l3g, 20);
+    CMD_msg("Gyro test\r\n");
+    for (i=0; i<20; i++)
+    {
+        vTaskDelay(25);
+        l3g_readNormalize(&hardwarePAL.l3g);    
+        CMD_printf("%2d/20: %12f (%6d) %12f ", i, hardwarePAL.l3g.n.XAxis, hardwarePAL.l3g.r.XAxis, hardwarePAL.l3g.n.YAxis);
+        CMD_printf("(%6d) %10f (%6d)\r\n", hardwarePAL.l3g.r.YAxis, hardwarePAL.l3g.n.ZAxis, hardwarePAL.l3g.r.ZAxis);
+    }
+    
     return OK_SILENT; 
 }
+
+static CliExRes_t calibrate(CliState_t *state)
+{
+    CMD_msg("Calibrating GYRO\r\n");
+    l3g_calibrate(&hardwarePAL.l3g, 20);
+    return OK_INFORM; 
+}
+
 
 static CliExRes_t adxlTest(CliState_t *state)
 {

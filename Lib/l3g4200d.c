@@ -121,18 +121,18 @@ void l3g_calibrate(L3G4200D_t *l3g, uint8_t samples)
     float sigmaX = 0;
     float sigmaY = 0;
     float sigmaZ = 0;
-
+    
     // Read n-samples
     for (uint8_t i = 0; i < samples; ++i)
     {
         l3g_readRaw(l3g);
-    	sumX += l3g->r.XAxis;
-        sumY += l3g->r.YAxis;
-        sumZ += l3g->r.ZAxis;
+    	sumX += (float)l3g->r.XAxis;
+        sumY += (float)l3g->r.YAxis;
+        sumZ += (float)l3g->r.ZAxis;
 
-    	sigmaX += l3g->r.XAxis * l3g->r.XAxis;
-        sigmaY += l3g->r.YAxis * l3g->r.YAxis;
-        sigmaZ += l3g->r.ZAxis * l3g->r.ZAxis;
+    	sigmaX += (float)l3g->r.XAxis * (float)l3g->r.XAxis;
+        sigmaY += (float)l3g->r.YAxis * (float)l3g->r.YAxis;
+        sigmaZ += (float)l3g->r.ZAxis * (float)l3g->r.ZAxis;
 	
         vTaskDelay(1);
     }
@@ -143,9 +143,9 @@ void l3g_calibrate(L3G4200D_t *l3g, uint8_t samples)
     l3g->d.ZAxis = sumZ / samples;
 
     // Calculate threshold vectors
-    l3g->thresholdX = sqrt((sigmaX / samples) - (l3g->d.XAxis * l3g->d.XAxis));
-    l3g->thresholdY = sqrt((sigmaY / samples) - (l3g->d.YAxis * l3g->d.YAxis));
-    l3g->thresholdZ = sqrt((sigmaZ / samples) - (l3g->d.ZAxis * l3g->d.ZAxis));
+    l3g->tOld.XAxis = sqrt((sigmaX / samples) - (l3g->d.XAxis * l3g->d.XAxis));
+    l3g->tOld.YAxis = sqrt((sigmaY / samples) - (l3g->d.YAxis * l3g->d.YAxis));
+    l3g->tOld.ZAxis = sqrt((sigmaZ / samples) - (l3g->d.ZAxis * l3g->d.ZAxis));
 
     // If already set threshold, recalculate threshold vectors
     if (l3g->actualThreshold > 0)
@@ -171,9 +171,9 @@ void l3g_setThreshold(L3G4200D_t *l3g, uint8_t multiple)
             l3g_calibrate(l3g, multiple);
         }	
 	// Calculate threshold vectors
-    	l3g->t.XAxis = l3g->thresholdX * multiple;
-        l3g->t.YAxis = l3g->thresholdY * multiple;
-        l3g->t.ZAxis = l3g->thresholdZ * multiple;
+    	l3g->t.XAxis = l3g->tOld.XAxis * multiple;
+        l3g->t.YAxis = l3g->tOld.YAxis * multiple;
+        l3g->t.ZAxis = l3g->tOld.ZAxis * multiple;
     } 
     else
     {
@@ -253,15 +253,15 @@ void l3g_readNormalize(L3G4200D_t *l3g)
 
     if (l3g->useCalibrate)
     {
-    	l3g->n.XAxis = (l3g->r.XAxis - l3g->d.XAxis) * l3g->dpsPerDigit;
-        l3g->n.YAxis = (l3g->r.YAxis - l3g->d.YAxis) * l3g->dpsPerDigit;
-        l3g->n.ZAxis = (l3g->r.ZAxis - l3g->d.ZAxis) * l3g->dpsPerDigit;
+    	l3g->n.XAxis = ((float)l3g->r.XAxis - l3g->d.XAxis) * l3g->dpsPerDigit;
+        l3g->n.YAxis = ((float)l3g->r.YAxis - l3g->d.YAxis) * l3g->dpsPerDigit;
+        l3g->n.ZAxis = ((float)l3g->r.ZAxis - l3g->d.ZAxis) * l3g->dpsPerDigit;
     } 
     else
     {
-        l3g->n.XAxis = l3g->r.XAxis * l3g->dpsPerDigit;
-        l3g->n.YAxis = l3g->r.YAxis * l3g->dpsPerDigit;
-        l3g->n.ZAxis = l3g->r.ZAxis * l3g->dpsPerDigit;
+        l3g->n.XAxis = (float)l3g->r.XAxis * l3g->dpsPerDigit;
+        l3g->n.YAxis = (float)l3g->r.YAxis * l3g->dpsPerDigit;
+        l3g->n.ZAxis = (float)l3g->r.ZAxis * l3g->dpsPerDigit;
     }
 
     if (l3g->actualThreshold > 0)

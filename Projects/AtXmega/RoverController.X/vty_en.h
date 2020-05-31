@@ -69,6 +69,7 @@ const char cmd_adxlTest[]         PROGMEM = "adxl";      const char cmd_help_adx
 const char cmd_bmpTest[]          PROGMEM = "bmp";       const char cmd_help_bmpTest[]           PROGMEM = "Barometer No Arg. Just demo";
 const char cmd_mhcTest[]          PROGMEM = "mhc";       const char cmd_help_mhcTest[]           PROGMEM = "Magnetometer No Arg. Just demo";
 const char cmd_l3gTest[]          PROGMEM = "l3g";       const char cmd_help_l3gTest[]           PROGMEM = "Gyroscope demo";
+const char cmd_calibrate[]        PROGMEM = "calibrate"; const char cmd_help_calibrate[]         PROGMEM = "Calibrate sensors";
 
 
 #if USE_SIM900

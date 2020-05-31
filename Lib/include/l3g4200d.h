@@ -83,18 +83,15 @@ typedef struct L3G4200D
     xSemaphoreHandle mutex;
     TWI_Master_t *twi;
     
-	VectorUint16_t r;
+	VectorInt16_t r;
 	VectorFloat_t n;
-	VectorUint16_t d;
-	VectorUint16_t t;
+	VectorFloat_t d;
+	VectorFloat_t t;
+	VectorFloat_t tOld;
 
 	uint8_t useCalibrate;
 	float actualThreshold;
 	float dpsPerDigit;
-	float thresholdX;
-	float thresholdY;
-	float thresholdZ;
-
 } L3G4200D_t;
 
 uint8_t l3g_init(L3G4200D_t *l3g, TWI_Master_t *twi, l3g4200d_dps_t scale, l3g4200d_odrbw_t odrbw, FILE *io);//L3G4200D_SCALE_2000DPS L3G4200D_DATARATE_100HZ_12_5
