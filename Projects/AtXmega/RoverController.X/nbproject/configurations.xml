@@ -29,6 +29,7 @@
         <itemPath>../../../Lib/include/mhc5883l.h</itemPath>
         <itemPath>../../../Lib/include/cVector.h</itemPath>
         <itemPath>../../../Lib/include/l3g4200d.h</itemPath>
+        <itemPath>../../../Lib/include/rc_ibus.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Port" projectFiles="true">
         <itemPath>../../../FreeRtosCore/portable/GCC/ATXmega/portmacro.h</itemPath>
@@ -53,6 +54,7 @@
       <itemPath>taskSensors.h</itemPath>
       <itemPath>sensors.h</itemPath>
       <itemPath>hardwareBsp.h</itemPath>
+      <itemPath>rc_task.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -78,6 +80,7 @@
         <itemPath>../../../Lib/bmp085.c</itemPath>
         <itemPath>../../../Lib/mhc5883l.c</itemPath>
         <itemPath>../../../Lib/l3g4200d.c</itemPath>
+        <itemPath>../../../Lib/rc_ibus.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Port" projectFiles="true">
         <itemPath>../../../FreeRtosCore/portable/MemMang/heap_avr.c</itemPath>
@@ -94,6 +97,7 @@
       <itemPath>vty.c</itemPath>
       <itemPath>hc12.c</itemPath>
       <itemPath>taskSensors.c</itemPath>
+      <itemPath>rc_task.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -899,6 +903,9 @@
         <property key="stack-type" value="compiled"/>
         <property key="user-pack-device-support" value=""/>
       </XC8-config-global>
+      <snap>
+        <property key="debugoptions.useswbreakpoints" value="true"/>
+      </snap>
     </conf>
   </confs>
 </configurationDescriptor>

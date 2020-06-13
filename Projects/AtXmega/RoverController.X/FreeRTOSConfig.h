@@ -77,11 +77,11 @@
 
 //If you you want another frequency don't forget to modify period of timer counter used for tick interrupt
 
-#define configTICK_RATE_HZ			( ( portTickType ) 100 )// czestotliwoæ RTOS przerwania tick, sluzy do odmierzania czasu
+#define configTICK_RATE_HZ			( ( portTickType ) 100 )// FTOS Frequency RTOS one tick per 2.5 ms przerwania tick, sluzy do odmierzania czasu
 
 #define configMAX_PRIORITIES		( ( unsigned portBASE_TYPE ) 3 )//4 maksymalna liczba priorytetów obs³ugiwana przez zadanie
 
-#define configMINIMAL_STACK_SIZE	( ( unsigned short ) 150 )//85 // min rozmiar stosu, który wykorzystywany jest przez zadanie IDle
+#define configMINIMAL_STACK_SIZE	( ( unsigned short ) 250 )//85 // min rozmiar stosu, który wykorzystywany jest przez zadanie IDle
 
 #define configTOTAL_HEAP_SIZE		( (size_t ) ( 7000 ) )//1500// całkowita ilość pamięci RAM dostępna dla jądra RTOS
 
@@ -89,7 +89,7 @@
 
 #define configUSE_MUTEXES           1
 
-#define configMAX_TASK_NAME_LEN		( 10 )
+#define configMAX_TASK_NAME_LEN		( 7 )
 
 #define configUSE_TRACE_FACILITY	1 //Set to 1 if you wish to include additional structure members and functions to assist with execution visualisation and tracing
 

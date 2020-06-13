@@ -15,10 +15,6 @@
 #include "main.h"
 
 
-extern xQueueHandle         xMainRec;
-
-
-
 typedef struct mainMsg
 {
   uint16_t duration;

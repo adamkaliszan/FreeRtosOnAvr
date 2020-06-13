@@ -59,6 +59,7 @@ configuration.c \
 serial.c \
 hardware.c \
 vty.c \
+rc_task.c \
 cli_task.c \
 tlv_task.c\
 tlv.c\
@@ -71,6 +72,7 @@ $(LIB_DIR)/bmp085.c \
 $(LIB_DIR)/mhc5883l.c \
 $(LIB_DIR)/l3g4200d.c \
 $(LIB_DIR)/queueStream.c \
+$(LIB_DIR)/rc_ibus.c \
 $(LIB_DIR)/tlvProt.c \
 $(DRV_DIR)/twi.c \
 $(RTOS_SRC_DIR)/tasks.c \

@@ -24,6 +24,13 @@ void initQueueStreamHC12(FILE *stream)
   return;
 }
 
+void initQueueStreamSim900(FILE *stream)
+{
+  fdev_setup_stream(stream, SIM900PutChar, SIM900GetChar, _FDEV_SETUP_RW);
+  fdev_set_udata(stream, NULL);
+  return;
+}
+
 void initQueueStreamHC12fake(FILE *stream)
 {
   fdev_setup_stream(stream, HC12PutCharFake, HC12GetChar, _FDEV_SETUP_RW);
@@ -119,13 +126,13 @@ void xSerialPortInitMinimal(void)
   portENTER_CRITICAL();
   {
     xVtyRec    = xQueueCreate(64, ( unsigned portBASE_TYPE ) sizeof( signed portCHAR ));
-    xVtyTx     = xQueueCreate(32, ( unsigned portBASE_TYPE ) sizeof( signed portCHAR ));
+    xVtyTx     = xQueueCreate(128, ( unsigned portBASE_TYPE ) sizeof( signed portCHAR ));
 
     xHC12Rec   = xQueueCreate(64, ( unsigned portBASE_TYPE ) sizeof( signed portCHAR ));
     xHC12Tx    = xQueueCreate(32, ( unsigned portBASE_TYPE ) sizeof( signed portCHAR ));
 
-    xSIM900Rec = xQueueCreate(128,( unsigned portBASE_TYPE ) sizeof( signed portCHAR ));
-    xSIM900Tx  = xQueueCreate(32, ( unsigned portBASE_TYPE ) sizeof( signed portCHAR ));
+    xSIM900Rec = xQueueCreate(128, ( unsigned portBASE_TYPE ) sizeof( signed portCHAR ));
+    xSIM900Tx  = xQueueCreate(16, ( unsigned portBASE_TYPE ) sizeof( signed portCHAR ));
   }
   portEXIT_CRITICAL();
   return;
@@ -135,20 +142,17 @@ void xSerialPortInitMinimal(void)
 /** VTY ---------------------------------------------------*/
 ISR(USARTC0_RXC_vect)
 {
+    static uint8_t cChar;
+    static signed portBASE_TYPE xHigherPriorityTaskWoken;
 
-  static signed portBASE_TYPE xHigherPriorityTaskWoken;
-  signed portCHAR cChar;
+    xHigherPriorityTaskWoken = pdFALSE;
+    cChar = USARTC0.DATA;
 
-  cChar = USARTC0.DATA;
-  //return;
-  //USARTC0.DATA = cChar+1;
-
-  xHigherPriorityTaskWoken = pdFALSE;
-  xQueueSendFromISR(xVtyRec, &cChar, &xHigherPriorityTaskWoken);
-  if( xHigherPriorityTaskWoken )
-  {
-    taskYIELD();
-  }
+    xQueueSendFromISR(xVtyRec, &cChar, &xHigherPriorityTaskWoken);
+    if( xHigherPriorityTaskWoken )
+    {
+        taskYIELD();
+    }
 }
 
 void uartVtySendByte(uint8_t data)
@@ -159,21 +163,22 @@ void uartVtySendByte(uint8_t data)
 
 ISR(USARTC0_DRE_vect) // USART1_UDRE_vect
 {
-  static signed portBASE_TYPE xHigherPriorityTaskWoken;
-  static char data;
-  if(xQueueReceiveFromISR(xVtyTx, &data, &xHigherPriorityTaskWoken) == pdTRUE)
-  {
-    USARTC0.DATA = data;
-  }
-  else
-  {
+    static uint8_t data;
+    static signed portBASE_TYPE xHigherPriorityTaskWoken;
+    
     xHigherPriorityTaskWoken = pdFALSE;
-    vInterruptVtyOff();
-  }
-  //if( xHigherPriorityTaskWoken )
-  //{
-  //  taskYIELD();
-  //}
+    if(xQueueReceiveFromISR(xVtyTx, &data, &xHigherPriorityTaskWoken) == pdTRUE)
+    {
+        USARTC0.DATA = data;
+    }
+    else
+    {
+        vInterruptVtyOff();
+    }
+    if( xHigherPriorityTaskWoken )
+    {
+        taskYIELD();
+    }
 }
 
 
@@ -181,20 +186,17 @@ ISR(USARTC0_DRE_vect) // USART1_UDRE_vect
 
 ISR(USARTC1_RXC_vect)
 {
+    static uint8_t cChar;
+    static signed portBASE_TYPE xHigherPriorityTaskWoken;
+    
+    xHigherPriorityTaskWoken = pdFALSE;
+    cChar = USARTC1.DATA;
 
-  static signed portBASE_TYPE xHigherPriorityTaskWoken;
-  signed portCHAR cChar;
-
-  cChar = USARTC1.DATA;
-  //return;
-  //USARTC0.DATA = cChar+1;
-
-  xHigherPriorityTaskWoken = pdFALSE;
-  xQueueSendFromISR(xHC12Rec, &cChar, &xHigherPriorityTaskWoken);
-  if( xHigherPriorityTaskWoken )
-  {
-    taskYIELD();
-  }
+    xQueueSendFromISR(xHC12Rec, &cChar, &xHigherPriorityTaskWoken);
+    if( xHigherPriorityTaskWoken )
+    {
+        taskYIELD();
+    }
 }
 
 void uartHC12SendByte(uint8_t data)
@@ -210,64 +212,62 @@ void uartHC12SendByteFake(uint8_t data)
 
 ISR(USARTC1_DRE_vect)
 {
-  static signed portBASE_TYPE xHigherPriorityTaskWoken;
-  static char data;
-  if(xQueueReceiveFromISR(xHC12Tx, &data, &xHigherPriorityTaskWoken) == pdTRUE)
-  {
-    USARTC1.DATA = data;
-  }
-  else
-  {
-    xHigherPriorityTaskWoken = pdFALSE;
-    vInterruptHC12Off();
-  }
-  if( xHigherPriorityTaskWoken )
-  {
-    taskYIELD();
-  }
+    static uint8_t data;
+    static signed portBASE_TYPE xHigherPriorityTaskWoken;
+    
+    xHigherPriorityTaskWoken = pdFALSE;    
+    if(xQueueReceiveFromISR(xHC12Tx, &data, &xHigherPriorityTaskWoken) == pdTRUE)
+    {
+        USARTC1.DATA = data;
+    }
+    else
+    {
+        vInterruptHC12Off();
+    }
+    if( xHigherPriorityTaskWoken )
+    {
+        taskYIELD();
+    }
 }
 
 /** SIM900 ************************************/
 
 ISR(USARTD0_RXC_vect)
 {
-
-  static signed portBASE_TYPE xHigherPriorityTaskWoken;
-  signed portCHAR cChar;
-
-  cChar = USARTD0.DATA;
-  //return;
-  //USARTC0.DATA = cChar+1;
-
-  xHigherPriorityTaskWoken = pdFALSE;
-  xQueueSendFromISR(xSIM900Rec, &cChar, &xHigherPriorityTaskWoken);
-  if( xHigherPriorityTaskWoken )
-  {
-    taskYIELD();
-  }
+    static uint8_t cChar;
+    static signed portBASE_TYPE xHigherPriorityTaskWoken;
+   
+    xHigherPriorityTaskWoken = pdFALSE;
+    cChar = USARTD0.DATA;
+    xQueueSendFromISR(xSIM900Rec, &cChar, &xHigherPriorityTaskWoken);
+    if( xHigherPriorityTaskWoken )
+    {
+        taskYIELD();
+    }
 }
 
 void uartSIM900SendByte(uint8_t data)
 {
-  xQueueSend(xSIM900Tx, &data, 10);
-  vInterruptSIM900On();
+    xQueueSend(xSIM900Tx, &data, 10);
+    vInterruptSIM900On();
 }
 
 ISR(USARTD0_DRE_vect)
 {
-  static signed portBASE_TYPE xHigherPriorityTaskWoken;
-  static char data;
-  if(xQueueReceiveFromISR(xSIM900Tx, &data, &xHigherPriorityTaskWoken) == pdTRUE)
-  {
-    USARTD0.DATA = data;
-  }
-  else
-  {
+    static uint8_t data;
+    static signed portBASE_TYPE xHigherPriorityTaskWoken;
+
     xHigherPriorityTaskWoken = pdFALSE;
-    vInterruptSIM900Off();
-  }
-  if( xHigherPriorityTaskWoken )
-  {
-    taskYIELD();
-  }
+    if(xQueueReceiveFromISR(xSIM900Tx, &data, &xHigherPriorityTaskWoken) == pdTRUE)
+    {
+        USARTD0.DATA = data;
+    }
+    else
+    {
+        vInterruptSIM900Off();
+    }
+    if( xHigherPriorityTaskWoken )
+    {
+        taskYIELD();
+    }
 }

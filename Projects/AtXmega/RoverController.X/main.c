@@ -46,6 +46,7 @@
 #include "main.h"
 
 #include "main_task.h"
+#include "rc_task.h"
 
 uint8_t timer100Hz = 0;
 
@@ -54,7 +55,6 @@ xQueueHandle xVtyRec;
 
 xQueueHandle xHC12Tx;
 xQueueHandle xHC12Rec;
-xQueueHandle xMainRec;
 
 xQueueHandle xSIM900Rec;
 xQueueHandle xSIM900Tx;
@@ -69,6 +69,7 @@ FILE hc12FakeStream;
 
 xSemaphoreHandle Hc12semaphore;
 
+xTaskHandle xHandleRcReceiver;
 xTaskHandle xHandleVTY_USB;
 xTaskHandle xHandleTLV;
 xTaskHandle xHandleMain;
@@ -125,8 +126,6 @@ portSHORT main( void )
   loadConfiguration();
   xSerialPortInitMinimal();
 
-  xMainRec = xQueueCreate(16, 1);
-
 
   CLIStateSerialUsb  = xmalloc(sizeof(CliState_t));
   TLVstate = xmalloc(sizeof(TlvInterpreter_t));
@@ -142,8 +141,9 @@ portSHORT main( void )
 
   sei();
 
-  xTaskCreate(vTaskVTYusb,    NULL /*"VTY"            */, STACK_SIZE_VTY,         (void *)(CLIStateSerialUsb),            1, &xHandleVTY_USB);
-  xTaskCreate(vTaskTLV,       NULL /*"TLV"            */, STACK_SIZE_VTY,         (void *)(TLVstate),                     1, &xHandleTLV);
+  xTaskCreate(vTaskRc,        "RcRec",         2000,          NULL,                                   2, NULL);
+  xTaskCreate(vTaskVTYusb,    "VTY" ,         1000+STACK_SIZE_VTY,         (void *)(CLIStateSerialUsb),            1, &xHandleVTY_USB);
+//  xTaskCreate(vTaskTLV,       NULL /*"TLV"            */, STACK_SIZE_VTY,         (void *)(TLVstate),                     1, &xHandleTLV);
 //  xTaskCreate(vTaskMain,      NULL /*"TLV"            */, STACK_SIZE_VTY,         NULL,                                   1, &xHandleMain);
 
   vTaskStartScheduler();

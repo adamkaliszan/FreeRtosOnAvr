@@ -18,6 +18,8 @@
 #include "adxl345.h"
 #include "bmp085.h"
 #include "mhc5883l.h"
+#include "rc_ibus.h"
+
 
 #if LANG_EN
 #include "vty_en.h"
@@ -71,8 +73,8 @@ static CliExRes_t adxlTest                   (CliState_t *state);
 static CliExRes_t bmpTest                    (CliState_t *state);
 static CliExRes_t mhcTest                    (CliState_t *state);
 static CliExRes_t l3gTest                    (CliState_t *state);
-static CliExRes_t calibrate               (CliState_t *state);
-
+static CliExRes_t calibrate                  (CliState_t *state);
+static CliExRes_t rcTest                     (CliState_t *state);
 
 static CliExRes_t sendHC12(CliState_t *state, uint8_t addr, uint8_t type, uint8_t len, const uint8_t const cmdDta[]);
 static CliExRes_t sendHC12AtCmd(CliState_t *state, const char cmd[]);
@@ -122,6 +124,8 @@ const Command_t cmdListNormal[] PROGMEM =
   {cmd_mhcTest        , cmd_help_mhcTest,         mhcTest,                     0},
   {cmd_l3gTest        , cmd_help_l3gTest,         l3gTest,                     0},
   {cmd_calibrate      , cmd_help_calibrate,       calibrate,                   0},
+  {cmd_rc             , cmd_help_rc,              rcTest,                      0},
+  {cmd_pwr,             cmd_help_pwr,             pwrFunction,                 0},
   {NULL               , NULL,                     NULL,                        0}
 };
 
@@ -212,10 +216,11 @@ static CliExRes_t disableFunction(CliState_t *state)
 // ************************** VTY API ***************************************************************************************
 void printStatus(FILE *stream)
 {
+  uint16_t tmp;
 #ifdef USE_XC8
   fprintf(stream, SYSTEM_NAME" ver "S_VERSION" build: "__DATE__", "__TIME__"\r\n");
   fprintf(stream, "PWR status: 4v3 %s, RPI 3v3 %s, RPI 4v3 %s\r\n", isPwr4v3() ? "On": "Off", isPwr3v3rpi() ? "On": "Off", isPwr4v3rpi() ? "On": "Off");
-
+  
   fprintf(stream, "Hc12 config:\r\n");
   fprintf(stream, "\tmode    %d\r\n", confHC12mode);
   fprintf(stream, "\tbaud    %d\r\n", confHC12baud);
@@ -261,6 +266,30 @@ void printStatus(FILE *stream)
   fprintf_P(stream, PSTR("     %d + %d/32 A\r\n"),  res2>>5, res2&0x1F);  
 #endif
   //Print system state
+  
+  
+#ifdef USE_XC8
+  fprintf(stream, "Tasks:\r\n");
+#else
+  fprintf_P(stream, PSTR("Tasks:\r\n"));
+#endif
+  
+  tmp = xPortGetFreeHeapSize();
+  tmp-=2;
+  char *buffer = pvPortMalloc(1024);
+  if (buffer != NULL)
+  {
+    vTaskList(tmp, buffer);
+    fprintf(stream, buffer);
+    vPortFree(buffer);  
+  }
+  
+#ifdef USE_XC8
+  fprintf(stream, "Heap free space: %d\r\n", xPortGetFreeHeapSize());
+#else
+  fprintf_P(stream, PSTR("Heap free space: %d\r\n"), xPortGetFreeHeapSize());
+#endif
+  
 }
 
 
@@ -599,6 +628,36 @@ static CliExRes_t l3gTest(CliState_t *state)
     return OK_SILENT; 
 }
 
+static CliExRes_t rcTest(CliState_t *state)
+{
+    uint8_t i;
+    uint8_t j;
+    uint16_t tmp1 = rc_getNoOfNewFrames();
+    uint16_t tmp2 = rc_getNoOfProcFrames();
+    uint16_t tmp3 = rc_getNoOfCrcErrors();
+    CMD_printf("Rc demo: no of new Frames: %u, ", tmp1);
+    CMD_printf("(%u + ", tmp2);
+    CMD_printf("%u)\r\n", tmp3);
+
+    pwrOn4v3rpi();
+    
+    //return OK_INFORM; 
+        
+        
+    for (i=0; i< 20; i++)
+    {
+        for (j=0; j< 4; j++)
+        {
+            tmp1 = rc_getChan(j);
+            CMD_printf("%u ", tmp1);
+            //vTaskDelay(2);
+        }
+        CMD_msg("\r\n");
+        vTaskDelay(50);
+    }
+    return OK_INFORM; 
+}
+
 static CliExRes_t calibrate(CliState_t *state)
 {
     CMD_msg("Calibrating GYRO\r\n");
@@ -639,8 +698,6 @@ static CliExRes_t twiWtiteAndRead(CliState_t *state)
     result = TwiMaster_ReadAndWrite(&hardwarePAL.twiSensors, address, wrDtaLen, tmpDta, rdDtaLen, NULL);    
     
     fprintf(state->myStdInOut, "Result: 0x%02x", result);
-    if (result & TWI_REZ_OVERFLOW)        
-        fprintf(state->myStdInOut, " BUFFER_OVERFLOW");
         
     if (result & TWI_REZ_ARBITRATION_LOST)        
         fprintf(state->myStdInOut, " ARBITRATION_LOST");

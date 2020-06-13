@@ -64,8 +64,8 @@ void hardwareInit(void)
     // 1 Sim900 reset     5 SPI 1
     // 2 Sim900 RxD       6 SPI 2
     // 3 Sim900 TxD       7 SPI 3
-    PORTD.DIR=0x35;
-    PORTD.OUT=0x01;
+    PORTD.DIR=0x3B;
+    PORTD.OUT=0x05;
 
     /// PORT E
     // 0 DC/DC 4v3        2 RPI RxD

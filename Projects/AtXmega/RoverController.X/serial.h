@@ -112,6 +112,7 @@ extern xQueueHandle         xSIM900Tx;
 
 void         initQueueStreamUSB(FILE *stream);
 void         initQueueStreamHC12(FILE *stream);
+void         initQueueStreamSim900(FILE *stream);
 void         initQueueStreamHC12fake(FILE *stream);
 
 int          VtyPutChar(char c, FILE *stream);
