@@ -57,6 +57,7 @@
  * Modified by Adam Kaliszan
  */
 #include <stdlib.h>
+#include <string.h>
 
 /* Defining MPU_WRAPPERS_INCLUDED_FROM_API_FILE prevents task.h from redefining
 all the API functions to use the MPU wrappers.  That should only be done when
@@ -99,12 +100,14 @@ void *pvPortMalloc( size_t xWantedSize )
 	vTaskSuspendAll();
 	{
 		/* Check there is enough room left for the allocation. */
-		if( ( ( xNextFreeByte + xWantedSize ) < configTOTAL_HEAP_SIZE ) &&
-			( ( xNextFreeByte + xWantedSize ) > xNextFreeByte )	)/* Check for overflow. */
+		if( ( ( xNextFreeByte + xWantedSize + 2 ) < configTOTAL_HEAP_SIZE ) &&
+			( ( xNextFreeByte + xWantedSize + 2 ) > xNextFreeByte )	)/* Check for overflow. */
 		{
 			/* Return the next free byte then increment the index past this
 			block. */
-			pvReturn = &( xHeap.ucHeap[ xNextFreeByte ] );
+            *((uint16_t *)(&xHeap.ucHeap[xNextFreeByte])) = xWantedSize;
+            xNextFreeByte+= 2;
+   			pvReturn = &( xHeap.ucHeap[ xNextFreeByte ] );
 			xNextFreeByte += xWantedSize;
 		}
 	}
@@ -126,10 +129,18 @@ void *pvPortMalloc( size_t xWantedSize )
 
 void vPortFree( void *pv )
 {
-	/* Memory cannot be freed using this scheme.  See heap_2.c and heap_3.c
-	for alternative implementations, and the memory management pages of
-	http://www.FreeRTOS.org for more information. */
-	( void ) pv;
+    uint16_t *ptr = (uint16_t *)(pv);
+    
+    ptr--;
+  	vTaskSuspendAll();
+    if (((unsigned char *)pv + *ptr) == (unsigned char *)(&xHeap.ucHeap[xNextFreeByte]))
+    {
+        xNextFreeByte-= *ptr;
+        xNextFreeByte-= 2;
+    }
+    memset(pv, 0, *ptr);
+    *ptr = 0;
+	xTaskResumeAll();
 }
 /*-----------------------------------------------------------*/
 

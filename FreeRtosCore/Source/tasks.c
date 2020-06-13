@@ -88,7 +88,7 @@ typedef struct tskTaskControlBlock
 	xListItem				xEventListItem;		/*< List item used to place the TCB in event lists. */
 	unsigned portBASE_TYPE	uxPriority;			/*< The priority of the task where 0 is the lowest priority. */
 	portSTACK_TYPE			*pxStack;			/*< Points to the start of the stack. */
-	signed char				pcTaskName[ configMAX_TASK_NAME_LEN ];/*< Descriptive name given to the task when created.  Facilitates debugging only. */
+	char				    pcTaskName[ configMAX_TASK_NAME_LEN ];/*< Descriptive name given to the task when created.  Facilitates debugging only. */
 
 	#if ( portSTACK_GROWTH > 0 )
 		portSTACK_TYPE *pxEndOfStack;			/*< Used for stack overflow checking on architectures where the stack grows up from low memory. */
@@ -197,8 +197,6 @@ PRIVILEGED_DATA static unsigned portBASE_TYPE uxTaskNumber 						= ( unsigned po
 	PRIVILEGED_DATA static signed char *pcTraceBufferEnd;
 	PRIVILEGED_DATA static signed portBASE_TYPE xTracing = pdFALSE;
 	static unsigned portBASE_TYPE uxPreviousTask = 255;
-	PRIVILEGED_DATA static char pcStatusString[ 50 ];
-
 #endif
 
 /*-----------------------------------------------------------*/
@@ -301,8 +299,7 @@ register tskTCB *pxTCB;																								\
  * Utility to ready a TCB for a given task.  Mainly just copies the parameters
  * into the TCB structure.
  */
-static void prvInitialiseTCBVariables( tskTCB *pxTCB, const signed char * const pcName, unsigned portBASE_TYPE uxPriority, const xMemoryRegion * const xRegions, unsigned short usStackDepth ) PRIVILEGED_FUNCTION;
-
+static void prvInitialiseTCBVariables( tskTCB *pxTCB, const char *pcName, unsigned portBASE_TYPE uxPriority, const xMemoryRegion * const xRegions, unsigned short usStackDepth );
 /*
  * Utility to ready all the lists used by the scheduler.  This is called
  * automatically upon the creation of the first task.
@@ -359,7 +356,7 @@ static tskTCB *prvAllocateTCBAndStack( unsigned short usStackDepth, portSTACK_TY
  */
 #if ( configUSE_TRACE_FACILITY == 1 )
 
-	static void prvListTaskWithinSingleList( const signed char *pcWriteBuffer, xList *pxList, signed char cStatus ) PRIVILEGED_FUNCTION;
+	static uint16_t prvListTaskWithinSingleList(uint16_t maxLen, char *pcWriteBuffer, xList *pxList, signed char cStatus);
 
 #endif
 
@@ -383,7 +380,7 @@ static tskTCB *prvAllocateTCBAndStack( unsigned short usStackDepth, portSTACK_TY
  * TASK CREATION API documented in task.h
  *----------------------------------------------------------*/
 
-signed portBASE_TYPE xTaskGenericCreate( pdTASK_CODE pxTaskCode, const signed char * const pcName, unsigned short usStackDepth, void *pvParameters, unsigned portBASE_TYPE uxPriority, xTaskHandle *pxCreatedTask, portSTACK_TYPE *puxStackBuffer, const xMemoryRegion * const xRegions )
+signed portBASE_TYPE xTaskGenericCreate( pdTASK_CODE pxTaskCode, const char *pcName, unsigned short usStackDepth, void *pvParameters, unsigned portBASE_TYPE uxPriority, xTaskHandle *pxCreatedTask, portSTACK_TYPE *puxStackBuffer, const xMemoryRegion * const xRegions )
 {
 signed portBASE_TYPE xReturn;
 tskTCB * pxNewTCB;
@@ -1023,7 +1020,7 @@ void vTaskStartScheduler( void )
 portBASE_TYPE xReturn;
 
 	/* Add the idle task at the lowest priority. */
-	xReturn = xTaskCreate( prvIdleTask, ( signed char * ) "IDLE", tskIDLE_STACK_SIZE, ( void * ) NULL, ( tskIDLE_PRIORITY | portPRIVILEGE_BIT ), ( xTaskHandle * ) NULL );
+	xReturn = xTaskCreate( prvIdleTask, "IDLE", tskIDLE_STACK_SIZE, ( void * ) NULL, ( tskIDLE_PRIORITY | portPRIVILEGE_BIT ), ( xTaskHandle * ) NULL );
 
 	if( xReturn == pdPASS )
 	{
@@ -1186,64 +1183,69 @@ unsigned portBASE_TYPE uxTaskGetNumberOfTasks( void )
 
 #if ( configUSE_TRACE_FACILITY == 1 )
 
-	void vTaskList( signed char *pcWriteBuffer )
-	{
+void vTaskList(uint16_t maxLen, char *pcWriteBuffer )
+{
 	unsigned portBASE_TYPE uxQueue;
 
 		/* This is a VERY costly function that should be used for debug only.
 		It leaves interrupts disabled for a LONG time. */
 
-		vTaskSuspendAll();
+    uint16_t tmpLen;
+    
+	pcWriteBuffer[ 0 ] = 0x00;        
+	vTaskSuspendAll();
+	{
+		uxQueue = uxTopUsedPriority + 1;
+		do
 		{
-			/* Run through all the lists that could potentially contain a TCB and
-			report the task name, state and stack high water mark. */
+			uxQueue--;
 
-			pcWriteBuffer[ 0 ] = ( signed char ) 0x00;
-			strcat( ( char * ) pcWriteBuffer, ( const char * ) "\r\n" );
-
-			uxQueue = uxTopUsedPriority + 1;
-
-			do
+			if( !listLIST_IS_EMPTY( &( pxReadyTasksLists[ uxQueue ] ) ) )
 			{
-				uxQueue--;
-
-				if( !listLIST_IS_EMPTY( &( pxReadyTasksLists[ uxQueue ] ) ) )
-				{
-					prvListTaskWithinSingleList( pcWriteBuffer, ( xList * ) &( pxReadyTasksLists[ uxQueue ] ), tskREADY_CHAR );
-				}
-			}while( uxQueue > ( unsigned short ) tskIDLE_PRIORITY );
-
-			if( !listLIST_IS_EMPTY( pxDelayedTaskList ) )
-			{
-				prvListTaskWithinSingleList( pcWriteBuffer, ( xList * ) pxDelayedTaskList, tskBLOCKED_CHAR );
+				tmpLen = prvListTaskWithinSingleList( maxLen, pcWriteBuffer, ( xList * ) &( pxReadyTasksLists[ uxQueue ] ), tskREADY_CHAR );
+                maxLen-=tmpLen;
+                pcWriteBuffer+= tmpLen;
 			}
+		} while( uxQueue > ( unsigned short ) tskIDLE_PRIORITY );
 
-			if( !listLIST_IS_EMPTY( pxOverflowDelayedTaskList ) )
-			{
-				prvListTaskWithinSingleList( pcWriteBuffer, ( xList * ) pxOverflowDelayedTaskList, tskBLOCKED_CHAR );
-			}
-
-			#if( INCLUDE_vTaskDelete == 1 )
-			{
-				if( !listLIST_IS_EMPTY( &xTasksWaitingTermination ) )
-				{
-					prvListTaskWithinSingleList( pcWriteBuffer, ( xList * ) &xTasksWaitingTermination, tskDELETED_CHAR );
-				}
-			}
-			#endif
-
-			#if ( INCLUDE_vTaskSuspend == 1 )
-			{
-				if( !listLIST_IS_EMPTY( &xSuspendedTaskList ) )
-				{
-					prvListTaskWithinSingleList( pcWriteBuffer, ( xList * ) &xSuspendedTaskList, tskSUSPENDED_CHAR );
-				}
-			}
-			#endif
+		if( !listLIST_IS_EMPTY( pxDelayedTaskList ) )
+		{
+			tmpLen = prvListTaskWithinSingleList( maxLen, pcWriteBuffer, ( xList * ) pxDelayedTaskList, tskBLOCKED_CHAR );
+            maxLen-=tmpLen;
+            pcWriteBuffer+= tmpLen;
 		}
-		xTaskResumeAll();
-	}
 
+		if( !listLIST_IS_EMPTY( pxOverflowDelayedTaskList ) )
+    	{
+        	tmpLen = prvListTaskWithinSingleList( maxLen, pcWriteBuffer, ( xList * ) pxOverflowDelayedTaskList, tskBLOCKED_CHAR );
+            maxLen-=tmpLen;
+            pcWriteBuffer+= tmpLen;
+		}
+
+		#if( INCLUDE_vTaskDelete == 1 )
+		{
+			if( !listLIST_IS_EMPTY( &xTasksWaitingTermination ) )
+			{
+				tmpLen = prvListTaskWithinSingleList( maxLen, pcWriteBuffer, ( xList * ) &xTasksWaitingTermination, tskDELETED_CHAR );
+                maxLen-=tmpLen;
+                pcWriteBuffer+= tmpLen;
+			}
+		}
+		#endif
+
+		#if ( INCLUDE_vTaskSuspend == 1 )
+		{
+			if( !listLIST_IS_EMPTY( &xSuspendedTaskList ) )
+			{
+				tmpLen = prvListTaskWithinSingleList( maxLen, pcWriteBuffer, ( xList * ) &xSuspendedTaskList, tskSUSPENDED_CHAR );
+                maxLen-=tmpLen;
+                pcWriteBuffer+= tmpLen;
+			}
+		}
+		#endif
+	}
+	xTaskResumeAll();
+}
 #endif
 /*----------------------------------------------------------*/
 
@@ -1842,13 +1844,13 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 
 
 
-static void prvInitialiseTCBVariables( tskTCB *pxTCB, const signed char * const pcName, unsigned portBASE_TYPE uxPriority, const xMemoryRegion * const xRegions, unsigned short usStackDepth )
+static void prvInitialiseTCBVariables( tskTCB *pxTCB, const char *pcName, unsigned portBASE_TYPE uxPriority, const xMemoryRegion * const xRegions, unsigned short usStackDepth )
 {
 	/* Store the function name in the TCB. */
 	#if configMAX_TASK_NAME_LEN > 1
 	{
 		/* Don't bring strncpy into the build unnecessarily. */
-		strncpy( ( char * ) pxTCB->pcTaskName, ( const char * ) pcName, ( unsigned short ) configMAX_TASK_NAME_LEN );
+		strncpy( pxTCB->pcTaskName, pcName, ( unsigned short ) configMAX_TASK_NAME_LEN );
 	}
 	#else
 	(void) pcName;
@@ -2031,10 +2033,15 @@ tskTCB *pxNewTCB;
 
 #if ( configUSE_TRACE_FACILITY == 1 )
 
-	static void prvListTaskWithinSingleList( const signed char *pcWriteBuffer, xList *pxList, signed char cStatus )
+	static uint16_t prvListTaskWithinSingleList(uint16_t maxLen, char *pcWriteBuffer, xList *pxList, signed char cStatus)
 	{
-	volatile tskTCB *pxNextTCB, *pxFirstTCB;
-	unsigned short usStackRemaining;
+        uint16_t result = 0;
+        uint16_t tmp;
+    	volatile tskTCB *pxNextTCB, *pxFirstTCB;
+	    unsigned short usStackRemaining;
+        
+        if (maxLen == 0)
+            return 0;
 
 		/* Write the details of all the TCB's in pxList into the buffer. */
 		listGET_OWNER_OF_NEXT_ENTRY( pxFirstTCB, pxList );
@@ -2051,10 +2058,20 @@ tskTCB *pxNewTCB;
 			}
 			#endif
 
-			sprintf( pcStatusString, ( char * ) "%s\t\t%c\t%u\t%u\t%u\r\n", pxNextTCB->pcTaskName, cStatus, ( unsigned int ) pxNextTCB->uxPriority, usStackRemaining, ( unsigned int ) pxNextTCB->uxTCBNumber );
-			strcat( ( char * ) pcWriteBuffer, ( char * ) pcStatusString );
+            strncpy(pcWriteBuffer, (const char*)(pxNextTCB->pcTaskName),(size_t) (maxLen < configMAX_TASK_NAME_LEN ? maxLen : configMAX_TASK_NAME_LEN));
+			tmp = strlen(pcWriteBuffer);
+            result+= tmp;
+            pcWriteBuffer+= tmp;
+            maxLen-= tmp;
+
+            tmp = snprintf( pcWriteBuffer, maxLen, "\t\t%c\t%u\t%u\t%u\r\n", cStatus, pxNextTCB->uxPriority, usStackRemaining, pxNextTCB->uxTCBNumber);
+            //tmp = snprintf( pcWriteBuffer, maxLen, "%s\t\t%c\t%u\t%u\t%u\r\n", pxNextTCB->pcTaskName, cStatus, ( unsigned int ) pxNextTCB->uxPriority, usStackRemaining, ( unsigned int ) pxNextTCB->uxTCBNumber );
+			result+= tmp;
+            pcWriteBuffer+= tmp;
+            maxLen-= tmp;
 
 		} while( pxNextTCB != pxFirstTCB );
+        return result;
 	}
 
 #endif
