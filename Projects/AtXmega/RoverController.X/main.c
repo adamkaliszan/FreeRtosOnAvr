@@ -143,7 +143,7 @@ portSHORT main( void )
 
   xTaskCreate(vTaskRc,        "RcRec",         2000,          NULL,                                   2, NULL);
   xTaskCreate(vTaskVTYusb,    "VTY" ,         1000+STACK_SIZE_VTY,         (void *)(CLIStateSerialUsb),            1, &xHandleVTY_USB);
-//  xTaskCreate(vTaskTLV,       NULL /*"TLV"            */, STACK_SIZE_VTY,         (void *)(TLVstate),                     1, &xHandleTLV);
+  xTaskCreate(vTaskTLV,       NULL /*"TLV"            */, STACK_SIZE_VTY,         (void *)(TLVstate),                     1, &xHandleTLV);
 //  xTaskCreate(vTaskMain,      NULL /*"TLV"            */, STACK_SIZE_VTY,         NULL,                                   1, &xHandleMain);
 
   vTaskStartScheduler();

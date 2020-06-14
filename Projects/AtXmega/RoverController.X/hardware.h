@@ -40,10 +40,10 @@ void hardwareInit(void);
 
 void offHbridge(void);
 
-void forwardA(uint8_t left, uint8_t right);
-void backwordA(uint8_t left, uint8_t right);
-void rotateLeftA(uint8_t left, uint8_t right);
-void rotateRightA(uint8_t left, uint8_t right);
+//void forwardA(uint8_t left, uint8_t right);
+//void backwordA(uint8_t left, uint8_t right);
+//void rotateLeftA(uint8_t left, uint8_t right);
+//void rotateRightA(uint8_t left, uint8_t right);
 
 void forwardB(uint8_t left, uint8_t right);
 void backwordB(uint8_t left, uint8_t right);

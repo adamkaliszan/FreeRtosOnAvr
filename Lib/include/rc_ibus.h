@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+extern int8_t rcChannels[8];
+
 uint8_t ibus_processDta(uint8_t dta);
 void ibus_processMessage(void);
 

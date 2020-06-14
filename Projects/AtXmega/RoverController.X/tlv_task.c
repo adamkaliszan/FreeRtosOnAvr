@@ -72,4 +72,3 @@ void vTaskTLV(void *tlvIntPtr)
     xSemaphoreGive(Hc12semaphore);
   }
 }
-

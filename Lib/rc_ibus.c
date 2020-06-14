@@ -61,9 +61,17 @@ void ibus_newFrame()
     _state = RC_ST_SIZE;
 }
 
+int8_t rcChannels[8];
+
+
 void ibus_processMessage(void)
 {
-    
+    uint8_t i;
+    if (message.type == 0x40)
+    {
+        for (i=0; i<8; i++)
+            rcChannels[i] = (1500 - message.channels[i]) / 4;
+    }
 }
 
 uint8_t ibus_processDta(uint8_t dta)

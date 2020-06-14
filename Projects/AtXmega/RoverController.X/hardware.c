@@ -81,7 +81,7 @@ void hardwareInit(void)
 
 
     //Timer 0 H bridge PWM
-    TCC0.PER   = 100;   //Zakres
+    TCC0.PER   = 127;   //Zakres
 
     ///LoadConfig overrides this register
     TCC0.CTRLA = 0x07;      //Preskaler 1024 PWM @ 0.32 KHz Za niska częstotliwość
@@ -135,36 +135,36 @@ void forwardA(uint8_t left, uint8_t right)
 }
 
 
-void backwordA(uint8_t left, uint8_t right)
-{
-    PORTR.OUTSET = 0x02;
-    PORTA.OUTCLR = 0x90;
-    PORTA.OUTSET = 0x60;
+//void backwordA(uint8_t left, uint8_t right)
+//{
+//    PORTR.OUTSET = 0x02;
+//    PORTA.OUTCLR = 0x90;
+//    PORTA.OUTSET = 0x60;
 
-    TCC0.CCA = left;
-    TCC0.CCB = right;
-}
+//    TCC0.CCA = left;
+//    TCC0.CCB = right;
+//}
 
-void rotateLeftA(uint8_t left, uint8_t right)
-{
-    PORTR.OUTSET = 0x02;
-    PORTA.OUTCLR = 0xA0;
-    PORTA.OUTSET = 0x50;
+//void rotateLeftA(uint8_t left, uint8_t right)
+//{
+//    PORTR.OUTSET = 0x02;
+//    PORTA.OUTCLR = 0xA0;
+//    PORTA.OUTSET = 0x50;
 
-    TCC0.CCA = left;
-    TCC0.CCB = right;
-}
+//    TCC0.CCA = left;
+//    TCC0.CCB = right;
+//}
 
-void rotateRightA(uint8_t left, uint8_t right)
-{
-    PORTR.OUTSET = 0x02;
+//void rotateRightA(uint8_t left, uint8_t right)
+//{
+//    PORTR.OUTSET = 0x02;
 
-    PORTA.OUTCLR = 0x50;
-    PORTA.OUTSET = 0xA0;
+//    PORTA.OUTCLR = 0x50;
+//    PORTA.OUTSET = 0xA0;
 
-    TCC0.CCA = left;
-    TCC0.CCB = right;
-}
+//    TCC0.CCA = left;
+//    TCC0.CCB = right;
+//}
 
 //0 - (18)        4 - B1 in
 //1 - (17)        5 - A1 in
