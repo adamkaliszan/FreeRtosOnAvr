@@ -1,5 +1,10 @@
 #include "loop_task.h"
 
+#include <avr/io.h>
+
+#include <FreeRTOS.h>
+#include <task.h>
+
 void vTaskLoop(void *arg)
 {
   (void) arg;

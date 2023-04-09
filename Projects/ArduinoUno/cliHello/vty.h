@@ -1,15 +1,8 @@
 #ifndef VTY_H
 #define VTY_H
 
-#include "main.h"
 #include <stdio.h>
-#include <avr/pgmspace.h>
-
-#include "memory_x.h"
-#include "configuration.h"
-
 #include "cmdline.h"
-
 
 void VtyInit(CliState_t *state, FILE *stream);
 

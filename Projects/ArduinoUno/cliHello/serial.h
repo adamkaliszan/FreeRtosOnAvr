@@ -1,11 +1,10 @@
 #ifndef SERIAL_H
 #define SERIAL_H
 
-#include "main.h"
-#include "semphr.h"
-#include "queue.h"
-#include "task.h"
-#include "hardware.h"
+#include <stdio.h>
+
+#include <FreeRTOS.h>
+#include <semphr.h>
 
 /* Constants for writing to UCSRB. */
 #define serRX_INT_ENABLE        ( ( unsigned portCHAR ) 0x80 )

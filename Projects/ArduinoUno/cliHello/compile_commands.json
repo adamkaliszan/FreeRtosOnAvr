@@ -1,0 +1,72 @@
+[
+  {
+    "directory": ".",
+    "command": "avr-gcc -c -mmcu=atmega328 -I. -D GCC_MEGA_AVR -I. -I../../../FreeRTOS/FreeRTOS/Source/include -I../../../Lib/include -g -Os -fsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wunused -Wa,-adhlns=main.lst  -DF_CPU=16000000UL -std=gnu99 main.c -o main.o",
+    "file": "main.o"
+  },
+  {
+    "directory": ".",
+    "command": "avr-gcc -c -mmcu=atmega328 -I. -D GCC_MEGA_AVR -I. -I../../../FreeRTOS/FreeRTOS/Source/include -I../../../Lib/include -g -Os -fsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wunused -Wa,-adhlns=configuration.lst  -DF_CPU=16000000UL -std=gnu99 configuration.c -o configuration.o",
+    "file": "configuration.o"
+  },
+  {
+    "directory": ".",
+    "command": "avr-gcc -c -mmcu=atmega328 -I. -D GCC_MEGA_AVR -I. -I../../../FreeRTOS/FreeRTOS/Source/include -I../../../Lib/include -g -Os -fsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wunused -Wa,-adhlns=serial.lst  -DF_CPU=16000000UL -std=gnu99 serial.c -o serial.o",
+    "file": "serial.o"
+  },
+  {
+    "directory": ".",
+    "command": "avr-gcc -c -mmcu=atmega328 -I. -D GCC_MEGA_AVR -I. -I../../../FreeRTOS/FreeRTOS/Source/include -I../../../Lib/include -g -Os -fsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wunused -Wa,-adhlns=hardware.lst  -DF_CPU=16000000UL -std=gnu99 hardware.c -o hardware.o",
+    "file": "hardware.o"
+  },
+  {
+    "directory": ".",
+    "command": "avr-gcc -c -mmcu=atmega328 -I. -D GCC_MEGA_AVR -I. -I../../../FreeRTOS/FreeRTOS/Source/include -I../../../Lib/include -g -Os -fsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wunused -Wa,-adhlns=vty.lst  -DF_CPU=16000000UL -std=gnu99 vty.c -o vty.o",
+    "file": "vty.o"
+  },
+  {
+    "directory": ".",
+    "command": "avr-gcc -c -mmcu=atmega328 -I. -D GCC_MEGA_AVR -I. -I../../../FreeRTOS/FreeRTOS/Source/include -I../../../Lib/include -g -Os -fsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wunused -Wa,-adhlns=cli_task.lst  -DF_CPU=16000000UL -std=gnu99 cli_task.c -o cli_task.o",
+    "file": "cli_task.o"
+  },
+  {
+    "directory": ".",
+    "command": "avr-gcc -c -mmcu=atmega328 -I. -D GCC_MEGA_AVR -I. -I../../../FreeRTOS/FreeRTOS/Source/include -I../../../Lib/include -g -Os -fsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wunused -Wa,-adhlns=loop_task.lst  -DF_CPU=16000000UL -std=gnu99 loop_task.c -o loop_task.o",
+    "file": "loop_task.o"
+  },
+  {
+    "directory": ".",
+    "command": "avr-gcc -c -mmcu=atmega328 -I. -D GCC_MEGA_AVR -I. -I../../../FreeRTOS/FreeRTOS/Source/include -I../../../Lib/include -g -Os -fsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wunused -Wa,-adhlns=../../../Lib/cmdline.lst  -DF_CPU=16000000UL -std=gnu99 ../../../Lib/cmdline.c -o ../../../Lib/cmdline.o",
+    "file": "../../../Lib/cmdline.o"
+  },
+  {
+    "directory": ".",
+    "command": "avr-gcc -c -mmcu=atmega328 -I. -D GCC_MEGA_AVR -I. -I../../../FreeRTOS/FreeRTOS/Source/include -I../../../Lib/include -g -Os -fsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wunused -Wa,-adhlns=../../../Lib/queueStream.lst  -DF_CPU=16000000UL -std=gnu99 ../../../Lib/queueStream.c -o ../../../Lib/queueStream.o",
+    "file": "../../../Lib/queueStream.o"
+  },
+  {
+    "directory": ".",
+    "command": "avr-gcc -c -mmcu=atmega328 -I. -D GCC_MEGA_AVR -I. -I../../../FreeRTOS/FreeRTOS/Source/include -I../../../Lib/include -g -Os -fsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wunused -Wa,-adhlns=../../../FreeRTOS/FreeRTOS/Source/tasks.lst  -DF_CPU=16000000UL -std=gnu99 ../../../FreeRTOS/FreeRTOS/Source/tasks.c -o ../../../FreeRTOS/FreeRTOS/Source/tasks.o",
+    "file": "../../../FreeRTOS/FreeRTOS/Source/tasks.o"
+  },
+  {
+    "directory": ".",
+    "command": "avr-gcc -c -mmcu=atmega328 -I. -D GCC_MEGA_AVR -I. -I../../../FreeRTOS/FreeRTOS/Source/include -I../../../Lib/include -g -Os -fsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wunused -Wa,-adhlns=../../../FreeRTOS/FreeRTOS/Source/queue.lst  -DF_CPU=16000000UL -std=gnu99 ../../../FreeRTOS/FreeRTOS/Source/queue.c -o ../../../FreeRTOS/FreeRTOS/Source/queue.o",
+    "file": "../../../FreeRTOS/FreeRTOS/Source/queue.o"
+  },
+  {
+    "directory": ".",
+    "command": "avr-gcc -c -mmcu=atmega328 -I. -D GCC_MEGA_AVR -I. -I../../../FreeRTOS/FreeRTOS/Source/include -I../../../Lib/include -g -Os -fsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wunused -Wa,-adhlns=../../../FreeRTOS/FreeRTOS/Source/list.lst  -DF_CPU=16000000UL -std=gnu99 ../../../FreeRTOS/FreeRTOS/Source/list.c -o ../../../FreeRTOS/FreeRTOS/Source/list.o",
+    "file": "../../../FreeRTOS/FreeRTOS/Source/list.o"
+  },
+  {
+    "directory": ".",
+    "command": "avr-gcc -c -mmcu=atmega328 -I. -D GCC_MEGA_AVR -I. -I../../../FreeRTOS/FreeRTOS/Source/include -I../../../Lib/include -g -Os -fsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wunused -Wa,-adhlns=../../../FreeRTOS/FreeRTOS/Source/portable/MemMang/heap_1.lst  -DF_CPU=16000000UL -std=gnu99 ../../../FreeRTOS/FreeRTOS/Source/portable/MemMang/heap_1.c -o ../../../FreeRTOS/FreeRTOS/Source/portable/MemMang/heap_1.o",
+    "file": "../../../FreeRTOS/FreeRTOS/Source/portable/MemMang/heap_1.o"
+  },
+  {
+    "directory": ".",
+    "command": "avr-gcc -c -mmcu=atmega328 -I. -D GCC_MEGA_AVR -I. -I../../../FreeRTOS/FreeRTOS/Source/include -I../../../Lib/include -g -Os -fsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wextra -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wunused -Wa,-adhlns=../../../FreeRTOS/FreeRTOS/Source/portable/ThirdParty/GCC/ATmega/port.lst  -DF_CPU=16000000UL -std=gnu99 ../../../FreeRTOS/FreeRTOS/Source/portable/ThirdParty/GCC/ATmega/port.c -o ../../../FreeRTOS/FreeRTOS/Source/portable/ThirdParty/GCC/ATmega/port.o",
+    "file": "../../../FreeRTOS/FreeRTOS/Source/portable/ThirdParty/GCC/ATmega/port.o"
+  }
+]

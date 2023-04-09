@@ -1,12 +1,9 @@
 #ifndef CLI_TASK_H
 #define CLI_TASK_H
 
-#include <stdio.h>
-#include <avr/pgmspace.h>
 
-#include "FreeRTOS.h"
-#include "queue.h"
-#include "cmdline.h"
+#include <FreeRTOS.h>
+#include <queue.h>
 
 extern xQueueHandle         xVtyRec;
 extern xQueueHandle         xVtyTx;

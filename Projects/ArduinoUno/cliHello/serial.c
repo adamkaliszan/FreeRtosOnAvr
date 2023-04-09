@@ -57,7 +57,6 @@ ISR(USART_RX_vect)
   signed portCHAR cChar;
 
   cChar = UDR0;
-//  xQueueSendFromISR(xVtyRec, &cChar, NULL);
 
   xHigherPriorityTaskWoken = pdFALSE;
   xQueueSendFromISR(xVtyRec, &cChar, &xHigherPriorityTaskWoken);
